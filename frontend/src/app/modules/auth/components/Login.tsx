@@ -59,8 +59,6 @@ export function Login() {
           values.password
         )
         const firebaseUser = userCredential.user
-        console.log("ggggggggggggggggggggggggggggggggggggggggggggggggggggg",firebaseUser);
-        
 
         // Step 2: Get Firestore doc
         type UserRole = 'owner' | 'admin' | 'employee' | 'CEO'
@@ -76,7 +74,7 @@ export function Login() {
           name         = d.name         ?? ''
           lastname     = d.lastname     ?? ''
           role         = (d.role as UserRole) ?? 'employee'
-          phone_number = d.phone_number ?? '11111'
+          phone_number = d.phone_number ?? ''
         } else {
           name = firebaseUser.email?.split('@')[0] ?? 'User'
         }
@@ -87,7 +85,8 @@ export function Login() {
           user_name:     `${name} ${lastname}`.trim(),
           user_email:    firebaseUser.email ?? values.user_email,
           role:          role,
-          phone_number:  firebaseUser.phoneNumber
+          department_id: '',
+          leave_days:    0,
         }
 
         // Step 4: Build authData
@@ -99,7 +98,8 @@ export function Login() {
           user_name:     user.user_name,
           user_email:    user.user_email,
           role:          authRole,
-          phone_number:  user.phone_number
+          department_id: '',
+          leave_days:    0,
         }
 
         // Step 5: Save
