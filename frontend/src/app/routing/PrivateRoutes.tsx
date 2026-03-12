@@ -19,6 +19,7 @@ const PrivateRoutes = () => {
   const HolidaysPage = lazy(() => import('../modules/apps/holiday/HolidaysPage'))
   const RequestsPage = lazy(() => import('../modules/apps/request/RequestPage'))
   const UserRequired = lazy(() => import('../modules/apps/user-required/UserRequired'))
+  const AddFood  = lazy(()=> import('../modules/apps/addFood/addFoodPage'))
 
   return (
     <Routes>
@@ -99,6 +100,14 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <UsersPage />
+            </SuspensedView>
+          }
+        />
+        <Route
+          path='apps/add-food/*'
+          element={
+            <SuspensedView>
+              <AddFood />
             </SuspensedView>
           }
         />

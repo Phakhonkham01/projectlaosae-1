@@ -118,6 +118,12 @@ export function AsideMenuMain() {
         title='Holidays'
         fontIcon='bi-calendar-event'
       />
+      <AsideMenuItem
+        to='/apps/add-food'
+        icon='tree'
+        title='Add Food'
+        fontIcon='bi-calendar-event'
+      />
     </>
   )
 }

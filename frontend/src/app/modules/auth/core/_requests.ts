@@ -79,8 +79,7 @@ export async function getUserByToken(token: string): Promise<{ data: UserModel }
           user_name: auth.user_name,
           user_email: auth.user_email,
           role: auth.role,
-          department_id: auth.department_id,
-          leave_days: auth.leave_days,
+          phone_number: auth.phone_number
         };
         
         return { data: user } as any;
