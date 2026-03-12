@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>⚡ Metronic Module Generator + CMD</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
+        .panel { flex: 1; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #667eea; color: white; border: none; padding: 10px; width: 100%; margin: 5px 0; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #5a67d8; }
+        pre { background: #1e1e2d; color: white; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: monospace; font-size: 14px; }
+        .tree-line { padding: 3px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .tree-line:hover { background: #2a2a3a; }
+        .folder { color: #ffd700; }
+        .file { color: #98fb98; }
+        .copy-btn { background: #50cd89; padding: 2px 8px; font-size: 12px; width: auto; }
+        .tab { display: flex; gap: 10px; margin: 10px 0; }
+        .tab-btn { flex: 1; background: #ddd; color: black; padding: 8px; }
+        .tab-btn.active { background: #667eea; color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Panel ซ้าย: Input และ File Tree -->
+    <div class="panel">
+        <h2>📁 ตั้งค่า Module</h2>
+        
+        <label>🔤 ชื่อ Module (ตัวเล็ก) เช่น employee</label>
+        <input type="text" id="moduleName" value="employee">
+        
+        <label>📁 ชื่อ Folder (พหูพจน์) เช่น employees</label>
+        <input type="text" id="folderName" value="employees">
+        
+        <label>🏷️ ชื่อ Module (ตัวใหญ่) เช่น Employee</label>
+        <input type="text" id="moduleCapital" value="Employee">
+        
+        <label>📂 Base Path</label>
+        <input type="text" id="basePath" value="src/app/modules/apps">
+        
+        <button onclick="generateTree()">🚀 สร้าง File Tree</button>
+        
+        <div style="margin-top: 20px; max-height: 500px; overflow-y: auto; background: #1e1e2d; color: white; padding: 15px; border-radius: 5px;" id="fileTree">
+            <!-- File Tree จะแสดงตรงนี้ -->
+        </div>
+        
+        <button onclick="copyAllNames()" style="margin-top: 10px;">📋 คัดลอกชื่อทั้งหมด</button>
+    </div>
+    
+    <!-- Panel ขวา: CMD Commands -->
+    <div class="panel">
+        <h2>📋 CMD Commands</h2>
+        
+        <div class="tab">
+            <button class="tab-btn active" onclick="showTab('win')" id="tabWinBtn">Windows CMD</button>
+            <button class="tab-btn" onclick="showTab('mac')" id="tabMacBtn">Mac/Linux</button>
+        </div>
+        
+        <div id="winPanel">
+            <pre id="winCommands" style="max-height: 500px; overflow-y: auto;"></pre>
+            <button onclick="copyWinCommands()">📋 คัดลอก Windows Commands</button>
+        </div>
+        
+        <div id="macPanel" style="display: none;">
+            <pre id="macCommands" style="max-height: 500px; overflow-y: auto;"></pre>
+            <button onclick="copyMacCommands()">📋 คัดลอก Mac Commands</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// รายการไฟล์ทั้งหมด
+const files = [
+    { type: 'folder', name: '[folder]-management/', level: 0 },
+    { type: 'folder', name: 'core/', level: 1 },
+    { type: 'file', name: '[module]_models.ts', level: 2 },
+    { type: 'file', name: '[module]_requests.ts', level: 2 },
+    { type: 'file', name: 'ListViewProvider.tsx', level: 2 },
+    { type: 'file', name: 'QueryRequestProvider.tsx', level: 2 },
+    { type: 'file', name: 'QueryResponseProvider.tsx', level: 2 },
+    
+    { type: 'folder', name: 'components/', level: 1 },
+    { type: 'folder', name: 'header/', level: 2 },
+    { type: 'file', name: '[Module]ListHeader.tsx', level: 3 },
+    { type: 'folder', name: 'listing/', level: 2 },
+    { type: 'file', name: '[Module]Table.tsx', level: 3 },
+    { type: 'file', name: '[Module]TableFooter.tsx', level: 3 },
+    { type: 'folder', name: 'modals/', level: 2 },
+    { type: 'file', name: '[Module]EditModal.tsx', level: 3 },
+    
+    { type: 'folder', name: 'table-columns/', level: 1 },
+    { type: 'file', name: '[Module]Columns.tsx', level: 2 },
+    { type: 'file', name: '[Module]InfoCell.tsx', level: 2 },
+    { type: 'file', name: '[Module]ImageCell.tsx', level: 2 },
+    { type: 'file', name: '[Module]StatusCell.tsx', level: 2 },
+    { type: 'file', name: '[Module]ActionsCell.tsx', level: 2 },
+    { type: 'file', name: '[Module]CustomHeader.tsx', level: 2 },
+    
+    { type: 'file', name: '[Module]ManagementPage.tsx', level: 1 }
+];
+
+let currentModule = { name: 'employee', folder: 'employees', capital: 'Employee', basePath: 'src/app/modules/apps' };
+
+function generateTree() {
+    const moduleName = document.getElementById('moduleName').value;
+    const folderName = document.getElementById('folderName').value;
+    const moduleCapital = document.getElementById('moduleCapital').value;
+    const basePath = document.getElementById('basePath').value;
+    
+    currentModule = { name: moduleName, folder: folderName, capital: moduleCapital, basePath: basePath };
+    
+    // สร้าง File Tree
+    let treeHtml = '';
+    files.forEach(file => {
+        let displayName = file.name
+            .replace('[module]', moduleName)
+            .replace('[Module]', moduleCapital)
+            .replace('[folder]', folderName);
+        
+        let indent = '  '.repeat(file.level);
+        let icon = file.type === 'folder' ? '📁' : '📄';
+        let colorClass = file.type === 'folder' ? 'folder' : 'file';
+        
+        treeHtml += `
+            <div class="tree-line">
+                <span><span class="${colorClass}">${indent}${icon} ${displayName}</span></span>
+                <button class="copy-btn" onclick="copyName('${displayName}')">📋</button>
+            </div>
+        `;
+    });
+    
+    document.getElementById('fileTree').innerHTML = treeHtml;
+    
+    // สร้าง CMD Commands
+    generateWindowsCMD();
+    generateMacCMD();
+}
+
+function generateWindowsCMD() {
+    const m = currentModule;
+    let cmd = `
+
+REM core folder
+mkdir core 2>nul
+cd core
+type nul > ${m.name}_models.ts
+type nul > ${m.name}_requests.ts
+type nul > ListViewProvider.tsx
+type nul > QueryRequestProvider.tsx
+type nul > QueryResponseProvider.tsx
+cd ..
+
+REM components folder
+mkdir components\\header 2>nul
+mkdir components\\listing 2>nul
+mkdir components\\modals 2>nul
+
+cd components\\header
+type nul > ${m.capital}ListHeader.tsx
+cd ..\\..
+
+cd components\\listing
+type nul > ${m.capital}Table.tsx
+type nul > ${m.capital}TableFooter.tsx
+cd ..\\..
+
+cd components\\modals
+type nul > ${m.capital}EditModal.tsx
+cd ..\\..
+
+REM table-columns folder
+mkdir table-columns 2>nul
+cd table-columns
+type nul > ${m.capital}Columns.tsx
+type nul > ${m.capital}InfoCell.tsx
+type nul > ${m.capital}ImageCell.tsx
+type nul > ${m.capital}StatusCell.tsx
+type nul > ${m.capital}ActionsCell.tsx
+type nul > ${m.capital}CustomHeader.tsx
+cd ..
+
+REM main page
+type nul > ${m.capital}ManagementPage.tsx
+
+
+dir /s /b`;
+    
+    document.getElementById('winCommands').textContent = cmd;
+}
+
+function generateMacCMD() {
+    const m = currentModule;
+    let cmd = `#!/bin/bash
+echo "🚀 Creating ${m.capital} Management Module..."
+
+# สร้าง root folder
+mkdir -p "${m.basePath}/${m.folder}-management"
+cd "${m.basePath}/${m.folder}-management"
+
+# core folder
+mkdir -p core
+cd core
+touch ${m.name}_models.ts
+touch ${m.name}_requests.ts
+touch ListViewProvider.tsx
+touch QueryRequestProvider.tsx
+touch QueryResponseProvider.tsx
+cd ..
+
+# components folder
+mkdir -p components/header components/listing components/modals
+
+cd components/header
+touch ${m.capital}ListHeader.tsx
+cd ../..
+
+cd components/listing
+touch ${m.capital}Table.tsx
+touch ${m.capital}TableFooter.tsx
+cd ../..
+
+cd components/modals
+touch ${m.capital}EditModal.tsx
+cd ../..
+
+# table-columns folder
+mkdir -p table-columns
+cd table-columns
+touch ${m.capital}Columns.tsx
+touch ${m.capital}InfoCell.tsx
+touch ${m.capital}ImageCell.tsx
+touch ${m.capital}StatusCell.tsx
+touch ${m.capital}ActionsCell.tsx
+touch ${m.capital}CustomHeader.tsx
+cd ..
+
+# main page
+touch ${m.capital}ManagementPage.tsx
+
+echo "✅ Done! Created 16 files"
+ls -R`;
+    
+    document.getElementById('macCommands').textContent = cmd;
+}
+
+function showTab(tab) {
+    if (tab === 'win') {
+        document.getElementById('winPanel').style.display = 'block';
+        document.getElementById('macPanel').style.display = 'none';
+        document.getElementById('tabWinBtn').classList.add('active');
+        document.getElementById('tabMacBtn').classList.remove('active');
+    } else {
+        document.getElementById('winPanel').style.display = 'none';
+        document.getElementById('macPanel').style.display = 'block';
+        document.getElementById('tabWinBtn').classList.remove('active');
+        document.getElementById('tabMacBtn').classList.add('active');
+    }
+}
+
+function copyName(name) {
+    navigator.clipboard.writeText(name);
+    alert('✅ คัดลอก: ' + name);
+}
+
+function copyAllNames() {
+    const names = files.map(f => {
+        return f.name
+            .replace('[module]', currentModule.name)
+            .replace('[Module]', currentModule.capital)
+            .replace('[folder]', currentModule.folder);
+    }).join('\n');
+    
+    navigator.clipboard.writeText(names);
+    alert('✅ คัดลอกชื่อไฟล์ทั้งหมดแล้ว');
+}
+
+function copyWinCommands() {
+    navigator.clipboard.writeText(document.getElementById('winCommands').textContent);
+    alert('✅ คัดลอก Windows Commands แล้ว');
+}
+
+function copyMacCommands() {
+    navigator.clipboard.writeText(document.getElementById('macCommands').textContent);
+    alert('✅ คัดลอก Mac Commands แล้ว');
+}
+
+// เริ่มต้น
+generateTree();
+showTab('win');
+</script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1e1e2d;
+      border-bottom: 3px solid #009ef7;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #1e1e2d;
+      margin-top: 30px;
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    h3 {
+      color: #009ef7;
+    }
+    pre {
+      background: #1e1e2d;
+      color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+    }
+    code {
+      background: #eef2f5;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .tip {
+      background: #e8fff3;
+      border-left: 4px solid #50cd89;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 6px;
+    }
+    .warning {
+      background: #fff4e8;
+      border-left: 4px solid #ffc700;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 6px;
+    }
+    .path-box {
+      background: #f1faff;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      border: 1px solid #009ef7;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th {
+      background: #009ef7;
+      color: white;
+      padding: 12px;
+      text-align: left;
+    }
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #eef2f5;
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    .folder {
+      color: #009ef7;
+      font-weight: bold;
+    }
+    .file {
+      color: #1e1e2d;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🚢 สร้าง Metronic + Firebase Module (CRUD Complete)</h1>
+  
+  <div class="tip">
+    <strong>🎯 ความต้องการ:</strong> สร้าง module ใหม่ (employees-management) โดยใช้โครงสร้างแบบ ships-management ที่สมบูรณ์ CRUD ได้ มี Image Upload, SweetAlert2, รักษา Metronic Theme
+  </div>
+
+  <h2>📁 1. โครงสร้าง Folder ที่ต้องสร้าง</h2>
+  <pre>
+src/app/modules/apps/employees-management/
+│
+├── 📂 core/
+│   ├── 📄 employee_models.ts
+│   ├── 📄 employee_requests.ts
+│   ├── 📄 ListViewProvider.tsx
+│   ├── 📄 QueryRequestProvider.tsx
+│   └── 📄 QueryResponseProvider.tsx
+│
+├── 📂 components/
+│   ├── 📂 header/
+│   │   └── 📄 EmployeeListHeader.tsx
+│   ├── 📂 listing/
+│   │   ├── 📄 EmployeeTable.tsx
+│   │   └── 📄 EmployeeTableFooter.tsx
+│   └── 📂 modals/
+│       └── 📄 EmployeeEditModal.tsx
+│
+├── 📂 table-columns/
+│   ├── 📄 EmployeeColumns.tsx
+│   ├── 📄 EmployeeInfoCell.tsx
+│   ├── 📄 EmployeeImageCell.tsx
+│   ├── 📄 EmployeeDepartmentCell.tsx
+│   ├── 📄 EmployeePositionCell.tsx
+│   ├── 📄 EmployeeStatusCell.tsx
+│   ├── 📄 EmployeeActionsCell.tsx
+│   └── 📄 EmployeeCustomHeader.tsx
+│
+└── 📄 EmployeesManagementPage.tsx
+  </pre>
+
+  <h2>📋 2. Data Structure (employee_models.ts)</h2>
+  <pre>
+export interface EmployeeData {
+  id?: string
+  employee_code: string        // รหัสพนักงาน
+  first_name_th: string        // ชื่อไทย
+  last_name_th: string         // นามสกุลไทย
+  first_name_en: string        // ชื่ออังกฤษ
+  last_name_en: string         // นามสกุลอังกฤษ
+  nickname: string             // ชื่อเล่น
+  email: string                // อีเมล
+  phone: string                // เบอร์โทร
+  image_url: string            // รูปโปรไฟล์
+  department_id: string        // id แผนก
+  position_id: string          // id ตำแหน่ง
+  hire_date: string            // วันที่เริ่มงาน
+  salary: number               // เงินเดือน
+  status: 'Active' | 'Inactive' | 'On Leave'
+  createdAt?: string
+  updatedAt?: string
+}
+  </pre>
+
+  <h2>🔗 3. Import Paths ที่สำคัญ (ตามตำแหน่งไฟล์)</h2>
+
+  <h3>📍 core/employee_requests.ts</h3>
+  <div class="path-box">
+    import { collection, getDocs, addDoc, ... } from 'firebase/firestore'<br>
+    import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'<br>
+    <strong>import { db, storage } from '../../../../../firebase/useFirebase'</strong><br>
+    import { EmployeeData } from './employee_models'
+  </div>
+
+  <h3>📍 core/QueryResponseProvider.tsx</h3>
+  <div class="path-box">
+    import { useQuery } from 'react-query'<br>
+    <strong>import { initialQueryResponse, QUERIES, stringifyRequestQuery } from '../../../../../../_metronic/helpers'</strong><br>
+    <strong>import { getEmployees } from './employee_requests'</strong><br>
+    <strong>import { EmployeeData } from './employee_models'</strong><br>
+    <strong>import { useQueryRequest } from './QueryRequestProvider'</strong>
+  </div>
+
+  <h3>📍 components/modals/EmployeeEditModal.tsx</h3>
+  <div class="path-box">
+    import { useQueryClient, useMutation } from 'react-query'<br>
+    <strong>import { useListView } from '../../core/ListViewProvider'</strong><br>
+    <strong>import { useQueryResponse } from '../../core/QueryResponseProvider'</strong><br>
+    <strong>import { createEmployee, updateEmployee } from '../../core/employee_requests'</strong><br>
+    <strong>import { EmployeeData } from '../../core/employee_models'</strong><br>
+    <strong>import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'</strong><br>
+    import Swal from 'sweetalert2'<br>
+    <strong>import { db, storage } from '../../../../../../../firebase/useFirebase'</strong>
+  </div>
+
+  <h3>📍 table-columns/EmployeeColumns.tsx</h3>
+  <div class="path-box">
+    import { Column } from 'react-table'<br>
+    <strong>import { EmployeeData } from '../core/employee_models'</strong><br>
+    <strong>import { EmployeeInfoCell } from './EmployeeInfoCell'</strong><br>
+    <strong>import { EmployeeImageCell } from './EmployeeImageCell'</strong><br>
+    <strong>import { EmployeeStatusCell } from './EmployeeStatusCell'</strong><br>
+    <strong>import { EmployeeActionsCell } from './EmployeeActionsCell'</strong>
+  </div>
+
+  <h2>📊 4. ตาราง Import Paths ตาม Depth</h2>
+  <table>
+    <tr>
+      <th>ตำแหน่งไฟล์</th>
+      <th>Import จาก core</th>
+      <th>Import จาก Metronic</th>
+      <th>Import จาก Firebase</th>
+    </tr>
+    <tr>
+      <td><span class="folder">core/</span></td>
+      <td><code>'./file'</code></td>
+      <td><code>'../../../../../_metronic/helpers'</code></td>
+      <td><code>'../../../../firebase/useFirebase'</code></td>
+    </tr>
+    <tr>
+      <td><span class="folder">components/</span></td>
+      <td><code>'../core/file'</code></td>
+      <td><code>'../../../../../_metronic/helpers'</code></td>
+      <td><code>'../../../../firebase/useFirebase'</code></td>
+    </tr>
+    <tr>
+      <td><span class="folder">table-columns/</span></td>
+      <td><code>'../core/file'</code></td>
+      <td><code>'../../../../../_metronic/helpers'</code></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><span class="folder">root page</span></td>
+      <td><code>'./core/file'</code></td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+  </table>
+
+  <h2>🎨 5. Metronic Classes ที่ต้องใช้</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Class Names</th>
+    </tr>
+    <tr>
+      <td>Card</td>
+      <td><code>card, card-header, card-body, card-footer</code></td>
+    </tr>
+    <tr>
+      <td>Buttons</td>
+      <td><code>btn, btn-primary, btn-light, btn-icon, btn-sm</code></td>
+    </tr>
+    <tr>
+      <td>Badges</td>
+      <td><code>badge, badge-light-success, badge-light-danger, badge-light-warning</code></td>
+    </tr>
+    <tr>
+      <td>Icons</td>
+      <td><code>KTIcon, iconName="pencil", iconName="trash", iconName="cross"</code></td>
+    </tr>
+    <tr>
+      <td>Modal</td>
+      <td><code>modal-content, modal-header, modal-body, modal-footer</code></td>
+    </tr>
+    <tr>
+      <td>Table</td>
+      <td><code>table, table-row, table-cell, min-w-xxxpx</code></td>
+    </tr>
+  </table>
+
+  <h2>🔥 6. Firebase Operations ที่ต้องมี</h2>
+  <pre>
+// ใน employee_requests.ts
+- getEmployees()        // GET all with query
+- getEmployeeById()     // GET single
+- createEmployee()      // POST with image upload
+- updateEmployee()      // PUT/PATCH
+- deleteEmployee()      // DELETE single
+- deleteSelectedEmployees() // DELETE bulk
+
+// ใน EmployeeEditModal.tsx
+- Image upload to Firebase Storage
+- Image preview (200x200)
+- Delete old image on update
+  </pre>
+
+  <h2>⚡ 7. Features ที่ต้องมีในทุก Module</h2>
+  <ul>
+    <li><strong>CRUD Complete</strong> - Create, Read, Update, Delete</li>
+    <li><strong>SweetAlert2</strong> - Success, Error, Confirm dialogs</li>
+    <li><strong>Loading States</strong> - Spinners while loading</li>
+    <li><strong>Validation</strong> - Form validation with error messages</li>
+    <li><strong>Image Upload</strong> - To Firebase Storage</li>
+    <li><strong>Search/Filter</strong> - ใน QueryResponseProvider</li>
+    <li><strong>Sorting</strong> - ใน Table headers</li>
+    <li><strong>Pagination</strong> - ใน Table footer</li>
+  </ul>
+
+  <div class="tip">
+    <strong>💡 Pro Tip:</strong> วิธีที่เร็วที่สุดคือ copy โฟลเดอร์ ships-management ทั้งหมด 
+    แล้วเปลี่ยนคำว่า "ship" เป็น "employee" (ระวังตัวพิมพ์ใหญ่-เล็ก)
+  </div>
+
+  <div class="warning">
+    <strong>⚠️ Warning:</strong> Import path ต้องระวังจำนวน '../' ให้ดี 
+    ถ้าผิดนิดเดียว import ไม่เจอแน่นอน!
+  </div>
+
+  <h2>📝 8. Prompt สำหรับ ChatGPT (copy ไปใช้ได้)</h2>
+  <pre style="background: #1e1e2d; color: #fff; padding: 20px;">
+คุณเป็นผู้เชี่ยวชาญ React + TypeScript + Firebase + Metronic Theme 
+ช่วยสร้าง module "employees-management" ให้หน่อย โดยใช้โครงสร้างแบบ ships-management ที่เคยสร้างไป
+
+**สิ่งที่ต้องมี:**
+1. CRUD Complete กับ Firebase Emulator
+2. Image Upload ไป Firebase Storage (200x200 preview)
+3. SweetAlert2 ทุก action
+4. ใช้ Metronic UI/UX (KTIcon, badges, buttons)
+5. Table มี sort, search, pagination
+6. Form validation
+7. Loading states
+
+**Data Structure:**
+interface EmployeeData {
+  id?: string
+  employee_code: string
+  first_name_th: string
+  last_name_th: string
+  first_name_en: string
+  last_name_en: string
+  nickname: string
+  email: string
+  phone: string
+  image_url: string
+  department_id: string
+  position_id: string
+  hire_date: string
+  salary: number
+  status: 'Active' | 'Inactive' | 'On Leave'
+  createdAt?: string
+  updatedAt?: string
+}
+
+**Import Paths ที่ใช้:**
+- Firebase: import { db, storage } from '../../../../../firebase/useFirebase'
+- Metronic: import { KTIcon, QUERIES } from '../../../../../../_metronic/helpers'
+
+ช่วยเขียนโค้ดที่สมบูรณ์ พร้อมอธิบายแต่ละส่วนด้วยครับ
+  </pre>
+
+  <h2>🔍 9. Check List ก่อนใช้งาน</h2>
+  <table>
+    <tr>
+      <td>✅</td>
+      <td>Firebase emulator ทำงานอยู่ (port 8081, 9099, 9199)</td>
+    </tr>
+    <tr>
+      <td>✅</td>
+      <td>import paths ถูกต้องตาม depth ของไฟล์</td>
+    </tr>
+    <tr>
+      <td>✅</td>
+      <td>Collection name ใน Firestore ถูกต้อง (employees)</td>
+    </tr>
+    <tr>
+      <td>✅</td>
+      <td>Storage folder ถูกต้อง (employees/)</td>
+    </tr>
+    <tr>
+      <td>✅</td>
+      <td>Metronic theme ถูกโหลด (KTIcon ใช้งานได้)</td>
+    </tr>
+    <tr>
+      <td>✅</td>
+      <td>react-query ถูกติดตั้งและใช้งาน</td>
+    </tr>
+  </table>
+
+  <div style="text-align: center; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <strong>🎉 พร้อมสร้าง Module ใหม่แล้ว! ขอให้สนุกกับการเขียนโค้ดนะครับ</strong>
+  </div>
+</div>
+</body>
+</html>

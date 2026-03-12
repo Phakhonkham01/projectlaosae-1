@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ Metronic Full Module Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: white;
+    }
+    .header h1 { font-size: 2.2em; margin-bottom: 5px; }
+    .header p { opacity: 0.9; }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .card h2 {
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 3px solid #667eea;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+    }
+    
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95em;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    
+    .backend-config {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .radio-group {
+      display: flex;
+      gap: 15px;
+      margin: 10px 0;
+    }
+    .radio-option { flex: 1; }
+    .radio-option input { width: auto; margin-right: 5px; }
+    
+    .path-input {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      margin-top: 10px;
+    }
+    
+    .fields-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .field-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 10px;
+      background: white;
+    }
+    
+    .field-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .field-item:last-child { border-bottom: none; }
+    .field-item input[type="checkbox"] { width: auto; margin-right: 10px; }
+    .field-name { flex: 1; font-family: monospace; }
+    .field-type {
+      background: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      color: #1976d2;
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      width: 100%;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      background: white;
+      padding: 10px 0;
+      z-index: 10;
+    }
+    .tab {
+      padding: 8px 15px;
+      background: #f0f0f0;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    .code-block {
+      background: #1e1e2d;
+      color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85em;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-bottom: 10px;
+    }
+    
+    .file-tree {
+      background: #1e1e2d;
+      color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85em;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+    
+    .folder { color: #ffd700; }
+    .file { color: #98fb98; }
+    .indent { margin-left: 20px; }
+    
+    .copy-btn {
+      background: #50cd89;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      float: right;
+    }
+    .copy-btn:hover { background: #3ba36b; }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .stat-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-value { font-size: 1.5em; font-weight: bold; }
+    .stat-label { font-size: 0.8em; opacity: 0.9; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>⚡ Metronic Full Module Generator</h1>
+    <p>สร้างครบทุกไฟล์! CRUD + Image Upload + SweetAlert2 + Metronic Theme</p>
+  </div>
+
+  <div class="grid-2">
+    <!-- Left: Input Form -->
+    <div class="card">
+      <h2>📝 กำหนดค่า Module</h2>
+      
+      <div class="form-group">
+        <label>🔤 ชื่อ Module (singular)</label>
+        <input type="text" id="moduleName" value="employee" placeholder="employee">
+      </div>
+      
+      <div class="form-group">
+        <label>📁 ชื่อ Folder (plural)</label>
+        <input type="text" id="folderName" value="employees" placeholder="employees">
+      </div>
+      
+      <div class="form-group">
+        <label>🏷️ Interface Name</label>
+        <input type="text" id="interfaceName" value="EmployeeData" placeholder="EmployeeData">
+      </div>
+
+      <div class="backend-config">
+        <h3>🔧 Backend</h3>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="backendType" value="firebase" checked> 🔥 Firebase</label>
+          <label class="radio-option"><input type="radio" name="backendType" value="mongodb"> 🍃 MongoDB</label>
+          <label class="radio-option"><input type="radio" name="backendType" value="api"> 🌐 REST API</label>
+        </div>
+
+        <div id="firebaseConfig" class="path-input">
+          <label>📂 Firebase Path</label>
+          <input type="text" id="firebasePath" value="../../../../../firebase/useFirebase">
+        </div>
+        <div id="mongodbConfig" class="path-input" style="display:none">
+          <label>🌐 API URL</label>
+          <input type="text" id="mongodbUrl" value="http://localhost:8000/api">
+        </div>
+        <div id="apiConfig" class="path-input" style="display:none">
+          <label>🌐 API URL</label>
+          <input type="text" id="apiUrl" value="http://localhost:8000/api">
+        </div>
+      </div>
+
+      <div class="fields-section">
+        <h3>📋 Interface Fields</h3>
+        <textarea id="interfaceFields" rows="8" style="font-family: monospace;">id?: string
+employee_code: string
+first_name: string
+last_name: string
+nickname: string
+email: string
+phone: string
+image_url: string
+department_id: string
+position_id: string
+hire_date: string
+salary: number
+status: 'Active' | 'Inactive' | 'On Leave'
+createdAt?: string
+updatedAt?: string</textarea>
+      </div>
+
+      <div class="fields-section">
+        <h3>👁️ เลือก Fields ที่จะแสดงใน Table</h3>
+        <div id="fieldCheckboxes" class="field-list">
+          <!-- จะถูกสร้างด้วย JavaScript -->
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateModule()">🚀 Generate Full Module</button>
+    </div>
+
+    <!-- Right: Output Preview -->
+    <div class="card">
+      <h2>📂 โครงสร้างไฟล์ทั้งหมด (15 ไฟล์)</h2>
+      
+      <div class="stats">
+        <div class="stat-item"><span class="stat-value" id="folderCount">5</span><span class="stat-label">Folders</span></div>
+        <div class="stat-item"><span class="stat-value" id="fileCount">15</span><span class="stat-label">Files</span></div>
+        <div class="stat-item"><span class="stat-value" id="apiCount">7</span><span class="stat-label">APIs</span></div>
+        <div class="stat-item"><span class="stat-value" id="componentCount">12</span><span class="stat-label">Components</span></div>
+      </div>
+
+      <div class="file-tree" id="fileTree"></div>
+
+      <div class="tabs" id="fileTabs">
+        <!-- Tabs จะถูกสร้างด้วย JavaScript -->
+      </div>
+
+      <div class="code-block" id="codePreview">กำลังโหลด...</div>
+      <button class="copy-btn" onclick="copyCurrentCode()">📋 คัดลอกโค้ดนี้</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentModule = {
+    name: 'employee',
+    folder: 'employees',
+    interface: 'EmployeeData',
+    fields: [],
+    selectedFields: [],
+    backendType: 'firebase'
+  };
+
+  let currentFile = 'models';
+
+  // สร้าง checkbox สำหรับเลือก fields
+  function updateFieldCheckboxes() {
+    const fieldsText = document.getElementById('interfaceFields').value;
+    const lines = fieldsText.split('\n').filter(line => line.trim());
+    const container = document.getElementById('fieldCheckboxes');
+    
+    let html = '';
+    lines.forEach(line => {
+      const [name, type] = line.split(':').map(s => s.trim());
+      if (name && type && !name.includes('id?') && !name.includes('createdAt') && !name.includes('updatedAt')) {
+        const checked = name === 'image_url' || name === 'status' || name.includes('name') ? 'checked' : '';
+        html += `
+          <div class="field-item">
+            <input type="checkbox" class="field-checkbox" value="${name}" ${checked}>
+            <span class="field-name">${name}</span>
+            <span class="field-type">${type}</span>
+          </div>
+        `;
+      }
+    });
+    
+    container.innerHTML = html || '<div class="field-item">ไม่มี fields ให้เลือก</div>';
+  }
+
+  // อ่านค่าที่เลือก
+  function getSelectedFields() {
+    const checkboxes = document.querySelectorAll('.field-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+  }
+
+  // แสดง/ซ่อน backend config
+  document.querySelectorAll('input[name="backendType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('firebaseConfig').style.display = 'none';
+      document.getElementById('mongodbConfig').style.display = 'none';
+      document.getElementById('apiConfig').style.display = 'none';
+      
+      if (this.value === 'firebase') document.getElementById('firebaseConfig').style.display = 'block';
+      else if (this.value === 'mongodb') document.getElementById('mongodbConfig').style.display = 'block';
+      else if (this.value === 'api') document.getElementById('apiConfig').style.display = 'block';
+    });
+  });
+
+  document.getElementById('interfaceFields').addEventListener('input', updateFieldCheckboxes);
+  updateFieldCheckboxes();
+
+  // รายการไฟล์ทั้งหมด
+  const allFiles = [
+    { id: 'models', name: 'models.ts', path: 'core/[module]_models.ts' },
+    { id: 'requests', name: 'requests.ts', path: 'core/[module]_requests.ts' },
+    { id: 'ListViewProvider', name: 'ListViewProvider.tsx', path: 'core/ListViewProvider.tsx' },
+    { id: 'QueryRequestProvider', name: 'QueryRequestProvider.tsx', path: 'core/QueryRequestProvider.tsx' },
+    { id: 'QueryResponseProvider', name: 'QueryResponseProvider.tsx', path: 'core/QueryResponseProvider.tsx' },
+    { id: 'ListHeader', name: '[Module]ListHeader.tsx', path: 'components/header/[Module]ListHeader.tsx' },
+    { id: 'Table', name: '[Module]Table.tsx', path: 'components/listing/[Module]Table.tsx' },
+    { id: 'TableFooter', name: '[Module]TableFooter.tsx', path: 'components/listing/[Module]TableFooter.tsx' },
+    { id: 'EditModal', name: '[Module]EditModal.tsx', path: 'components/modals/[Module]EditModal.tsx' },
+    { id: 'Columns', name: '[Module]Columns.tsx', path: 'table-columns/[Module]Columns.tsx' },
+    { id: 'InfoCell', name: '[Module]InfoCell.tsx', path: 'table-columns/[Module]InfoCell.tsx' },
+    { id: 'ImageCell', name: '[Module]ImageCell.tsx', path: 'table-columns/[Module]ImageCell.tsx' },
+    { id: 'StatusCell', name: '[Module]StatusCell.tsx', path: 'table-columns/[Module]StatusCell.tsx' },
+    { id: 'ActionsCell', name: '[Module]ActionsCell.tsx', path: 'table-columns/[Module]ActionsCell.tsx' },
+    { id: 'CustomHeader', name: '[Module]CustomHeader.tsx', path: 'table-columns/[Module]CustomHeader.tsx' },
+    { id: 'Page', name: '[Module]ManagementPage.tsx', path: '[Module]ManagementPage.tsx' }
+  ];
+
+  function generateModule() {
+    // อ่านค่าจาก input
+    currentModule.name = document.getElementById('moduleName').value.toLowerCase();
+    currentModule.folder = document.getElementById('folderName').value.toLowerCase();
+    currentModule.interface = document.getElementById('interfaceName').value;
+    currentModule.backendType = document.querySelector('input[name="backendType"]:checked').value;
+    currentModule.firebasePath = document.getElementById('firebasePath')?.value || '';
+    currentModule.apiUrl = document.getElementById('apiUrl')?.value || '';
+    currentModule.mongodbUrl = document.getElementById('mongodbUrl')?.value || '';
+    
+    // อ่าน fields
+    const fieldsText = document.getElementById('interfaceFields').value;
+    currentModule.fields = fieldsText.split('\n')
+      .filter(line => line.trim())
+      .map(line => {
+        const [name, type] = line.split(':').map(s => s.trim());
+        return { name, type };
+      });
+    
+    // อ่าน fields ที่เลือก
+    currentModule.selectedFields = getSelectedFields();
+
+    // สร้าง tabs
+    createTabs();
+    
+    // อัพเดท file tree
+    updateFileTree();
+    
+    // แสดงโค้ดแรก
+    showFile('models');
+  }
+
+  function createTabs() {
+    const Module = currentModule.interface.replace('Data', '');
+    const tabsHtml = allFiles.map(file => {
+      const fileName = file.name.replace('[Module]', Module);
+      return `<div class="tab ${file.id === currentFile ? 'active' : ''}" onclick="showFile('${file.id}')">📄 ${fileName}</div>`;
+    }).join('');
+    
+    document.getElementById('fileTabs').innerHTML = tabsHtml;
+  }
+
+  function showFile(fileId) {
+    currentFile = fileId;
+    createTabs();
+    
+    let code = '';
+    switch(fileId) {
+      case 'models': code = generateModelsCode(); break;
+      case 'requests': code = generateRequestsCode(); break;
+      case 'ListViewProvider': code = generateListViewProvider(); break;
+      case 'QueryRequestProvider': code = generateQueryRequestProvider(); break;
+      case 'QueryResponseProvider': code = generateQueryResponseProvider(); break;
+      case 'ListHeader': code = generateListHeader(); break;
+      case 'Table': code = generateTable(); break;
+      case 'TableFooter': code = generateTableFooter(); break;
+      case 'EditModal': code = generateEditModal(); break;
+      case 'Columns': code = generateColumnsCode(); break;
+      case 'InfoCell': code = generateInfoCell(); break;
+      case 'ImageCell': code = generateImageCell(); break;
+      case 'StatusCell': code = generateStatusCell(); break;
+      case 'ActionsCell': code = generateActionsCell(); break;
+      case 'CustomHeader': code = generateCustomHeader(); break;
+      case 'Page': code = generatePage(); break;
+    }
+    
+    document.getElementById('codePreview').textContent = code;
+  }
+
+  function updateFileTree() {
+    const module = currentModule.name;
+    const folder = currentModule.folder;
+    const Module = currentModule.interface.replace('Data', '');
+    
+    const tree = `
+📁 src/app/modules/apps/${folder}-management/
+  📁 core/
+    📄 ${module}_models.ts
+    📄 ${module}_requests.ts
+    📄 ListViewProvider.tsx
+    📄 QueryRequestProvider.tsx
+    📄 QueryResponseProvider.tsx
+  📁 components/
+    📁 header/
+      📄 ${Module}ListHeader.tsx
+    📁 listing/
+      📄 ${Module}Table.tsx
+      📄 ${Module}TableFooter.tsx
+    📁 modals/
+      📄 ${Module}EditModal.tsx
+  📁 table-columns/
+    📄 ${Module}Columns.tsx
+    📄 ${Module}InfoCell.tsx
+    📄 ${Module}ImageCell.tsx
+    📄 ${Module}StatusCell.tsx
+    📄 ${Module}ActionsCell.tsx
+    📄 ${Module}CustomHeader.tsx
+  📄 ${Module}ManagementPage.tsx
+    `.trim();
+    
+    document.getElementById('fileTree').innerHTML = tree.replace(/ /g, '&nbsp;').replace(/\n/g, '<br>');
+  }
+
+  // ========== Code Generators ==========
+  
+  function generateModelsCode() {
+    const fields = currentModule.fields.map(f => `  ${f.name}: ${f.type}`).join('\n');
+    return `export interface ${currentModule.interface} {
+${fields}
+}`;
+  }
+
+  function generateRequestsCode() {
+    const module = currentModule.name;
+    const Module = currentModule.interface.replace('Data', '');
+    const collection = currentModule.folder;
+    
+    if (currentModule.backendType === 'firebase') {
+      return `import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { db, storage } from '${currentModule.firebasePath}'
+import { ${currentModule.interface} } from './${module}_models'
+
+const COLLECTION = '${collection}'
+
+// Get all
+export const get${Module}s = async (): Promise<${currentModule.interface}[]> => {
+  const querySnapshot = await getDocs(collection(db, COLLECTION))
+  return querySnapshot.docs.map(doc => ({ 
+    id: doc.id, 
+    ...doc.data() 
+  } as ${currentModule.interface}))
+}
+
+// Get by ID
+export const get${Module}ById = async (id: string): Promise<${currentModule.interface} | null> => {
+  const docSnap = await getDoc(doc(db, COLLECTION, id))
+  return docSnap.exists() 
+    ? { id: docSnap.id, ...docSnap.data() } as ${currentModule.interface} 
+    : null
+}
+
+// Create
+export const create${Module} = async (data: ${currentModule.interface}): Promise<${currentModule.interface}> => {
+  const docRef = await addDoc(collection(db, COLLECTION), {
+    ...data,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  })
+  return { id: docRef.id, ...data }
+}
+
+// Update
+export const update${Module} = async (id: string, data: Partial<${currentModule.interface}>): Promise<void> => {
+  await updateDoc(doc(db, COLLECTION, id), {
+    ...data,
+    updatedAt: new Date().toISOString()
+  })
+}
+
+// Delete
+export const delete${Module} = async (id: string): Promise<void> => {
+  await deleteDoc(doc(db, COLLECTION, id))
+}
+
+// Delete selected
+export const deleteSelected${Module}s = async (ids: string[]): Promise<void> => {
+  const promises = ids.map(id => delete${Module}(id))
+  await Promise.all(promises)
+}`;
+    } else {
+      return `import axios from 'axios'
+import { ${currentModule.interface} } from './${module}_models'
+
+const API_URL = '${currentModule.apiUrl || 'http://localhost:8000/api'}/${collection}'
+
+// Get all
+export const get${Module}s = async (): Promise<${currentModule.interface}[]> => {
+  const response = await axios.get(API_URL)
+  return response.data
+}
+
+// Get by ID
+export const get${Module}ById = async (id: string): Promise<${currentModule.interface}> => {
+  const response = await axios.get(\`\${API_URL}/\${id}\`)
+  return response.data
+}
+
+// Create
+export const create${Module} = async (data: ${currentModule.interface}): Promise<${currentModule.interface}> => {
+  const response = await axios.post(API_URL, data)
+  return response.data
+}
+
+// Update
+export const update${Module} = async (id: string, data: Partial<${currentModule.interface}>): Promise<${currentModule.interface}> => {
+  const response = await axios.put(\`\${API_URL}/\${id}\`, data)
+  return response.data
+}
+
+// Delete
+export const delete${Module} = async (id: string): Promise<void> => {
+  await axios.delete(\`\${API_URL}/\${id}\`)
+}
+
+// Delete selected
+export const deleteSelected${Module}s = async (ids: string[]): Promise<void> => {
+  const promises = ids.map(id => delete${Module}(id))
+  await Promise.all(promises)
+}`;
+    }
+  }
+
+  function generateListViewProvider() {
+    return `import { FC, useContext, useState, createContext } from 'react'
+import { WithChildren } from '../../../../../../_metronic/helpers'
+
+type ListViewContextProps = {
+  itemIdForUpdate: string | undefined
+  setItemIdForUpdate: (id: string | undefined) => void
+  selected: Array<string>
+  setSelected: (selected: Array<string>) => void
+}
+
+const ListViewContext = createContext<ListViewContextProps | undefined>(undefined)
+
+const ListViewProvider: FC<WithChildren> = ({ children }) => {
+  const [itemIdForUpdate, setItemIdForUpdate] = useState<string | undefined>()
+  const [selected, setSelected] = useState<Array<string>>([])
+
+  return (
+    <ListViewContext.Provider value={{ itemIdForUpdate, setItemIdForUpdate, selected, setSelected }}>
+      {children}
+    </ListViewContext.Provider>
+  )
+}
+
+const useListView = () => {
+  const context = useContext(ListViewContext)
+  if (!context) {
+    throw new Error('useListView must be used within ListViewProvider')
+  }
+  return context
+}
+
+export { ListViewProvider, useListView }`;
+  }
+
+  function generateQueryRequestProvider() {
+    return `import { FC, useContext, useMemo, useState, createContext } from 'react'
+import { initialQueryState } from '../../../../../../_metronic/helpers'
+import { WithChildren } from '../../../../../../_metronic/helpers'
+
+type QueryRequestContextProps = {
+  state: typeof initialQueryState
+  updateState: (updates: Partial<typeof initialQueryState>) => void
+}
+
+const QueryRequestContext = createContext<QueryRequestContextProps | undefined>(undefined)
+
+const QueryRequestProvider: FC<WithChildren> = ({ children }) => {
+  const [state, setState] = useState(initialQueryState)
+
+  const updateState = (updates: Partial<typeof initialQueryState>) => {
+    setState(prev => ({ ...prev, ...updates }))
+  }
+
+  const value = useMemo(() => ({ state, updateState }), [state])
+
+  return (
+    <QueryRequestContext.Provider value={value}>
+      {children}
+    </QueryRequestContext.Provider>
+  )
+}
+
+const useQueryRequest = () => {
+  const context = useContext(QueryRequestContext)
+  if (!context) {
+    throw new Error('useQueryRequest must be used within QueryRequestProvider')
+  }
+  return context
+}
+
+export { QueryRequestProvider, useQueryRequest }`;
+  }
+
+  function generateQueryResponseProvider() {
+    const module = currentModule.name;
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC, useContext, useState, useEffect, useMemo, createContext } from 'react'
+import { useQuery } from 'react-query'
+import {
+  initialQueryResponse,
+  initialQueryState,
+  PaginationState,
+  QUERIES,
+  stringifyRequestQuery,
+  WithChildren,
+} from '../../../../../../_metronic/helpers'
+import { get${Module}s } from './${module}_requests'
+import { ${currentModule.interface} } from './${module}_models'
+import { useQueryRequest } from './QueryRequestProvider'
+
+type QueryResponseContextProps = {
+  isLoading: boolean
+  refetch: () => void
+  response: typeof initialQueryResponse
+  query: string
+}
+
+const QueryResponseContext = createContext<QueryResponseContextProps | undefined>(undefined)
+
+const QueryResponseProvider: FC<WithChildren> = ({ children }) => {
+  const { state } = useQueryRequest()
+  const [query, setQuery] = useState(stringifyRequestQuery(state))
+  const updatedQuery = useMemo(() => stringifyRequestQuery(state), [state])
+
+  useEffect(() => {
+    if (query !== updatedQuery) {
+      setQuery(updatedQuery)
+    }
+  }, [updatedQuery])
+
+  const { isFetching, refetch, data: response } = useQuery(
+    \`\${QUERIES.USERS_LIST}-${module}s-\${query}\`,
+    async () => {
+      try {
+        let items = await get${Module}s()
+        
+        // Apply search
+        if (state.search) {
+          const searchTerm = state.search.toLowerCase()
+          items = items.filter(item => 
+            Object.values(item).some(val => 
+              String(val).toLowerCase().includes(searchTerm)
+            )
+          )
+        }
+
+        // Apply pagination
+        const page = state.page || 1
+        const itemsPerPage = state.items_per_page || 10
+        const total = items.length
+        const start = (page - 1) * itemsPerPage
+        const paginatedItems = items.slice(start, start + itemsPerPage)
+
+        return {
+          data: paginatedItems,
+          payload: {
+            pagination: {
+              current_page: page,
+              last_page: Math.ceil(total / itemsPerPage),
+              per_page: itemsPerPage,
+              total: total,
+              from: start + 1,
+              to: start + paginatedItems.length,
+              links: []
+            }
+          }
+        }
+      } catch (error) {
+        return { data: [], payload: { pagination: initialQueryState } }
+      }
+    },
+    { cacheTime: 0, keepPreviousData: true, refetchOnWindowFocus: false }
+  )
+
+  const value = { isLoading: isFetching, refetch, response: response || initialQueryResponse, query }
+
+  return (
+    <QueryResponseContext.Provider value={value}>
+      {children}
+    </QueryResponseContext.Provider>
+  )
+}
+
+const useQueryResponse = () => {
+  const context = useContext(QueryResponseContext)
+  if (!context) throw new Error('useQueryResponse must be used within QueryResponseProvider')
+  return context
+}
+
+const useQueryResponseData = (): ${currentModule.interface}[] => {
+  const { response } = useQueryResponse()
+  return response?.data || []
+}
+
+const useQueryResponseLoading = (): boolean => {
+  const { isLoading } = useQueryResponse()
+  return isLoading
+}
+
+const useQueryResponsePagination = () => {
+  const { response } = useQueryResponse()
+  return response?.payload?.pagination || initialQueryState
+}
+
+export {
+  QueryResponseProvider,
+  useQueryResponse,
+  useQueryResponseData,
+  useQueryResponseLoading,
+  useQueryResponsePagination
+}`;
+  }
+
+  function generateListHeader() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { KTIcon } from '../../../../../../../_metronic/helpers'
+import { useListView } from '../../core/ListViewProvider'
+
+const ${Module}ListHeader: FC = () => {
+  const { setItemIdForUpdate } = useListView()
+
+  const openAddModal = () => {
+    setItemIdForUpdate(undefined)
+  }
+
+  return (
+    <div className='card-header border-0 pt-6'>
+      <div className='card-title'>
+        <h2>${Module} List</h2>
+      </div>
+      <div className='card-toolbar'>
+        <button className='btn btn-primary' onClick={openAddModal}>
+          <KTIcon iconName='plus' className='fs-2' />
+          Add ${Module}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export { ${Module}ListHeader }`;
+  }
+
+  function generateTable() {
+    const module = currentModule.name;
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { useQueryResponseData, useQueryResponseLoading } from '../../core/QueryResponseProvider'
+import { ${module}Columns } from '../../table-columns/${Module}Columns'
+import { Table } from '../../../../../../../_metronic/partials/table/Table'
+
+const ${Module}Table: FC = () => {
+  const data = useQueryResponseData()
+  const isLoading = useQueryResponseLoading()
+  const columns = ${module}Columns
+
+  return (
+    <Table
+      columns={columns}
+      data={data}
+      isLoading={isLoading}
+    />
+  )
+}
+
+export { ${Module}Table }`;
+  }
+
+  function generateTableFooter() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { useQueryResponsePagination } from '../../core/QueryResponseProvider'
+
+const ${Module}TableFooter: FC = () => {
+  const pagination = useQueryResponsePagination()
+
+  return (
+    <div className='card-footer d-flex justify-content-between align-items-center'>
+      <div className='text-muted'>
+        Showing {pagination.from} to {pagination.to} of {pagination.total} entries
+      </div>
+      <div className='pagination'>
+        {/* Add pagination controls here */}
+      </div>
+    </div>
+  )
+}
+
+export { ${Module}TableFooter }`;
+  }
+
+  function generateEditModal() {
+    const module = currentModule.name;
+    const Module = currentModule.interface.replace('Data', '');
+    const fields = currentModule.fields.filter(f => !f.name.includes('?') && !f.name.includes('id') && !f.name.includes('At'));
+    
+    const formFields = fields.map(f => `
+          <div className="mb-7">
+            <label className="required fw-bold fs-6 mb-2">${f.name}</label>
+            <input
+              type="${f.type.includes('number') ? 'number' : 'text'}"
+              name="${f.name}"
+              className="form-control form-control-solid"
+              value={formData.${f.name} || ''}
+              onChange={handleChange}
+            />
+          </div>`).join('');
+
+    return `import { FC, useState, useEffect, useRef } from 'react'
+import { useQueryClient, useMutation } from 'react-query'
+import { useListView } from '../core/ListViewProvider'
+import { useQueryResponse } from '../core/QueryResponseProvider'
+import { create${Module}, update${Module}, get${Module}ById } from '../core/${module}_requests'
+import { ${currentModule.interface} } from '../core/${module}_models'
+import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
+import Swal from 'sweetalert2'
+${currentModule.backendType === 'firebase' ? `import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { storage } from '${currentModule.firebasePath}'` : ''}
+
+const ${Module}EditModal: FC = () => {
+  const { itemIdForUpdate, setItemIdForUpdate } = useListView()
+  const { refetch } = useQueryResponse()
+  const queryClient = useQueryClient()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [formData, setFormData] = useState<Partial<${currentModule.interface}>>({})
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    if (itemIdForUpdate) {
+      const fetchData = async () => {
+        try {
+          setLoading(true)
+          const data = await get${Module}ById(itemIdForUpdate)
+          setFormData(data || {})
+        } catch (error) {
+          console.error('Error fetching:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
+      fetchData()
+    } else {
+      setFormData({})
+    }
+  }, [itemIdForUpdate])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const filename = \`${module}s/\${Date.now()}_\${file.name}\`
+      const storageRef = ref(storage, filename)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setFormData(prev => ({ ...prev, image_url: url }))
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Upload failed' })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const createMutation = useMutation(() => create${Module}(formData as ${currentModule.interface}), {
+    onSuccess: () => {
+      Swal.fire({ icon: 'success', title: 'Created!', timer: 2000, showConfirmButton: false })
+      queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${module}s\`)
+      refetch()
+      setItemIdForUpdate(undefined)
+    },
+    onError: (error: any) => {
+      Swal.fire({ icon: 'error', title: 'Error!', text: error.message })
+    }
+  })
+
+  const updateMutation = useMutation(() => update${Module}(itemIdForUpdate!, formData), {
+    onSuccess: () => {
+      Swal.fire({ icon: 'success', title: 'Updated!', timer: 2000, showConfirmButton: false })
+      queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${module}s\`)
+      refetch()
+      setItemIdForUpdate(undefined)
+    },
+    onError: (error: any) => {
+      Swal.fire({ icon: 'error', title: 'Error!', text: error.message })
+    }
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (itemIdForUpdate) {
+      await updateMutation.mutateAsync()
+    } else {
+      await createMutation.mutateAsync()
+    }
+  }
+
+  return (
+    <div className="modal-content">
+      <div className="modal-header">
+        <h2>{itemIdForUpdate ? 'Edit' : 'Add'} ${Module}</h2>
+        <div className="btn btn-icon btn-sm" onClick={() => setItemIdForUpdate(undefined)}>
+          <KTIcon iconName="cross" className="fs-1" />
+        </div>
+      </div>
+      <div className="modal-body">
+        <form onSubmit={handleSubmit}>
+          ${formFields || '          {/* Add form fields here */}'}
+          
+          <div className="mb-7">
+            <label className="fw-bold fs-6 mb-2">Image</label>
+            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" />
+          </div>
+        </form>
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn btn-light" onClick={() => setItemIdForUpdate(undefined)}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={loading || uploading}>
+          {loading ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export { ${Module}EditModal }`;
+  }
+
+  function generateColumnsCode() {
+    const module = currentModule.name;
+    const Module = currentModule.interface.replace('Data', '');
+    const selectedFields = currentModule.selectedFields;
+    
+    let columnDefinitions = '';
+    
+    // Always add No column
+    columnDefinitions += `  {
+    Header: () => <th className="min-w-50px text-center">No</th>,
+    id: 'no',
+    Cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
+  },\n`;
+
+    // Add selected fields as columns
+    selectedFields.forEach(field => {
+      if (field === 'image_url') {
+        columnDefinitions += `  {
+    Header: (props) => <${Module}CustomHeader tableProps={props} title="Image" className="min-w-100px" />,
+    accessor: 'image_url',
+    Cell: ({ value }) => <${Module}ImageCell image_url={value} />,
+  },\n`;
+      } else if (field === 'status') {
+        columnDefinitions += `  {
+    Header: (props) => <${Module}CustomHeader tableProps={props} title="Status" className="min-w-100px" />,
+    accessor: 'status',
+    Cell: ({ value }) => <${Module}StatusCell status={value} />,
+  },\n`;
+      } else if (field.includes('name')) {
+        columnDefinitions += `  {
+    Header: (props) => <${Module}CustomHeader tableProps={props} title="${field}" className="min-w-150px" />,
+    accessor: '${field}',
+    Cell: ({ row }) => <${Module}InfoCell data={row.original} />,
+  },\n`;
+      } else {
+        columnDefinitions += `  {
+    Header: (props) => <${Module}CustomHeader tableProps={props} title="${field}" className="min-w-120px" />,
+    accessor: '${field}',
+    Cell: ({ value }) => <div>${`{value}`}</div>,
+  },\n`;
+      }
+    });
+
+    // Always add Actions column
+    columnDefinitions += `  {
+    Header: (props) => <${Module}CustomHeader tableProps={props} title="Actions" className="text-end min-w-100px" />,
+    id: 'actions',
+    Cell: ({ row }) => <${Module}ActionsCell id={row.original.id} />,
+  }`;
+
+    return `import { Column } from 'react-table'
+import { ${currentModule.interface} } from '../core/${module}_models'
+import { ${Module}InfoCell } from './${Module}InfoCell'
+import { ${Module}ImageCell } from './${Module}ImageCell'
+import { ${Module}StatusCell } from './${Module}StatusCell'
+import { ${Module}ActionsCell } from './${Module}ActionsCell'
+import { ${Module}CustomHeader } from './${Module}CustomHeader'
+
+const ${module}Columns: ReadonlyArray<Column<${currentModule.interface}>> = [
+${columnDefinitions}
+]
+
+export { ${module}Columns }`;
+  }
+
+  function generateInfoCell() {
+    const Module = currentModule.interface.replace('Data', '');
+    const nameField = currentModule.fields.find(f => f.name.includes('name'))?.name || 'name';
+    
+    return `import { FC } from 'react'
+import { ${currentModule.interface} } from '../core/${currentModule.name}_models'
+
+type Props = {
+  data: ${currentModule.interface}
+}
+
+const ${Module}InfoCell: FC<Props> = ({ data }) => {
+  return (
+    <div className="d-flex align-items-center">
+      <div className="d-flex flex-column">
+        <span className="text-gray-800 fw-bold text-hover-primary mb-1">
+          {data.${nameField}}
+        </span>
+        <span className="text-gray-600 fw-semibold d-block fs-7">
+          {data.id}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+export { ${Module}InfoCell }`;
+  }
+
+  function generateImageCell() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { KTIcon } from '../../../../../../../_metronic/helpers'
+
+type Props = {
+  image_url: string
+}
+
+const ${Module}ImageCell: FC<Props> = ({ image_url }) => {
+  return (
+    <div className="symbol symbol-75px">
+      {image_url ? (
+        <img src={image_url} alt="avatar" className="symbol-label" />
+      ) : (
+        <div className="symbol-label bg-light-primary">
+          <KTIcon iconName="profile" className="fs-1 text-primary" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+export { ${Module}ImageCell }`;
+  }
+
+  function generateStatusCell() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+
+type Props = {
+  status: string
+}
+
+const ${Module}StatusCell: FC<Props> = ({ status }) => {
+  const getBadgeClass = (status: string) => {
+    switch(status?.toLowerCase()) {
+      case 'active': return 'badge-light-success'
+      case 'inactive': return 'badge-light-secondary'
+      case 'on leave': return 'badge-light-warning'
+      default: return 'badge-light-light'
+    }
+  }
+
+  return (
+    <div className={\`badge \${getBadgeClass(status)} fw-bold px-3 py-2\`}>
+      {status}
+    </div>
+  )
+}
+
+export { ${Module}StatusCell }`;
+  }
+
+  function generateActionsCell() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { useMutation, useQueryClient } from 'react-query'
+import { useListView } from '../core/ListViewProvider'
+import { useQueryResponse } from '../core/QueryResponseProvider'
+import { delete${Module} } from '../core/${currentModule.name}_requests'
+import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
+import Swal from 'sweetalert2'
+
+type Props = {
+  id: string
+}
+
+const ${Module}ActionsCell: FC<Props> = ({ id }) => {
+  const { setItemIdForUpdate } = useListView()
+  const { query } = useQueryResponse()
+  const queryClient = useQueryClient()
+
+  const deleteMutation = useMutation(() => delete${Module}(id), {
+    onSuccess: () => {
+      Swal.fire({ icon: 'success', title: 'Deleted!', timer: 2000, showConfirmButton: false })
+      queryClient.invalidateQueries([\`\${QUERIES.USERS_LIST}-${currentModule.name}s-\${query}\`])
+    }
+  })
+
+  const handleDelete = () => {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Are you sure?',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete!',
+    }).then(result => {
+      if (result.isConfirmed) {
+        deleteMutation.mutate()
+      }
+    })
+  }
+
+  return (
+    <div className="d-flex justify-content-end gap-2">
+      <button className="btn btn-icon btn-light-primary btn-sm" onClick={() => setItemIdForUpdate(id)}>
+        <KTIcon iconName="pencil" className="fs-3" />
+      </button>
+      <button className="btn btn-icon btn-light-danger btn-sm" onClick={handleDelete}>
+        <KTIcon iconName="trash" className="fs-3" />
+      </button>
+    </div>
+  )
+}
+
+export { ${Module}ActionsCell }`;
+  }
+
+  function generateCustomHeader() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { HeaderProps } from 'react-table'
+import { ${currentModule.interface} } from '../core/${currentModule.name}_models'
+
+type Props = {
+  tableProps: HeaderProps<${currentModule.interface}>
+  title: string
+  className?: string
+}
+
+const ${Module}CustomHeader: FC<Props> = ({ tableProps, title, className }) => {
+  return (
+    <th {...tableProps.column.getHeaderProps()} className={className}>
+      {tableProps.column.render('Header')}
+      <span className="text-gray-700 fw-bold">{title}</span>
+    </th>
+  )
+}
+
+export { ${Module}CustomHeader }`;
+  }
+
+  function generatePage() {
+    const Module = currentModule.interface.replace('Data', '');
+    
+    return `import { FC } from 'react'
+import { ListViewProvider } from './core/ListViewProvider'
+import { QueryRequestProvider } from './core/QueryRequestProvider'
+import { QueryResponseProvider } from './core/QueryResponseProvider'
+import { ${Module}ListHeader } from './components/header/${Module}ListHeader'
+import { ${Module}Table } from './components/listing/${Module}Table'
+import { ${Module}TableFooter } from './components/listing/${Module}TableFooter'
+import { ${Module}EditModal } from './components/modals/${Module}EditModal'
+
+const ${Module}ManagementPage: FC = () => {
+  return (
+    <QueryRequestProvider>
+      <QueryResponseProvider>
+        <ListViewProvider>
+          <div className="card">
+            <${Module}ListHeader />
+            <${Module}Table />
+            <${Module}TableFooter />
+            <${Module}EditModal />
+          </div>
+        </ListViewProvider>
+      </QueryResponseProvider>
+    </QueryRequestProvider>
+  )
+}
+
+export { ${Module}ManagementPage }`;
+  }
+
+  function copyCurrentCode() {
+    const code = document.getElementById('codePreview').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      alert('✅ คัดลอกโค้ดเรียบร้อย!');
+    });
+  }
+
+  // Initialize
+  generateModule();
+</script>
+</body>
+</html>

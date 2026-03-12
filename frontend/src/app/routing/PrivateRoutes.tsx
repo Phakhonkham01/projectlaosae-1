@@ -19,7 +19,7 @@ const PrivateRoutes = () => {
   const HolidaysPage = lazy(() => import('../modules/apps/holiday/HolidaysPage'))
   const RequestsPage = lazy(() => import('../modules/apps/request/RequestPage'))
   const UserRequired = lazy(() => import('../modules/apps/user-required/UserRequired'))
-
+  const ShipsPage = lazy(() => import('../modules/apps/create-ships/ShipsPage'))
   return (
     <Routes>
       <Route element={<MasterLayout />}>
@@ -35,6 +35,14 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <ProfilePage />
+            </SuspensedView>
+          }
+        />
+        <Route
+          path='apps/create-ships/*'
+          element={
+            <SuspensedView>
+              <ShipsPage />
             </SuspensedView>
           }
         />

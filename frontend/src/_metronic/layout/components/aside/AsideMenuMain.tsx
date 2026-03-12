@@ -95,6 +95,12 @@ export function AsideMenuMain() {
         fontIcon='bi-layers'
       />
       <AsideMenuItem
+        to='/apps/create-ships/ships'
+        icon='people'
+        title='Create Ships'
+        fontIcon='bi-layers'
+      />
+      <AsideMenuItem
         to='/apps/event/events'
         icon='calendar-edit'
         title='Events'
