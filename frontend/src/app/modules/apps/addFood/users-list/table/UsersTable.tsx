@@ -12,12 +12,12 @@ import { UsersListPagination } from '../components/pagination/UsersListPaginatio
 const ProductsTable = () => {
   const products = useQueryResponseData()
   const isLoading = useQueryResponseLoading()
-  const { map: categoryMap } = useCategoryMap() // ✅ fetch ครั้งเดียว
+  const { map: categoryMap, loading: loadingMap } = useCategoryMap()
 
   const data = useMemo(() => products, [products])
   const columns = useMemo(
-    () => getProductsColumns(categoryMap), // ✅ pass map เข้า columns
-    [categoryMap]
+    () => getProductsColumns(categoryMap, loadingMap),
+    [categoryMap, loadingMap]
   )
 
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } = useTable({
@@ -58,7 +58,7 @@ const ProductsTable = () => {
           </tbody>
         </table>
       </div>
-      {/* <UsersListPagination /> */}
+      <UsersListPagination />
       {isLoading && <UsersListLoading />}
     </KTCardBody>
   )

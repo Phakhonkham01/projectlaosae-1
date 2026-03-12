@@ -5,42 +5,30 @@ import { Product } from '../../core/_models'
 import { UserActionsCell } from './UserActionsCell'
 import { useState, useEffect } from 'react'
 
-// ─── Shared category map (module-level cache, fetch once) ─────────────────────
-let _categoryCache: Record<string, string> = {}
-let _fetched = false
-
+// ─── useCategoryMap — fetch categories และ cache ─────────────────────────────
 export const useCategoryMap = () => {
-  const [map, setMap] = useState<Record<string, string>>(_categoryCache)
+  const [map, setMap] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (_fetched) return // ✅ ใช้ cache ถ้าดึงแล้ว
-    _fetched = true
+  const fetchMap = () => {
+    setLoading(true)
     getDocs(collection(db, 'categories'))
       .then((snapshot) => {
+        const result: Record<string, string> = {}
         snapshot.docs.forEach((d) => {
-          _categoryCache[d.id] = (d.data() as { name: string }).name
+          result[d.id] = (d.data() as { name: string }).name
         })
-        setMap({ ..._categoryCache })
+        setMap(result)
       })
       .catch(console.error)
-  }, [])
-
-  // expose refetch เพื่อ invalidate cache เมื่อ add/edit/delete category
-  const refetch = () => {
-    _fetched = false
-    _categoryCache = {}
-    getDocs(collection(db, 'categories'))
-      .then((snapshot) => {
-        snapshot.docs.forEach((d) => {
-          _categoryCache[d.id] = (d.data() as { name: string }).name
-        })
-        _fetched = true
-        setMap({ ..._categoryCache })
-      })
-      .catch(console.error)
+      .finally(() => setLoading(false))
   }
 
-  return { map, refetch }
+  useEffect(() => {
+    fetchMap()
+  }, [])
+
+  return { map, loading, refetch: fetchMap }
 }
 
 // ─── Cell Components ──────────────────────────────────────────────────────────
@@ -75,10 +63,13 @@ const AvailabilityCell = ({ available }: { available: boolean }) => (
 const CategoryCell = ({
   categoryId,
   categoryMap,
+  loadingMap,
 }: {
   categoryId: string
   categoryMap: Record<string, string>
+  loadingMap: boolean
 }) => {
+  if (loadingMap) return <span className='spinner-border spinner-border-sm text-muted' />
   const name = categoryMap[categoryId]
   if (!name) return <span className='text-muted fst-italic fs-7'>—</span>
   return <span className='badge badge-light-info fw-semibold'>{name}</span>
@@ -86,7 +77,8 @@ const CategoryCell = ({
 
 // ─── Column factory — รับ categoryMap จาก ProductsTable ──────────────────────
 export const getProductsColumns = (
-  categoryMap: Record<string, string>
+  categoryMap: Record<string, string>,
+  loadingMap: boolean
 ): ReadonlyArray<Column<Product>> => [
   {
     Header: 'Image',
@@ -106,7 +98,7 @@ export const getProductsColumns = (
     Header: 'Category',
     id: 'category',
     Cell: ({ row }) => (
-      <CategoryCell categoryId={row.original.category_id} categoryMap={categoryMap} />
+      <CategoryCell categoryId={row.original.category_id} categoryMap={categoryMap} loadingMap={loadingMap} />
     ),
   },
   {

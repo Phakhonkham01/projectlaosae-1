@@ -4,7 +4,8 @@ export interface AuthModel {
   user_name: string;
   user_email: string;
   role: "CEO" | "admin" | "employee";
-  phone_number: string | null;
+  department_id?: DepartmentModel | string | null;
+  leave_days: number;
   token: string; // ✅ ใช้ token
 }
 
@@ -22,7 +23,8 @@ export interface UserModel {
   user_name: string;
   user_email: string;
   role: "owner" | "admin" | "employee" |"CEO";
-  phone_number:string | null;
+  department_id?: DepartmentModel | string | null;
+  leave_days: number;
   createdAt?: string;
   updatedAt?: string;
 }
