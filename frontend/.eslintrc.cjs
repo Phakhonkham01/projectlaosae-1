@@ -13,9 +13,11 @@ module.exports = {
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
+      
     ],
-
+    
     // ✅ ปิด error เรื่อง any
     '@typescript-eslint/no-explicit-any': 'off',
+     "@typescript-eslint/no-unused-vars": "off"
   },
 }

@@ -112,6 +112,12 @@ export function AsideMenuMain() {
         title='Requests'
         fontIcon='bi-calendar-event'
       />
+             <AsideMenuItem
+        to='/apps/employees-management/employees'
+        icon='check-circle'
+        title='Employees-management'
+        fontIcon='bi-calendar-event'
+      />
        <AsideMenuItem
         to='/apps/user-required'
         icon='abstract-10'

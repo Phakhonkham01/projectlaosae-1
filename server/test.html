@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metronic Module Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .label-required::after {
+            content: ' *';
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .radio-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .conditional-field {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .example-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        .example-box pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        .output-section {
+            display: none;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .output-section.active {
+            display: block;
+        }
+
+        .file-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .file-header {
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-content {
+            padding: 15px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .copy-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            margin-top: 20px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Metronic Module Generator</h1>
+            <p>สร้าง CRUD Module ทั้งหมดอัตโนมัติ</p>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-section" id="formSection">
+            <form id="generatorForm">
+                <!-- Module Name -->
+                <div class="form-group">
+                    <label class="label-required">Module Name (ตัวเล็ก, เอกพจน์)</label>
+                    <input type="text" id="moduleName" placeholder="เช่น: ship, employee, product" required>
+                    <div class="help-text">ใช้ตัวเล็กทั้งหมด ไม่มีช่องว่าง (จะแปลง plural ให้อัตโนมัติ)</div>
+                </div>
+
+                <!-- Interface Fields -->
+                <div class="form-group">
+                    <label class="label-required">Interface Fields (JSON Format)</label>
+                    <textarea id="interfaceFields" placeholder='{"name": "string", "capacity": "number", "price": "number", "status": "string"}' required></textarea>
+                    <div class="help-text">ใส่ fields ในรูปแบบ JSON object</div>
+                    <div class="example-box">
+                        <strong>ตัวอย่าง:</strong>
+                        <pre>{
+  "name": "string",
+  "ship_name": "string",
+  "capacity": "number",
+  "price": "number",
+  "quantity": "number",
+  "image_url": "string",
+  "status": "string"
+}</pre>
+                    </div>
+                </div>
+
+                <!-- Backend Type -->
+                <div class="form-group">
+                    <label class="label-required">Backend Type</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="mongodb" name="backendType" value="mongodb">
+                            <label for="mongodb">MongoDB</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="firebase" name="backendType" value="firebase" checked>
+                            <label for="firebase">Firebase/Firestore</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MongoDB Path -->
+                <div class="form-group conditional-field" id="mongodbField" style="display: none;">
+                    <label class="label-required">Backend API Base URL</label>
+                    <input type="text" id="mongodbPath" placeholder="http://localhost:8000/api">
+                    <div class="help-text">เช่น: http://localhost:8000/api</div>
+                </div>
+
+                <!-- Firebase Path -->
+                <div class="form-group conditional-field" id="firebaseField">
+                    <label class="label-required">Firebase Config Path</label>
+                    <input type="text" id="firebasePath" placeholder="../../../../../firebase/useFirebase" value="../../../../../firebase/useFirebase">
+                    <div class="help-text">Path สำหรับ import { db, storage }</div>
+                </div>
+
+                <!-- Collection Name -->
+                <div class="form-group">
+                    <label class="label-required">Collection/Table Name</label>
+                    <input type="text" id="collectionName" placeholder="เช่น: All_ships, employees">
+                    <div class="help-text">ชื่อ Collection ใน Database</div>
+                </div>
+
+                <!-- Generate Button -->
+                <button type="submit" class="btn">🎯 Generate Code</button>
+            </form>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-section" id="outputSection">
+            <div class="success-message">
+                ✅ สร้าง Code สำเร็จ! ได้ไฟล์ทั้งหมด <strong>14 ไฟล์</strong> พร้อมใช้งาน - คลิกชื่อไฟล์เพื่อดู Code และกด Copy เพื่อคัดลอก
+            </div>
+            <div id="fileList"></div>
+            <button class="btn back-btn" onclick="resetForm()">⬅️ สร้างใหม่</button>
+        </div>
+    </div>
+
+    <script>
+        // Toggle backend fields
+        document.querySelectorAll('input[name="backendType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const mongoField = document.getElementById('mongodbField');
+                const firebaseField = document.getElementById('firebaseField');
+                
+                if (e.target.value === 'mongodb') {
+                    mongoField.style.display = 'block';
+                    firebaseField.style.display = 'none';
+                } else {
+                    mongoField.style.display = 'none';
+                    firebaseField.style.display = 'block';
+                }
+            });
+        });
+
+        // Form submission
+        document.getElementById('generatorForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            generateCode();
+        });
+
+        function generateCode() {
+            // Get form values
+            const moduleName = document.getElementById('moduleName').value.trim().toLowerCase();
+            const interfaceFieldsRaw = document.getElementById('interfaceFields').value.trim();
+            const backendType = document.querySelector('input[name="backendType"]:checked').value;
+            const mongodbPath = document.getElementById('mongodbPath').value.trim();
+            const firebasePath = document.getElementById('firebasePath').value.trim();
+            const collectionName = document.getElementById('collectionName').value.trim();
+
+            // Validate
+            if (!moduleName || !interfaceFieldsRaw || !collectionName) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            // Parse interface fields
+            let interfaceFields;
+            try {
+                interfaceFields = JSON.parse(interfaceFieldsRaw);
+            } catch (e) {
+                alert('รูปแบบ JSON ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
+                return;
+            }
+
+            // Generate files
+            const files = generateAllFiles(moduleName, interfaceFields, backendType, mongodbPath, firebasePath, collectionName);
+            
+            // Display output
+            displayOutput(files);
+        }
+
+        function generateAllFiles(moduleName, fields, backendType, mongoPath, firebasePath, collectionName) {
+            const ModuleName = capitalize(moduleName);
+            const modulePlural = pluralize(moduleName);
+            
+            const files = [];
+
+            // 1. _models.ts
+            files.push({
+                name: `core/_models.ts`,
+                content: generateModelsFile(ModuleName, moduleName, fields)
+            });
+
+            // 2. _requests.ts
+            if (backendType === 'firebase') {
+                files.push({
+                    name: `core/_requests.ts`,
+                    content: generateFirebaseRequestsFile(ModuleName, moduleName, modulePlural, firebasePath, collectionName)
+                });
+            } else {
+                files.push({
+                    name: `core/_requests.ts`,
+                    content: generateMongoRequestsFile(ModuleName, moduleName, modulePlural, mongoPath, collectionName)
+                });
+            }
+
+            // 3. ListViewProvider.tsx
+            files.push({
+                name: `core/ListViewProvider.tsx`,
+                content: generateListViewProvider()
+            });
+
+            // 4. QueryRequestProvider.tsx
+            files.push({
+                name: `core/QueryRequestProvider.tsx`,
+                content: generateQueryRequestProvider()
+            });
+
+            // 5. QueryResponseProvider.tsx
+            files.push({
+                name: `core/QueryResponseProvider.tsx`,
+                content: generateQueryResponseProvider(ModuleName, moduleName, modulePlural)
+            });
+
+            // 5. QueryResponseProvider.tsx
+            files.push({
+                name: `core/QueryResponseProvider.tsx`,
+                content: generateQueryResponseProvider(ModuleName, moduleName, modulePlural)
+            });
+
+            // 6. EditModalForm.tsx
+            files.push({
+                name: `${moduleName}-edit-modal/${ModuleName}EditModalForm.tsx`,
+                content: generateEditModalForm(ModuleName, moduleName, fields, backendType)
+            });
+
+            // 7. _columns.tsx
+            files.push({
+                name: `table/columns/_columns.tsx`,
+                content: generateColumnsFile(ModuleName, moduleName, fields)
+            });
+
+            // 8. CustomHeader.tsx
+            files.push({
+                name: `table/columns/${ModuleName}CustomHeader.tsx`,
+                content: generateCustomHeaderFile(ModuleName, moduleName)
+            });
+
+            // 9. ActionsCell.tsx
+            files.push({
+                name: `table/columns/${ModuleName}ActionsCell.tsx`,
+                content: generateActionsCellFile(ModuleName, moduleName)
+            });
+
+            // 10. Table.tsx
+            files.push({
+                name: `table/${ModuleName}Table.tsx`,
+                content: generateTableFile(ModuleName, moduleName, modulePlural)
+            });
+
+            // 11. EditModal.tsx
+            files.push({
+                name: `${moduleName}-edit-modal/${ModuleName}EditModal.tsx`,
+                content: generateEditModalFile(ModuleName)
+            });
+
+            // 12. EditModalHeader.tsx
+            files.push({
+                name: `${moduleName}-edit-modal/${ModuleName}EditModalHeader.tsx`,
+                content: generateEditModalHeaderFile(ModuleName)
+            });
+
+            // 13. List.tsx (Main List Component)
+            files.push({
+                name: `${ModuleName}List.tsx`,
+                content: generateListFile(ModuleName, moduleName, modulePlural)
+            });
+
+            // 14. Page.tsx (Main Page Component)
+            files.push({
+                name: `${ModuleName}Page.tsx`,
+                content: generatePageFile(ModuleName, moduleName, modulePlural)
+            });
+
+            return files;
+        }
+
+        function generateModelsFile(ModuleName, moduleName, fields) {
+            const fieldsStr = Object.entries(fields).map(([key, type]) => `  ${key}: ${type}`).join('\n');
+            
+            return `import { ID, Response } from '../../../../../../_metronic/helpers'
+
+export type ${ModuleName}Data = {
+  _id?: string
+  id?: ID
+${fieldsStr}
+  created_at?: string
+  updated_at?: string
+}
+
+export type ${ModuleName}sQueryResponse = Response<Array<${ModuleName}Data>>
+
+export const initial${ModuleName}: ${ModuleName}Data = {
+${Object.entries(fields).map(([key, type]) => {
+    if (type === 'number') return `  ${key}: 0,`;
+    if (type === 'boolean') return `  ${key}: false,`;
+    return `  ${key}: '',`;
+}).join('\n')}
+}`;
+        }
+
+        function generateFirebaseRequestsFile(ModuleName, moduleName, modulePlural, firebasePath, collectionName) {
+            return `import { 
+  collection, 
+  getDocs, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  query,
+  orderBy 
+} from 'firebase/firestore'
+import { db } from '${firebasePath}'
+import { ${ModuleName}Data, ${ModuleName}sQueryResponse } from './_models'
+import { ID } from '../../../../../../_metronic/helpers'
+
+const COLLECTION_NAME = '${collectionName}'
+
+// Get all ${modulePlural}
+export const get${ModuleName}s = async (): Promise<${ModuleName}sQueryResponse> => {
+  try {
+    const q = query(collection(db, COLLECTION_NAME), orderBy('created_at', 'desc'))
+    const querySnapshot = await getDocs(q)
+    
+    const ${modulePlural}: ${ModuleName}Data[] = []
+    querySnapshot.forEach((doc) => {
+      ${modulePlural}.push({
+        id: doc.id,
+        _id: doc.id,
+        ...doc.data(),
+      } as ${ModuleName}Data)
+    })
+    
+    return { data: ${modulePlural} }
+  } catch (error) {
+    console.error('Error fetching ${modulePlural}:', error)
+    return { data: [] }
+  }
+}
+
+// Get ${moduleName} by ID
+export const get${ModuleName}ById = async (id: ID): Promise<${ModuleName}Data | null> => {
+  try {
+    const docRef = doc(db, COLLECTION_NAME, String(id))
+    const docSnap = await getDoc(docRef)
+    
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        _id: docSnap.id,
+        ...docSnap.data(),
+      } as ${ModuleName}Data
+    }
+    return null
+  } catch (error) {
+    console.error('Error fetching ${moduleName}:', error)
+    return null
+  }
+}
+
+// Create ${moduleName}
+export const create${ModuleName} = async (${moduleName}Data: Partial<${ModuleName}Data>): Promise<${ModuleName}Data> => {
+  try {
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+      ...${moduleName}Data,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    
+    return {
+      id: docRef.id,
+      _id: docRef.id,
+      ...${moduleName}Data,
+    } as ${ModuleName}Data
+  } catch (error) {
+    console.error('Error creating ${moduleName}:', error)
+    throw error
+  }
+}
+
+// Update ${moduleName}
+export const update${ModuleName} = async (id: ID, ${moduleName}Data: Partial<${ModuleName}Data>): Promise<void> => {
+  try {
+    const docRef = doc(db, COLLECTION_NAME, String(id))
+    await updateDoc(docRef, {
+      ...${moduleName}Data,
+      updated_at: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Error updating ${moduleName}:', error)
+    throw error
+  }
+}
+
+// Delete ${moduleName}
+export const delete${ModuleName} = async (id: ID): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, COLLECTION_NAME, String(id)))
+  } catch (error) {
+    console.error('Error deleting ${moduleName}:', error)
+    throw error
+  }
+}`;
+        }
+
+        function generateMongoRequestsFile(ModuleName, moduleName, modulePlural, mongoPath, collectionName) {
+            return `import axios, { AxiosResponse } from 'axios'
+import { ID } from '../../../../../../_metronic/helpers'
+import { ${ModuleName}Data, ${ModuleName}sQueryResponse } from './_models'
+
+const API_URL = '${mongoPath}'
+const ${moduleName.toUpperCase()}_URL = \`\${API_URL}/${modulePlural}\`
+
+// Get all ${modulePlural}
+export const get${ModuleName}s = async (): Promise<${ModuleName}sQueryResponse> => {
+  const { data }: AxiosResponse<{ ${modulePlural}: ${ModuleName}Data[] }> = await axios.get(\`\${${moduleName.toUpperCase()}_URL}\`)
+  return { data: data.${modulePlural} || [] }
+}
+
+// Get ${moduleName} by ID
+export const get${ModuleName}ById = async (id: ID): Promise<${ModuleName}Data> => {
+  const { data }: AxiosResponse<{ ${moduleName}: ${ModuleName}Data }> = await axios.get(\`\${${moduleName.toUpperCase()}_URL}/\${id}\`)
+  return data.${moduleName}
+}
+
+// Create ${moduleName}
+export const create${ModuleName} = async (${moduleName}: ${ModuleName}Data): Promise<${ModuleName}Data> => {
+  const { data }: AxiosResponse<{ ${moduleName}: ${ModuleName}Data }> = await axios.post(${moduleName.toUpperCase()}_URL, ${moduleName})
+  return data.${moduleName}
+}
+
+// Update ${moduleName}
+export const update${ModuleName} = async (id: ID, ${moduleName}: ${ModuleName}Data): Promise<${ModuleName}Data> => {
+  const { data }: AxiosResponse<{ ${moduleName}: ${ModuleName}Data }> = await axios.put(\`\${${moduleName.toUpperCase()}_URL}/\${id}\`, ${moduleName})
+  return data.${moduleName}
+}
+
+// Delete ${moduleName}
+export const delete${ModuleName} = async (id: ID): Promise<void> => {
+  await axios.delete(\`\${${moduleName.toUpperCase()}_URL}/\${id}\`)
+}`;
+        }
+
+        function generateListViewProvider() {
+            return `/* eslint-disable react-refresh/only-export-components */
+import {FC, useState, createContext, useContext, useMemo} from 'react'
+import {
+  ID,
+  calculatedGroupingIsDisabled,
+  calculateIsAllDataSelected,
+  groupingOnSelect,
+  initialListView,
+  ListViewContextProps,
+  groupingOnSelectAll,
+  WithChildren,
+} from '../../../../../../_metronic/helpers'
+import {useQueryResponse, useQueryResponseData} from './QueryResponseProvider'
+
+const ListViewContext = createContext<ListViewContextProps>(initialListView)
+
+const ListViewProvider: FC<WithChildren> = ({children}) => {
+  const [selected, setSelected] = useState<Array<ID>>(initialListView.selected)
+  const [itemIdForUpdate, setItemIdForUpdate] = useState<ID>(initialListView.itemIdForUpdate)
+  const {isLoading} = useQueryResponse()
+  const data = useQueryResponseData()
+  const disabled = useMemo(() => calculatedGroupingIsDisabled(isLoading, data), [isLoading, data])
+  const isAllSelected = useMemo(() => calculateIsAllDataSelected(data, selected), [data, selected])
+
+  return (
+    <ListViewContext.Provider
+      value={{
+        selected,
+        itemIdForUpdate,
+        setItemIdForUpdate,
+        disabled,
+        isAllSelected,
+        onSelect: (id: ID) => {
+          groupingOnSelect(id, selected, setSelected)
+        },
+        onSelectAll: () => {
+          groupingOnSelectAll(isAllSelected, setSelected, data)
+        },
+        clearSelected: () => {
+          setSelected([])
+        },
+      }}
+    >
+      {children}
+    </ListViewContext.Provider>
+  )
+}
+
+const useListView = () => useContext(ListViewContext)
+
+export {ListViewProvider, useListView}`;
+        }
+
+        function generateQueryRequestProvider() {
+            return `/* eslint-disable react-refresh/only-export-components */
+import {FC, useState, createContext, useContext} from 'react'
+import {
+  QueryState,
+  QueryRequestContextProps,
+  initialQueryRequest,
+  WithChildren,
+} from '../../../../../../_metronic/helpers'
+
+const QueryRequestContext = createContext<QueryRequestContextProps>(initialQueryRequest)
+
+const QueryRequestProvider: FC<WithChildren> = ({children}) => {
+  const [state, setState] = useState<QueryState>(initialQueryRequest.state)
+
+  const updateState = (updates: Partial<QueryState>) => {
+    const updatedState = {...state, ...updates} as QueryState
+    setState(updatedState)
+  }
+
+  return (
+    <QueryRequestContext.Provider value={{state, updateState}}>
+      {children}
+    </QueryRequestContext.Provider>
+  )
+}
+
+const useQueryRequest = () => useContext(QueryRequestContext)
+export {QueryRequestProvider, useQueryRequest}`;
+        }
+
+        function generateQueryResponseProvider(ModuleName, moduleName, modulePlural) {
+            return `import { FC, useContext, useState, useEffect, useMemo, createContext } from 'react'
+import { useQuery } from 'react-query'
+import {
+  createResponseContext,
+  initialQueryResponse,
+  QUERIES,
+  stringifyRequestQuery,
+  WithChildren,
+} from '../../../../../../_metronic/helpers'
+import { get${ModuleName}s } from './_requests'
+import { ${ModuleName}Data } from './_models'
+import { useQueryRequest } from './QueryRequestProvider'
+
+const QueryResponseContext = createResponseContext<${ModuleName}Data>(initialQueryResponse)
+
+const QueryResponseProvider: FC<WithChildren> = ({ children }) => {
+  const { state } = useQueryRequest()
+  const [query, setQuery] = useState<string>(stringifyRequestQuery(state))
+  const updatedQuery = useMemo(() => stringifyRequestQuery(state), [state])
+
+  useEffect(() => {
+    if (query !== updatedQuery) {
+      setQuery(updatedQuery)
+    }
+  }, [updatedQuery])
+
+  const { isFetching, refetch, data: response } = useQuery(
+    \`\${QUERIES.USERS_LIST}-${modulePlural}\`,
+    () => get${ModuleName}s(),
+    {
+      cacheTime: 0,
+      keepPreviousData: true,
+      refetchOnWindowFocus: false,
+    }
+  )
+
+  return (
+    <QueryResponseContext.Provider value={{ isLoading: isFetching, refetch, response, query }}>
+      {children}
+    </QueryResponseContext.Provider>
+  )
+}
+
+const useQueryResponse = () => useContext(QueryResponseContext)
+
+const useQueryResponseData = () => {
+  const { response } = useQueryResponse()
+  if (!response) return []
+  return response?.data || []
+}
+
+const useQueryResponseLoading = (): boolean => {
+  const { isLoading } = useQueryResponse()
+  return isLoading
+}
+
+export { QueryResponseProvider, useQueryResponse, useQueryResponseData, useQueryResponseLoading }`;
+        }
+
+        function generateEditModalForm(ModuleName, moduleName, fields, backendType) {
+            const fieldsInitial = Object.entries(fields).map(([key, type]) => {
+                if (type === 'number') return `${key}: 0`;
+                if (type === 'boolean') return `${key}: false`;
+                return `${key}: ''`;
+            }).join(',\n    ');
+
+            const formFields = Object.entries(fields).map(([key, type]) => {
+                const label = key.split('_').map(w => capitalize(w)).join(' ');
+                if (type === 'number') {
+                    return `          <div className="mb-7">
+            <label className="required fw-bold fs-6 mb-2">${label}</label>
+            <input
+              type="number"
+              name="${key}"
+              className={\`form-control form-control-solid \${errors.${key} ? 'is-invalid' : ''}\`}
+              value={formData.${key}}
+              onChange={handleChange}
+            />
+            {errors.${key} && <div className="invalid-feedback d-block">{errors.${key}}</div>}
+          </div>`;
+                } else {
+                    return `          <div className="mb-7">
+            <label className="required fw-bold fs-6 mb-2">${label}</label>
+            <input
+              type="text"
+              name="${key}"
+              className={\`form-control form-control-solid \${errors.${key} ? 'is-invalid' : ''}\`}
+              value={formData.${key}}
+              onChange={handleChange}
+            />
+            {errors.${key} && <div className="invalid-feedback d-block">{errors.${key}}</div>}
+          </div>`;
+                }
+            }).join('\n\n');
+
+            return `import { FC, useState, useEffect } from 'react'
+import { useQueryClient, useMutation } from 'react-query'
+import { useListView } from '../core/ListViewProvider'
+import { useQueryResponse } from '../core/QueryResponseProvider'
+import { create${ModuleName}, update${ModuleName}, get${ModuleName}ById } from '../core/_requests'
+import { ${ModuleName}Data } from '../core/_models'
+import { KTIcon, QUERIES } from '../../../../../_metronic/helpers'
+import Swal from 'sweetalert2'
+
+const ${ModuleName}EditModalForm: FC = () => {
+  const { itemIdForUpdate, setItemIdForUpdate } = useListView()
+  const { refetch } = useQueryResponse()
+  const queryClient = useQueryClient()
+
+  const [formData, setFormData] = useState<${ModuleName}Data>({
+    ${fieldsInitial}
+  })
+
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  useEffect(() => {
+    if (itemIdForUpdate) {
+      loadData()
+    } else {
+      setFormData({
+        ${fieldsInitial}
+      })
+    }
+  }, [itemIdForUpdate])
+
+  const loadData = async () => {
+    if (!itemIdForUpdate) return
+    const data = await get${ModuleName}ById(itemIdForUpdate)
+    if (data) {
+      setFormData(data)
+    }
+  }
+
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {}
+    
+    ${Object.entries(fields).map(([key, type]) => {
+      return `if (!formData.${key}) newErrors.${key} = '${key} is required'`;
+    }).join('\n    ')}
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const createMutation = useMutation(
+    () => create${ModuleName}(formData),
+    {
+      onSuccess: () => {
+        Swal.fire({ icon: 'success', title: 'Success!', text: '${ModuleName} created', timer: 2000, showConfirmButton: false })
+        queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${moduleName}s\`)
+        refetch()
+        setItemIdForUpdate(undefined)
+      },
+      onError: (error: any) => {
+        Swal.fire({ icon: 'error', title: 'Error!', text: error.message || 'Failed to create' })
+      }
+    }
+  )
+
+  const updateMutation = useMutation(
+    () => update${ModuleName}(itemIdForUpdate!, formData),
+    {
+      onSuccess: () => {
+        Swal.fire({ icon: 'success', title: 'Success!', text: '${ModuleName} updated', timer: 2000, showConfirmButton: false })
+        queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${moduleName}s\`)
+        refetch()
+        setItemIdForUpdate(undefined)
+      },
+      onError: (error: any) => {
+        Swal.fire({ icon: 'error', title: 'Error!', text: error.message || 'Failed to update' })
+      }
+    }
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validateForm()) return
+
+    setLoading(true)
+    try {
+      if (itemIdForUpdate) {
+        await updateMutation.mutateAsync()
+      } else {
+        await createMutation.mutateAsync()
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: ${Object.keys(fields).some(k => fields[k] === 'number') ? `['${Object.keys(fields).filter(k => fields[k] === 'number').join("', '")}'].includes(name) ? parseFloat(value) || 0 : value` : 'value'}
+    }))
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
+  }
+
+  return (
+    <div className="modal-content">
+      <div className="modal-header">
+        <h2 className="fw-bold">{itemIdForUpdate ? 'Edit ${ModuleName}' : 'Add New ${ModuleName}'}</h2>
+        <div className="btn btn-icon btn-sm btn-active-icon-primary" onClick={() => setItemIdForUpdate(undefined)} style={{ cursor: 'pointer' }}>
+          <KTIcon iconName="cross" className="fs-1" />
+        </div>
+      </div>
+
+      <div className="modal-body scroll-y mx-5 mx-xl-15 my-7">
+        <form id="${moduleName}_form" onSubmit={handleSubmit}>
+${formFields}
+        </form>
+      </div>
+
+      <div className="modal-footer">
+        <button type="button" className="btn btn-light" onClick={() => setItemIdForUpdate(undefined)} disabled={loading}>
+          Cancel
+        </button>
+        <button type="submit" form="${moduleName}_form" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Processing...' : itemIdForUpdate ? 'Update ${ModuleName}' : 'Create ${ModuleName}'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export { ${ModuleName}EditModalForm }`;
+        }
+
+        function generateColumnsFile(ModuleName, moduleName, fields) {
+            const firstField = Object.keys(fields)[0];
+            
+            return `import { Column } from 'react-table'
+import { ${ModuleName}Data } from '../../core/_models'
+import { ${ModuleName}ActionsCell } from './${ModuleName}ActionsCell'
+import { ${ModuleName}CustomHeader } from './${ModuleName}CustomHeader'
+
+const ${moduleName}sColumns: ReadonlyArray<Column<${ModuleName}Data>> = [
+  {
+    Header: () => <th className="min-w-50px text-center">No</th>,
+    id: 'no',
+    Cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
+  },
+${Object.keys(fields).map((key, idx) => {
+  if (idx === 0) {
+    return `  {
+    Header: (props) => <${ModuleName}CustomHeader tableProps={props} title="${key.split('_').map(w => capitalize(w)).join(' ')}" className="min-w-150px" />,
+    accessor: '${key}',
+    Cell: ({ value }) => <div className="fw-bold text-gray-800">{value}</div>,
+  },`;
+  }
+  return `  {
+    Header: (props) => <${ModuleName}CustomHeader tableProps={props} title="${key.split('_').map(w => capitalize(w)).join(' ')}" className="min-w-100px" />,
+    accessor: '${key}',
+  },`;
+}).join('\n')}
+  {
+    Header: (props) => <${ModuleName}CustomHeader tableProps={props} title="Actions" className="text-end min-w-100px" />,
+    id: 'actions',
+    Cell: ({ row }) => <${ModuleName}ActionsCell ${moduleName}={row.original} />,
+  },
+]
+
+export { ${moduleName}sColumns }`;
+        }
+
+        function generateCustomHeaderFile(ModuleName, moduleName) {
+            return `import clsx from 'clsx'
+import { FC, PropsWithChildren } from 'react'
+import { HeaderProps } from 'react-table'
+import { ${ModuleName}Data } from '../../core/_models'
+
+type Props = {
+  className?: string
+  title?: string
+  tableProps: PropsWithChildren<HeaderProps<${ModuleName}Data>>
+}
+
+const ${ModuleName}CustomHeader: FC<Props> = ({ className, title, tableProps }) => {
+  return (
+    <th {...tableProps.column.getHeaderProps()} className={clsx(className)}>
+      {title}
+    </th>
+  )
+}
+
+export { ${ModuleName}CustomHeader }`;
+        }
+
+        function generateActionsCellFile(ModuleName, moduleName) {
+            return `import { FC } from 'react'
+import { useMutation, useQueryClient } from 'react-query'
+import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
+import { ${ModuleName}Data } from '../../core/_models'
+import { useListView } from '../../core/ListViewProvider'
+import { delete${ModuleName} } from '../../core/_requests'
+import Swal from 'sweetalert2'
+
+type Props = {
+  ${moduleName}: ${ModuleName}Data
+}
+
+const ${ModuleName}ActionsCell: FC<Props> = ({ ${moduleName} }) => {
+  const { setItemIdForUpdate } = useListView()
+  const queryClient = useQueryClient()
+
+  const deleteMutation = useMutation(
+    () => delete${ModuleName}(${moduleName}._id || ${moduleName}.id!),
+    {
+      onSuccess: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: '${ModuleName} has been deleted.',
+          timer: 2000,
+          showConfirmButton: false,
+        })
+        queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${moduleName}s\`)
+      },
+      onError: (error: any) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: error.message || 'Failed to delete ${moduleName}',
+        })
+      },
+    }
+  )
+
+  const handleEdit = () => {
+    setItemIdForUpdate(${moduleName}._id || ${moduleName}.id)
+  }
+
+  const handleDelete = () => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteMutation.mutate()
+      }
+    })
+  }
+
+  return (
+    <div className="d-flex justify-content-end gap-2">
+      <button
+        className="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
+        onClick={handleEdit}
+        title="Edit"
+      >
+        <KTIcon iconName="pencil" className="fs-3" />
+      </button>
+      <button
+        className="btn btn-icon btn-bg-light btn-active-color-danger btn-sm"
+        onClick={handleDelete}
+        title="Delete"
+      >
+        <KTIcon iconName="trash" className="fs-3" />
+      </button>
+    </div>
+  )
+}
+
+export { ${ModuleName}ActionsCell }`;
+        }
+
+        function generateTableFile(ModuleName, moduleName, modulePlural) {
+            return `import { useMemo } from 'react'
+import { useTable, ColumnInstance, Row } from 'react-table'
+import { useQueryResponseData, useQueryResponseLoading } from '../core/QueryResponseProvider'
+import { ${moduleName}sColumns } from './columns/_columns'
+import { ${ModuleName}Data } from '../core/_models'
+import { KTCardBody } from '../../../../../../_metronic/helpers'
+import { UsersListLoading } from '../../users-list/components/loading/UsersListLoading'
+import { CustomRow } from '../../users-list/table/columns/CustomRow'
+
+const ${ModuleName}Table = () => {
+  const ${modulePlural} = useQueryResponseData()
+  const isLoading = useQueryResponseLoading()
+  const data = useMemo(() => ${modulePlural}, [${modulePlural}])
+  const columns = useMemo(() => ${moduleName}sColumns, [])
+  const { getTableProps, getTableBodyProps, headers, rows, prepareRow } = useTable({ columns, data })
+
+  return (
+    <KTCardBody className="py-4">
+      <div className="table-responsive">
+        <table
+          id="kt_table_${modulePlural}"
+          className="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+          {...getTableProps()}
+        >
+          <thead>
+            <tr className="text-start text-muted fw-bolder fs-7 text-uppercase gs-0">
+              {headers.map((column: ColumnInstance<${ModuleName}Data>) => (
+                <th {...column.getHeaderProps()}>
+                  {column.render('Header')}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="text-gray-600 fw-bold" {...getTableBodyProps()}>
+            {rows.length > 0 ? (
+              rows.map((row: Row<${ModuleName}Data>, i) => {
+                prepareRow(row)
+                return <CustomRow row={row} key={\`row-\${i}-\${row.id}\`} />
+              })
+            ) : (
+              <tr>
+                <td colSpan={headers.length}>
+                  <div className="d-flex text-center w-100 align-content-center justify-content-center">
+                    No matching records found
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {isLoading && <UsersListLoading />}
+    </KTCardBody>
+  )
+}
+
+export { ${ModuleName}Table }`;
+        }
+
+        function generateEditModalFile(ModuleName) {
+            return `import { useEffect } from 'react'
+import { ${ModuleName}EditModalHeader } from './${ModuleName}EditModalHeader'
+import { ${ModuleName}EditModalForm } from './${ModuleName}EditModalForm'
+
+const ${ModuleName}EditModal = () => {
+  useEffect(() => {
+    document.body.classList.add('modal-open')
+    return () => {
+      document.body.classList.remove('modal-open')
+    }
+  }, [])
+
+  return (
+    <>
+      <div
+        className="modal fade show d-block"
+        id="kt_modal_${ModuleName.toLowerCase()}"
+        role="dialog"
+        tabIndex={-1}
+        aria-modal="true"
+      >
+        <div className="modal-dialog modal-dialog-centered mw-650px">
+          <${ModuleName}EditModalForm />
+        </div>
+      </div>
+      <div className="modal-backdrop fade show"></div>
+    </>
+  )
+}
+
+export { ${ModuleName}EditModal }`;
+        }
+
+        function generateEditModalHeaderFile(ModuleName) {
+            return `import { FC } from 'react'
+import { KTIcon } from '../../../../../../_metronic/helpers'
+import { useListView } from '../core/ListViewProvider'
+
+const ${ModuleName}EditModalHeader: FC = () => {
+  const { setItemIdForUpdate } = useListView()
+
+  return (
+    <div className="modal-header">
+      <h2 className="fw-bold">${ModuleName} Details</h2>
+      <div
+        className="btn btn-icon btn-sm btn-active-icon-primary"
+        onClick={() => setItemIdForUpdate(undefined)}
+        style={{ cursor: 'pointer' }}
+      >
+        <KTIcon iconName="cross" className="fs-1" />
+      </div>
+    </div>
+  )
+}
+
+export { ${ModuleName}EditModalHeader }`;
+        }
+
+        function generateListFile(ModuleName, moduleName, modulePlural) {
+            return `import { ListViewProvider, useListView } from './core/ListViewProvider'
+import { QueryRequestProvider } from './core/QueryRequestProvider'
+import { QueryResponseProvider } from './core/QueryResponseProvider'
+import { ${ModuleName}Table } from './table/${ModuleName}Table'
+import { ${ModuleName}EditModal } from './${moduleName}-edit-modal/${ModuleName}EditModal'
+import { KTCard } from '../../../../../_metronic/helpers'
+import { UsersListHeader } from '../users-list/components/header/UsersListHeader'
+
+const ${ModuleName}List = () => {
+  const { itemIdForUpdate } = useListView()
+
+  return (
+    <>
+      <KTCard>
+        <UsersListHeader />
+        <${ModuleName}Table />
+      </KTCard>
+      {itemIdForUpdate !== undefined && <${ModuleName}EditModal />}
+    </>
+  )
+}
+
+const ${ModuleName}ListWrapper = () => (
+  <QueryRequestProvider>
+    <QueryResponseProvider>
+      <ListViewProvider>
+        <${ModuleName}List />
+      </ListViewProvider>
+    </QueryResponseProvider>
+  </QueryRequestProvider>
+)
+
+export { ${ModuleName}ListWrapper }`;
+        }
+
+        function generatePageFile(ModuleName, moduleName, modulePlural) {
+            return `import { Route, Routes, Outlet, Navigate } from 'react-router-dom'
+import { PageLink, PageTitle } from '../../../../_metronic/layout/core'
+import { ${ModuleName}ListWrapper } from './${ModuleName}List'
+
+const ${modulePlural}Breadcrumbs: Array<PageLink> = [
+  {
+    title: '${ModuleName} Management',
+    path: '/apps/${moduleName}-management/${modulePlural}',
+    isSeparator: false,
+    isActive: false,
+  },
+  {
+    title: '',
+    path: '',
+    isSeparator: true,
+    isActive: false,
+  },
+]
+
+const ${ModuleName}Page = () => {
+  return (
+    <Routes>
+      <Route element={<Outlet />}>
+        <Route
+          path="${modulePlural}"
+          element={
+            <>
+              <PageTitle breadcrumbs={${modulePlural}Breadcrumbs}>${ModuleName}s List</PageTitle>
+              <${ModuleName}ListWrapper />
+            </>
+          }
+        />
+      </Route>
+      <Route index element={<Navigate to="/apps/${moduleName}-management/${modulePlural}" />} />
+    </Routes>
+  )
+}
+
+export default ${ModuleName}Page`;
+        }
+
+        function displayOutput(files) {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                fileItem.innerHTML = `
+                    <div class="file-header" onclick="toggleFile(${index})">
+                        <span>📄 ${file.name}</span>
+                        <button class="copy-btn" onclick="copyCode(event, ${index})">📋 Copy</button>
+                    </div>
+                    <div class="file-content" id="file-${index}" style="display: none;">
+                        <pre>${escapeHtml(file.content)}</pre>
+                    </div>
+                `;
+                
+                fileList.appendChild(fileItem);
+            });
+
+            // Store files globally for copy function
+            window.generatedFiles = files;
+
+            // Show output section
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('outputSection').classList.add('active');
+        }
+
+        function toggleFile(index) {
+            const fileContent = document.getElementById(`file-${index}`);
+            if (fileContent.style.display === 'none') {
+                fileContent.style.display = 'block';
+            } else {
+                fileContent.style.display = 'none';
+            }
+        }
+
+        function copyCode(event, index) {
+            event.stopPropagation();
+            const code = window.generatedFiles[index].content;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#28a745';
+                btn.style.color = 'white';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'white';
+                    btn.style.color = '#667eea';
+                }, 2000);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('generatorForm').reset();
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('outputSection').classList.remove('active');
+        }
+
+        // Helper functions
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function pluralize(str) {
+            if (str.endsWith('y')) {
+                return str.slice(0, -1) + 'ies';
+            }
+            if (str.endsWith('s') || str.endsWith('x') || str.endsWith('sh') || str.endsWith('ch')) {
+                return str + 'es';
+            }
+            return str + 's';
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>

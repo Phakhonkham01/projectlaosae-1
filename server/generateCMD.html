@@ -2,15 +2,15 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>⚡ Metronic Module Generator + CMD</title>
+    <title>📁 Metronic Module Generator - User Management Structure</title>
     <style>
         body { font-family: Arial; padding: 20px; background: #f0f0f0; }
-        .container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; display: flex; gap: 20px; }
         .panel { flex: 1; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
         button { background: #667eea; color: white; border: none; padding: 10px; width: 100%; margin: 5px 0; cursor: pointer; border-radius: 5px; }
         button:hover { background: #5a67d8; }
-        pre { background: #1e1e2d; color: white; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: monospace; font-size: 14px; }
+        pre { background: #1e1e2d; color: white; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: monospace; font-size: 13px; max-height: 600px; overflow-y: auto; }
         .tree-line { padding: 3px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
         .tree-line:hover { background: #2a2a3a; }
         .folder { color: #ffd700; }
@@ -19,29 +19,34 @@
         .tab { display: flex; gap: 10px; margin: 10px 0; }
         .tab-btn { flex: 1; background: #ddd; color: black; padding: 8px; }
         .tab-btn.active { background: #667eea; color: white; }
+        .stats { background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; }
     </style>
 </head>
 <body>
 <div class="container">
     <!-- Panel ซ้าย: Input และ File Tree -->
     <div class="panel">
-        <h2>📁 ตั้งค่า Module</h2>
+        <h2>📁 User Management Structure</h2>
         
-        <label>🔤 ชื่อ Module (ตัวเล็ก) เช่น employee</label>
-        <input type="text" id="moduleName" value="employee">
+        <div class="stats">
+            <strong>📊 โครงสร้างอ้างอิงจาก user-management</strong><br>
+            - 3 โฟลเดอร์หลัก: core, components, table<br>
+            - 1 modal folder: user-edit-modal<br>
+            - 33 ไฟล์ทั้งหมด
+        </div>
         
-        <label>📁 ชื่อ Folder (พหูพจน์) เช่น employees</label>
-        <input type="text" id="folderName" value="employees">
+        <label>🔤 Module Name (ตัวเล็ก) เช่น user</label>
+        <input type="text" id="moduleName" value="user">
         
-        <label>🏷️ ชื่อ Module (ตัวใหญ่) เช่น Employee</label>
-        <input type="text" id="moduleCapital" value="Employee">
+        <label>📁 Module Name (ตัวใหญ่) เช่น User</label>
+        <input type="text" id="moduleCapital" value="User">
         
         <label>📂 Base Path</label>
         <input type="text" id="basePath" value="src/app/modules/apps">
         
-        <button onclick="generateTree()">🚀 สร้าง File Tree</button>
+        <button onclick="generateTree()">🚀 Generate File Tree</button>
         
-        <div style="margin-top: 20px; max-height: 500px; overflow-y: auto; background: #1e1e2d; color: white; padding: 15px; border-radius: 5px;" id="fileTree">
+        <div style="margin-top: 20px; max-height: 600px; overflow-y: auto; background: #1e1e2d; color: white; padding: 15px; border-radius: 5px;" id="fileTree">
             <!-- File Tree จะแสดงตรงนี้ -->
         </div>
         
@@ -58,65 +63,99 @@
         </div>
         
         <div id="winPanel">
-            <pre id="winCommands" style="max-height: 500px; overflow-y: auto;"></pre>
+            <pre id="winCommands" style="max-height: 600px; overflow-y: auto;"></pre>
             <button onclick="copyWinCommands()">📋 คัดลอก Windows Commands</button>
         </div>
         
         <div id="macPanel" style="display: none;">
-            <pre id="macCommands" style="max-height: 500px; overflow-y: auto;"></pre>
+            <pre id="macCommands" style="max-height: 600px; overflow-y: auto;"></pre>
             <button onclick="copyMacCommands()">📋 คัดลอก Mac Commands</button>
         </div>
     </div>
 </div>
 
 <script>
-// รายการไฟล์ทั้งหมด
+// โครงสร้างตาม user-management
 const files = [
-    { type: 'folder', name: '[folder]-management/', level: 0 },
-    { type: 'folder', name: 'core/', level: 1 },
-    { type: 'file', name: '[module]_models.ts', level: 2 },
-    { type: 'file', name: '[module]_requests.ts', level: 2 },
-    { type: 'file', name: 'ListViewProvider.tsx', level: 2 },
-    { type: 'file', name: 'QueryRequestProvider.tsx', level: 2 },
-    { type: 'file', name: 'QueryResponseProvider.tsx', level: 2 },
+    // Root level
+    { type: 'file', name: '[Module]Page.tsx', level: 0, path: '[Module]Page.tsx' },
     
-    { type: 'folder', name: 'components/', level: 1 },
-    { type: 'folder', name: 'header/', level: 2 },
-    { type: 'file', name: '[Module]ListHeader.tsx', level: 3 },
-    { type: 'folder', name: 'listing/', level: 2 },
-    { type: 'file', name: '[Module]Table.tsx', level: 3 },
-    { type: 'file', name: '[Module]TableFooter.tsx', level: 3 },
-    { type: 'folder', name: 'modals/', level: 2 },
-    { type: 'file', name: '[Module]EditModal.tsx', level: 3 },
+    // users-list folder
+    { type: 'folder', name: '[module]-list/', level: 0, path: '[module]-list' },
+    { type: 'file', name: '[Module]List.tsx', level: 1, path: '[module]-list/[Module]List.tsx' },
     
-    { type: 'folder', name: 'table-columns/', level: 1 },
-    { type: 'file', name: '[Module]Columns.tsx', level: 2 },
-    { type: 'file', name: '[Module]InfoCell.tsx', level: 2 },
-    { type: 'file', name: '[Module]ImageCell.tsx', level: 2 },
-    { type: 'file', name: '[Module]StatusCell.tsx', level: 2 },
-    { type: 'file', name: '[Module]ActionsCell.tsx', level: 2 },
-    { type: 'file', name: '[Module]CustomHeader.tsx', level: 2 },
+    // components folder และลูกๆ
+    { type: 'folder', name: 'components/', level: 1, path: '[module]-list/components' },
     
-    { type: 'file', name: '[Module]ManagementPage.tsx', level: 1 }
+    // header components
+    { type: 'folder', name: 'header/', level: 2, path: '[module]-list/components/header' },
+    { type: 'file', name: '[Module]ListToolbar.tsx', level: 3, path: '[module]-list/components/header/[Module]ListToolbar.tsx' },
+    { type: 'file', name: '[Module]ListFilter.tsx', level: 3, path: '[module]-list/components/header/[Module]ListFilter.tsx' },
+    { type: 'file', name: '[Module]ListGrouping.tsx', level: 3, path: '[module]-list/components/header/[Module]ListGrouping.tsx' },
+    { type: 'file', name: '[Module]ListHeader.tsx', level: 3, path: '[module]-list/components/header/[Module]ListHeader.tsx' },
+    { type: 'file', name: '[Module]ListSearchComponent.tsx', level: 3, path: '[module]-list/components/header/[Module]ListSearchComponent.tsx' },
+    
+    // loading components
+    { type: 'folder', name: 'loading/', level: 2, path: '[module]-list/components/loading' },
+    { type: 'file', name: '[Module]ListLoading.tsx', level: 3, path: '[module]-list/components/loading/[Module]ListLoading.tsx' },
+    
+    // pagination components
+    { type: 'folder', name: 'pagination/', level: 2, path: '[module]-list/components/pagination' },
+    { type: 'file', name: '[Module]ListPagination.tsx', level: 3, path: '[module]-list/components/pagination/[Module]ListPagination.tsx' },
+    
+    // core folder
+    { type: 'folder', name: 'core/', level: 1, path: '[module]-list/core' },
+    { type: 'file', name: '_models.ts', level: 2, path: '[module]-list/core/_models.ts' },
+    { type: 'file', name: '_requests.ts', level: 2, path: '[module]-list/core/_requests.ts' },
+    { type: 'file', name: 'ListViewProvider.tsx', level: 2, path: '[module]-list/core/ListViewProvider.tsx' },
+    { type: 'file', name: 'QueryRequestProvider.tsx', level: 2, path: '[module]-list/core/QueryRequestProvider.tsx' },
+    { type: 'file', name: 'QueryResponseProvider.tsx', level: 2, path: '[module]-list/core/QueryResponseProvider.tsx' },
+    
+    // table folder
+    { type: 'folder', name: 'table/', level: 1, path: '[module]-list/table' },
+    { type: 'file', name: '[Module]Table.tsx', level: 2, path: '[module]-list/table/[Module]Table.tsx' },
+    
+    // columns folder ใน table
+    { type: 'folder', name: 'columns/', level: 2, path: '[module]-list/table/columns' },
+    { type: 'file', name: '_columns.tsx', level: 3, path: '[module]-list/table/columns/_columns.tsx' },
+    { type: 'file', name: 'CustomHeaderColumn.tsx', level: 3, path: '[module]-list/table/columns/CustomHeaderColumn.tsx' },
+    { type: 'file', name: 'CustomRow.tsx', level: 3, path: '[module]-list/table/columns/CustomRow.tsx' },
+    { type: 'file', name: '[Module]ActionsCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]ActionsCell.tsx' },
+    { type: 'file', name: '[Module]CustomHeader.tsx', level: 3, path: '[module]-list/table/columns/[Module]CustomHeader.tsx' },
+    { type: 'file', name: '[Module]DepartmentCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]DepartmentCell.tsx' },
+    { type: 'file', name: '[Module]EmailCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]EmailCell.tsx' },
+    { type: 'file', name: '[Module]InfoCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]InfoCell.tsx' },
+    { type: 'file', name: '[Module]LeaveDaysCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]LeaveDaysCell.tsx' },
+    { type: 'file', name: '[Module]PositionCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]PositionCell.tsx' },
+    { type: 'file', name: '[Module]SelectionCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]SelectionCell.tsx' },
+    { type: 'file', name: '[Module]SelectionHeader.tsx', level: 3, path: '[module]-list/table/columns/[Module]SelectionHeader.tsx' },
+    { type: 'file', name: '[Module]StatusCell.tsx', level: 3, path: '[module]-list/table/columns/[Module]StatusCell.tsx' },
+    
+    // user-edit-modal folder
+    { type: 'folder', name: '[module]-edit-modal/', level: 0, path: '[module]-edit-modal' },
+    { type: 'file', name: 'ChangePasswordModal.tsx', level: 1, path: '[module]-edit-modal/ChangePasswordModal.tsx' },
+    { type: 'file', name: 'CreateDepartmentModal.tsx', level: 1, path: '[module]-edit-modal/CreateDepartmentModal.tsx' },
+    { type: 'file', name: '[Module]EditModal.tsx', level: 1, path: '[module]-edit-modal/[Module]EditModal.tsx' },
+    { type: 'file', name: '[Module]EditModalForm.tsx', level: 1, path: '[module]-edit-modal/[Module]EditModalForm.tsx' },
+    { type: 'file', name: '[Module]EditModalFormWrapper.tsx', level: 1, path: '[module]-edit-modal/[Module]EditModalFormWrapper.tsx' },
+    { type: 'file', name: '[Module]EditModalHeader.tsx', level: 1, path: '[module]-edit-modal/[Module]EditModalHeader.tsx' }
 ];
 
-let currentModule = { name: 'employee', folder: 'employees', capital: 'Employee', basePath: 'src/app/modules/apps' };
+let currentModule = { name: 'user', capital: 'User', basePath: 'src/app/modules/apps' };
 
 function generateTree() {
     const moduleName = document.getElementById('moduleName').value;
-    const folderName = document.getElementById('folderName').value;
     const moduleCapital = document.getElementById('moduleCapital').value;
     const basePath = document.getElementById('basePath').value;
     
-    currentModule = { name: moduleName, folder: folderName, capital: moduleCapital, basePath: basePath };
+    currentModule = { name: moduleName, capital: moduleCapital, basePath: basePath };
     
     // สร้าง File Tree
     let treeHtml = '';
     files.forEach(file => {
         let displayName = file.name
             .replace('[module]', moduleName)
-            .replace('[Module]', moduleCapital)
-            .replace('[folder]', folderName);
+            .replace('[Module]', moduleCapital);
         
         let indent = '  '.repeat(file.level);
         let icon = file.type === 'folder' ? '📁' : '📄';
@@ -139,51 +178,90 @@ function generateTree() {
 
 function generateWindowsCMD() {
     const m = currentModule;
-    let cmd = `
+    let cmd = `@echo off
+echo 🚀 Creating ${m.capital} Management Module...
+
+REM ไปที่ path
+cd /d "${m.basePath}"
+
+REM สร้าง root folder
+mkdir ${m.name}-management 2>nul
+cd ${m.name}-management
+
+REM สร้าง UsersPage.tsx
+type nul > ${m.capital}Page.tsx
+
+REM สร้าง users-list folder
+mkdir ${m.name}-list 2>nul
+cd ${m.name}-list
+
+REM สร้าง UsersList.tsx
+type nul > ${m.capital}List.tsx
+
+REM สร้าง components structure
+mkdir components\\header components\\loading components\\pagination 2>nul
+
+REM header files
+cd components\\header
+type nul > ${m.capital}ListToolbar.tsx
+type nul > ${m.capital}ListFilter.tsx
+type nul > ${m.capital}ListGrouping.tsx
+type nul > ${m.capital}ListHeader.tsx
+type nul > ${m.capital}ListSearchComponent.tsx
+cd ..\\..
+
+REM loading files
+cd components\\loading
+type nul > ${m.capital}ListLoading.tsx
+cd ..\\..
+
+REM pagination files
+cd components\\pagination
+type nul > ${m.capital}ListPagination.tsx
+cd ..\\..
 
 REM core folder
 mkdir core 2>nul
 cd core
-type nul > ${m.name}_models.ts
-type nul > ${m.name}_requests.ts
+type nul > _models.ts
+type nul > _requests.ts
 type nul > ListViewProvider.tsx
 type nul > QueryRequestProvider.tsx
 type nul > QueryResponseProvider.tsx
 cd ..
 
-REM components folder
-mkdir components\\header 2>nul
-mkdir components\\listing 2>nul
-mkdir components\\modals 2>nul
-
-cd components\\header
-type nul > ${m.capital}ListHeader.tsx
-cd ..\\..
-
-cd components\\listing
+REM table folder
+mkdir table\\columns 2>nul
+cd table
 type nul > ${m.capital}Table.tsx
-type nul > ${m.capital}TableFooter.tsx
-cd ..\\..
-
-cd components\\modals
-type nul > ${m.capital}EditModal.tsx
-cd ..\\..
-
-REM table-columns folder
-mkdir table-columns 2>nul
-cd table-columns
-type nul > ${m.capital}Columns.tsx
-type nul > ${m.capital}InfoCell.tsx
-type nul > ${m.capital}ImageCell.tsx
-type nul > ${m.capital}StatusCell.tsx
+cd columns
+type nul > _columns.tsx
+type nul > CustomHeaderColumn.tsx
+type nul > CustomRow.tsx
 type nul > ${m.capital}ActionsCell.tsx
 type nul > ${m.capital}CustomHeader.tsx
+type nul > ${m.capital}DepartmentCell.tsx
+type nul > ${m.capital}EmailCell.tsx
+type nul > ${m.capital}InfoCell.tsx
+type nul > ${m.capital}LeaveDaysCell.tsx
+type nul > ${m.capital}PositionCell.tsx
+type nul > ${m.capital}SelectionCell.tsx
+type nul > ${m.capital}SelectionHeader.tsx
+type nul > ${m.capital}StatusCell.tsx
+cd ..\\..\\..
+
+REM user-edit-modal folder
+mkdir ${m.name}-edit-modal 2>nul
+cd ${m.name}-edit-modal
+type nul > ChangePasswordModal.tsx
+type nul > CreateDepartmentModal.tsx
+type nul > ${m.capital}EditModal.tsx
+type nul > ${m.capital}EditModalForm.tsx
+type nul > ${m.capital}EditModalFormWrapper.tsx
+type nul > ${m.capital}EditModalHeader.tsx
 cd ..
 
-REM main page
-type nul > ${m.capital}ManagementPage.tsx
-
-
+echo ✅ Done! Created 33 files
 dir /s /b`;
     
     document.getElementById('winCommands').textContent = cmd;
@@ -194,51 +272,87 @@ function generateMacCMD() {
     let cmd = `#!/bin/bash
 echo "🚀 Creating ${m.capital} Management Module..."
 
+# ไปที่ path
+cd "${m.basePath}"
+
 # สร้าง root folder
-mkdir -p "${m.basePath}/${m.folder}-management"
-cd "${m.basePath}/${m.folder}-management"
+mkdir -p ${m.name}-management
+cd ${m.name}-management
+
+# สร้าง UsersPage.tsx
+touch ${m.capital}Page.tsx
+
+# สร้าง users-list folder
+mkdir -p ${m.name}-list
+cd ${m.name}-list
+
+# สร้าง UsersList.tsx
+touch ${m.capital}List.tsx
+
+# สร้าง components structure
+mkdir -p components/header components/loading components/pagination
+
+# header files
+cd components/header
+touch ${m.capital}ListToolbar.tsx
+touch ${m.capital}ListFilter.tsx
+touch ${m.capital}ListGrouping.tsx
+touch ${m.capital}ListHeader.tsx
+touch ${m.capital}ListSearchComponent.tsx
+cd ../../..
+
+# loading files
+cd components/loading
+touch ${m.capital}ListLoading.tsx
+cd ../..
+
+# pagination files
+cd components/pagination
+touch ${m.capital}ListPagination.tsx
+cd ../..
 
 # core folder
 mkdir -p core
 cd core
-touch ${m.name}_models.ts
-touch ${m.name}_requests.ts
+touch _models.ts
+touch _requests.ts
 touch ListViewProvider.tsx
 touch QueryRequestProvider.tsx
 touch QueryResponseProvider.tsx
 cd ..
 
-# components folder
-mkdir -p components/header components/listing components/modals
-
-cd components/header
-touch ${m.capital}ListHeader.tsx
-cd ../..
-
-cd components/listing
+# table folder
+mkdir -p table/columns
+cd table
 touch ${m.capital}Table.tsx
-touch ${m.capital}TableFooter.tsx
-cd ../..
-
-cd components/modals
-touch ${m.capital}EditModal.tsx
-cd ../..
-
-# table-columns folder
-mkdir -p table-columns
-cd table-columns
-touch ${m.capital}Columns.tsx
-touch ${m.capital}InfoCell.tsx
-touch ${m.capital}ImageCell.tsx
-touch ${m.capital}StatusCell.tsx
+cd columns
+touch _columns.tsx
+touch CustomHeaderColumn.tsx
+touch CustomRow.tsx
 touch ${m.capital}ActionsCell.tsx
 touch ${m.capital}CustomHeader.tsx
+touch ${m.capital}DepartmentCell.tsx
+touch ${m.capital}EmailCell.tsx
+touch ${m.capital}InfoCell.tsx
+touch ${m.capital}LeaveDaysCell.tsx
+touch ${m.capital}PositionCell.tsx
+touch ${m.capital}SelectionCell.tsx
+touch ${m.capital}SelectionHeader.tsx
+touch ${m.capital}StatusCell.tsx
+cd ../../../..
+
+# user-edit-modal folder
+mkdir -p ${m.name}-edit-modal
+cd ${m.name}-edit-modal
+touch ChangePasswordModal.tsx
+touch CreateDepartmentModal.tsx
+touch ${m.capital}EditModal.tsx
+touch ${m.capital}EditModalForm.tsx
+touch ${m.capital}EditModalFormWrapper.tsx
+touch ${m.capital}EditModalHeader.tsx
 cd ..
 
-# main page
-touch ${m.capital}ManagementPage.tsx
-
-echo "✅ Done! Created 16 files"
+echo "✅ Done! Created 33 files"
 ls -R`;
     
     document.getElementById('macCommands').textContent = cmd;
@@ -265,14 +379,13 @@ function copyName(name) {
 
 function copyAllNames() {
     const names = files.map(f => {
-        return f.name
+        return f.path
             .replace('[module]', currentModule.name)
-            .replace('[Module]', currentModule.capital)
-            .replace('[folder]', currentModule.folder);
+            .replace('[Module]', currentModule.capital);
     }).join('\n');
     
     navigator.clipboard.writeText(names);
-    alert('✅ คัดลอกชื่อไฟล์ทั้งหมดแล้ว');
+    alert('✅ คัดลอกชื่อไฟล์และ path ทั้งหมดแล้ว');
 }
 
 function copyWinCommands() {

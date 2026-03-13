@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚡ Metronic Full Module Generator</title>
+  <title>📁 User Management Module Generator</title>
   <style>
     * {
       margin: 0;
@@ -230,8 +230,8 @@
 <body>
 <div class="container">
   <div class="header">
-    <h1>⚡ Metronic Full Module Generator</h1>
-    <p>สร้างครบทุกไฟล์! CRUD + Image Upload + SweetAlert2 + Metronic Theme</p>
+    <h1>📁 User Management Module Generator</h1>
+    <p>สร้างครบทุกไฟล์ตามโครงสร้าง user-management (37 ไฟล์)</p>
   </div>
 
   <div class="grid-2">
@@ -240,18 +240,18 @@
       <h2>📝 กำหนดค่า Module</h2>
       
       <div class="form-group">
-        <label>🔤 ชื่อ Module (singular)</label>
-        <input type="text" id="moduleName" value="employee" placeholder="employee">
+        <label>🔤 ชื่อ Module (ตัวเล็ก) เช่น user</label>
+        <input type="text" id="moduleName" value="user" placeholder="user">
       </div>
       
       <div class="form-group">
-        <label>📁 ชื่อ Folder (plural)</label>
-        <input type="text" id="folderName" value="employees" placeholder="employees">
+        <label>🏷️ ชื่อ Module (ตัวใหญ่) เช่น User</label>
+        <input type="text" id="moduleCapital" value="User" placeholder="User">
       </div>
       
       <div class="form-group">
-        <label>🏷️ Interface Name</label>
-        <input type="text" id="interfaceName" value="EmployeeData" placeholder="EmployeeData">
+        <label>📂 Base Path</label>
+        <input type="text" id="basePath" value="src/app/modules/apps" placeholder="src/app/modules/apps">
       </div>
 
       <div class="backend-config">
@@ -279,41 +279,31 @@
       <div class="fields-section">
         <h3>📋 Interface Fields</h3>
         <textarea id="interfaceFields" rows="8" style="font-family: monospace;">id?: string
-employee_code: string
+username: string
+email: string
 first_name: string
 last_name: string
-nickname: string
-email: string
-phone: string
-image_url: string
 department_id: string
 position_id: string
-hire_date: string
-salary: number
+leave_days: number
 status: 'Active' | 'Inactive' | 'On Leave'
+image_url: string
 createdAt?: string
 updatedAt?: string</textarea>
       </div>
 
-      <div class="fields-section">
-        <h3>👁️ เลือก Fields ที่จะแสดงใน Table</h3>
-        <div id="fieldCheckboxes" class="field-list">
-          <!-- จะถูกสร้างด้วย JavaScript -->
-        </div>
-      </div>
-
-      <button class="btn btn-primary" onclick="generateModule()">🚀 Generate Full Module</button>
+      <button class="btn btn-primary" onclick="generateModule()">🚀 Generate Module Structure</button>
     </div>
 
     <!-- Right: Output Preview -->
     <div class="card">
-      <h2>📂 โครงสร้างไฟล์ทั้งหมด (15 ไฟล์)</h2>
+      <h2>📂 โครงสร้างไฟล์ทั้งหมด (37 ไฟล์)</h2>
       
       <div class="stats">
-        <div class="stat-item"><span class="stat-value" id="folderCount">5</span><span class="stat-label">Folders</span></div>
-        <div class="stat-item"><span class="stat-value" id="fileCount">15</span><span class="stat-label">Files</span></div>
+        <div class="stat-item"><span class="stat-value" id="folderCount">10</span><span class="stat-label">Folders</span></div>
+        <div class="stat-item"><span class="stat-value" id="fileCount">37</span><span class="stat-label">Files</span></div>
         <div class="stat-item"><span class="stat-value" id="apiCount">7</span><span class="stat-label">APIs</span></div>
-        <div class="stat-item"><span class="stat-value" id="componentCount">12</span><span class="stat-label">Components</span></div>
+        <div class="stat-item"><span class="stat-value" id="componentCount">25</span><span class="stat-label">Components</span></div>
       </div>
 
       <div class="file-tree" id="fileTree"></div>
@@ -330,103 +320,78 @@ updatedAt?: string</textarea>
 
 <script>
   let currentModule = {
-    name: 'employee',
-    folder: 'employees',
-    interface: 'EmployeeData',
-    fields: [],
-    selectedFields: [],
-    backendType: 'firebase'
+    name: 'user',
+    capital: 'User',
+    basePath: 'src/app/modules/apps',
+    backendType: 'firebase',
+    firebasePath: '../../../../../firebase/useFirebase'
   };
 
-  let currentFile = 'models';
+  let currentFile = 'page';
 
-  // สร้าง checkbox สำหรับเลือก fields
-  function updateFieldCheckboxes() {
-    const fieldsText = document.getElementById('interfaceFields').value;
-    const lines = fieldsText.split('\n').filter(line => line.trim());
-    const container = document.getElementById('fieldCheckboxes');
-    
-    let html = '';
-    lines.forEach(line => {
-      const [name, type] = line.split(':').map(s => s.trim());
-      if (name && type && !name.includes('id?') && !name.includes('createdAt') && !name.includes('updatedAt')) {
-        const checked = name === 'image_url' || name === 'status' || name.includes('name') ? 'checked' : '';
-        html += `
-          <div class="field-item">
-            <input type="checkbox" class="field-checkbox" value="${name}" ${checked}>
-            <span class="field-name">${name}</span>
-            <span class="field-type">${type}</span>
-          </div>
-        `;
-      }
-    });
-    
-    container.innerHTML = html || '<div class="field-item">ไม่มี fields ให้เลือก</div>';
-  }
-
-  // อ่านค่าที่เลือก
-  function getSelectedFields() {
-    const checkboxes = document.querySelectorAll('.field-checkbox:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
-  }
-
-  // แสดง/ซ่อน backend config
-  document.querySelectorAll('input[name="backendType"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      document.getElementById('firebaseConfig').style.display = 'none';
-      document.getElementById('mongodbConfig').style.display = 'none';
-      document.getElementById('apiConfig').style.display = 'none';
-      
-      if (this.value === 'firebase') document.getElementById('firebaseConfig').style.display = 'block';
-      else if (this.value === 'mongodb') document.getElementById('mongodbConfig').style.display = 'block';
-      else if (this.value === 'api') document.getElementById('apiConfig').style.display = 'block';
-    });
-  });
-
-  document.getElementById('interfaceFields').addEventListener('input', updateFieldCheckboxes);
-  updateFieldCheckboxes();
-
-  // รายการไฟล์ทั้งหมด
+  // รายการไฟล์ทั้งหมดตามโครงสร้าง user-management
   const allFiles = [
-    { id: 'models', name: 'models.ts', path: 'core/[module]_models.ts' },
-    { id: 'requests', name: 'requests.ts', path: 'core/[module]_requests.ts' },
-    { id: 'ListViewProvider', name: 'ListViewProvider.tsx', path: 'core/ListViewProvider.tsx' },
-    { id: 'QueryRequestProvider', name: 'QueryRequestProvider.tsx', path: 'core/QueryRequestProvider.tsx' },
-    { id: 'QueryResponseProvider', name: 'QueryResponseProvider.tsx', path: 'core/QueryResponseProvider.tsx' },
-    { id: 'ListHeader', name: '[Module]ListHeader.tsx', path: 'components/header/[Module]ListHeader.tsx' },
-    { id: 'Table', name: '[Module]Table.tsx', path: 'components/listing/[Module]Table.tsx' },
-    { id: 'TableFooter', name: '[Module]TableFooter.tsx', path: 'components/listing/[Module]TableFooter.tsx' },
-    { id: 'EditModal', name: '[Module]EditModal.tsx', path: 'components/modals/[Module]EditModal.tsx' },
-    { id: 'Columns', name: '[Module]Columns.tsx', path: 'table-columns/[Module]Columns.tsx' },
-    { id: 'InfoCell', name: '[Module]InfoCell.tsx', path: 'table-columns/[Module]InfoCell.tsx' },
-    { id: 'ImageCell', name: '[Module]ImageCell.tsx', path: 'table-columns/[Module]ImageCell.tsx' },
-    { id: 'StatusCell', name: '[Module]StatusCell.tsx', path: 'table-columns/[Module]StatusCell.tsx' },
-    { id: 'ActionsCell', name: '[Module]ActionsCell.tsx', path: 'table-columns/[Module]ActionsCell.tsx' },
-    { id: 'CustomHeader', name: '[Module]CustomHeader.tsx', path: 'table-columns/[Module]CustomHeader.tsx' },
-    { id: 'Page', name: '[Module]ManagementPage.tsx', path: '[Module]ManagementPage.tsx' }
+    { id: 'page', name: '[Module]Page.tsx', path: '[Module]Page.tsx', folder: 'root' },
+    
+    // users-list folder
+    { id: 'list', name: '[Module]List.tsx', path: '[module]-list/[Module]List.tsx', folder: 'list' },
+    
+    // header components
+    { id: 'toolbar', name: '[Module]ListToolbar.tsx', path: '[module]-list/components/header/[Module]ListToolbar.tsx', folder: 'header' },
+    { id: 'filter', name: '[Module]ListFilter.tsx', path: '[module]-list/components/header/[Module]ListFilter.tsx', folder: 'header' },
+    { id: 'grouping', name: '[Module]ListGrouping.tsx', path: '[module]-list/components/header/[Module]ListGrouping.tsx', folder: 'header' },
+    { id: 'listheader', name: '[Module]ListHeader.tsx', path: '[module]-list/components/header/[Module]ListHeader.tsx', folder: 'header' },
+    { id: 'search', name: '[Module]ListSearchComponent.tsx', path: '[module]-list/components/header/[Module]ListSearchComponent.tsx', folder: 'header' },
+    
+    // loading components
+    { id: 'loading', name: '[Module]ListLoading.tsx', path: '[module]-list/components/loading/[Module]ListLoading.tsx', folder: 'loading' },
+    
+    // pagination components
+    { id: 'pagination', name: '[Module]ListPagination.tsx', path: '[module]-list/components/pagination/[Module]ListPagination.tsx', folder: 'pagination' },
+    
+    // core files
+    { id: 'models', name: '_models.ts', path: '[module]-list/core/_models.ts', folder: 'core' },
+    { id: 'requests', name: '_requests.ts', path: '[module]-list/core/_requests.ts', folder: 'core' },
+    { id: 'ListViewProvider', name: 'ListViewProvider.tsx', path: '[module]-list/core/ListViewProvider.tsx', folder: 'core' },
+    { id: 'QueryRequestProvider', name: 'QueryRequestProvider.tsx', path: '[module]-list/core/QueryRequestProvider.tsx', folder: 'core' },
+    { id: 'QueryResponseProvider', name: 'QueryResponseProvider.tsx', path: '[module]-list/core/QueryResponseProvider.tsx', folder: 'core' },
+    
+    // table
+    { id: 'table', name: '[Module]Table.tsx', path: '[module]-list/table/[Module]Table.tsx', folder: 'table' },
+    
+    // columns
+    { id: 'columns', name: '_columns.tsx', path: '[module]-list/table/columns/_columns.tsx', folder: 'columns' },
+    { id: 'CustomHeaderColumn', name: 'CustomHeaderColumn.tsx', path: '[module]-list/table/columns/CustomHeaderColumn.tsx', folder: 'columns' },
+    { id: 'CustomRow', name: 'CustomRow.tsx', path: '[module]-list/table/columns/CustomRow.tsx', folder: 'columns' },
+    { id: 'ActionsCell', name: '[Module]ActionsCell.tsx', path: '[module]-list/table/columns/[Module]ActionsCell.tsx', folder: 'columns' },
+    { id: 'CustomHeader', name: '[Module]CustomHeader.tsx', path: '[module]-list/table/columns/[Module]CustomHeader.tsx', folder: 'columns' },
+    { id: 'DepartmentCell', name: '[Module]DepartmentCell.tsx', path: '[module]-list/table/columns/[Module]DepartmentCell.tsx', folder: 'columns' },
+    { id: 'EmailCell', name: '[Module]EmailCell.tsx', path: '[module]-list/table/columns/[Module]EmailCell.tsx', folder: 'columns' },
+    { id: 'InfoCell', name: '[Module]InfoCell.tsx', path: '[module]-list/table/columns/[Module]InfoCell.tsx', folder: 'columns' },
+    { id: 'LeaveDaysCell', name: '[Module]LeaveDaysCell.tsx', path: '[module]-list/table/columns/[Module]LeaveDaysCell.tsx', folder: 'columns' },
+    { id: 'PositionCell', name: '[Module]PositionCell.tsx', path: '[module]-list/table/columns/[Module]PositionCell.tsx', folder: 'columns' },
+    { id: 'SelectionCell', name: '[Module]SelectionCell.tsx', path: '[module]-list/table/columns/[Module]SelectionCell.tsx', folder: 'columns' },
+    { id: 'SelectionHeader', name: '[Module]SelectionHeader.tsx', path: '[module]-list/table/columns/[Module]SelectionHeader.tsx', folder: 'columns' },
+    { id: 'StatusCell', name: '[Module]StatusCell.tsx', path: '[module]-list/table/columns/[Module]StatusCell.tsx', folder: 'columns' },
+    
+    // edit modal files
+    { id: 'ChangePasswordModal', name: 'ChangePasswordModal.tsx', path: '[module]-edit-modal/ChangePasswordModal.tsx', folder: 'edit-modal' },
+    { id: 'CreateDepartmentModal', name: 'CreateDepartmentModal.tsx', path: '[module]-edit-modal/CreateDepartmentModal.tsx', folder: 'edit-modal' },
+    { id: 'EditModal', name: '[Module]EditModal.tsx', path: '[module]-edit-modal/[Module]EditModal.tsx', folder: 'edit-modal' },
+    { id: 'EditModalForm', name: '[Module]EditModalForm.tsx', path: '[module]-edit-modal/[Module]EditModalForm.tsx', folder: 'edit-modal' },
+    { id: 'EditModalFormWrapper', name: '[Module]EditModalFormWrapper.tsx', path: '[module]-edit-modal/[Module]EditModalFormWrapper.tsx', folder: 'edit-modal' },
+    { id: 'EditModalHeader', name: '[Module]EditModalHeader.tsx', path: '[module]-edit-modal/[Module]EditModalHeader.tsx', folder: 'edit-modal' }
   ];
 
   function generateModule() {
     // อ่านค่าจาก input
     currentModule.name = document.getElementById('moduleName').value.toLowerCase();
-    currentModule.folder = document.getElementById('folderName').value.toLowerCase();
-    currentModule.interface = document.getElementById('interfaceName').value;
+    currentModule.capital = document.getElementById('moduleCapital').value;
+    currentModule.basePath = document.getElementById('basePath').value;
     currentModule.backendType = document.querySelector('input[name="backendType"]:checked').value;
     currentModule.firebasePath = document.getElementById('firebasePath')?.value || '';
     currentModule.apiUrl = document.getElementById('apiUrl')?.value || '';
     currentModule.mongodbUrl = document.getElementById('mongodbUrl')?.value || '';
-    
-    // อ่าน fields
-    const fieldsText = document.getElementById('interfaceFields').value;
-    currentModule.fields = fieldsText.split('\n')
-      .filter(line => line.trim())
-      .map(line => {
-        const [name, type] = line.split(':').map(s => s.trim());
-        return { name, type };
-      });
-    
-    // อ่าน fields ที่เลือก
-    currentModule.selectedFields = getSelectedFields();
 
     // สร้าง tabs
     createTabs();
@@ -435,13 +400,12 @@ updatedAt?: string</textarea>
     updateFileTree();
     
     // แสดงโค้ดแรก
-    showFile('models');
+    showFile('page');
   }
 
   function createTabs() {
-    const Module = currentModule.interface.replace('Data', '');
     const tabsHtml = allFiles.map(file => {
-      const fileName = file.name.replace('[Module]', Module);
+      const fileName = file.name.replace('[Module]', currentModule.capital);
       return `<div class="tab ${file.id === currentFile ? 'active' : ''}" onclick="showFile('${file.id}')">📄 ${fileName}</div>`;
     }).join('');
     
@@ -453,57 +417,79 @@ updatedAt?: string</textarea>
     createTabs();
     
     let code = '';
-    switch(fileId) {
-      case 'models': code = generateModelsCode(); break;
-      case 'requests': code = generateRequestsCode(); break;
-      case 'ListViewProvider': code = generateListViewProvider(); break;
-      case 'QueryRequestProvider': code = generateQueryRequestProvider(); break;
-      case 'QueryResponseProvider': code = generateQueryResponseProvider(); break;
-      case 'ListHeader': code = generateListHeader(); break;
-      case 'Table': code = generateTable(); break;
-      case 'TableFooter': code = generateTableFooter(); break;
-      case 'EditModal': code = generateEditModal(); break;
-      case 'Columns': code = generateColumnsCode(); break;
-      case 'InfoCell': code = generateInfoCell(); break;
-      case 'ImageCell': code = generateImageCell(); break;
-      case 'StatusCell': code = generateStatusCell(); break;
-      case 'ActionsCell': code = generateActionsCell(); break;
-      case 'CustomHeader': code = generateCustomHeader(); break;
-      case 'Page': code = generatePage(); break;
-    }
+    const file = allFiles.find(f => f.id === fileId);
+    
+    if (fileId === 'page') code = generatePageCode();
+    else if (fileId === 'list') code = generateListCode();
+    else if (fileId === 'models') code = generateModelsCode();
+    else if (fileId === 'requests') code = generateRequestsCode();
+    else if (fileId === 'ListViewProvider') code = generateListViewProvider();
+    else if (fileId === 'QueryRequestProvider') code = generateQueryRequestProvider();
+    else if (fileId === 'QueryResponseProvider') code = generateQueryResponseProvider();
+    else if (fileId === 'table') code = generateTableCode();
+    else if (fileId === 'columns') code = generateColumnsCode();
+    else if (fileId === 'EditModal') code = generateEditModalCode();
+    else if (fileId === 'EditModalForm') code = generateEditModalFormCode();
+    else if (fileId === 'ActionsCell') code = generateActionsCellCode();
+    else if (fileId === 'StatusCell') code = generateStatusCellCode();
+    else if (fileId === 'InfoCell') code = generateInfoCellCode();
+    else if (fileId === 'EmailCell') code = generateEmailCellCode();
+    else if (fileId === 'DepartmentCell') code = generateDepartmentCellCode();
+    else if (fileId === 'PositionCell') code = generatePositionCellCode();
+    else if (fileId === 'LeaveDaysCell') code = generateLeaveDaysCellCode();
+    else code = '// ' + file.name + '\n\n// กรุณาเพิ่มโค้ดตามต้องการ';
     
     document.getElementById('codePreview').textContent = code;
   }
 
   function updateFileTree() {
-    const module = currentModule.name;
-    const folder = currentModule.folder;
-    const Module = currentModule.interface.replace('Data', '');
+    const m = currentModule;
     
     const tree = `
-📁 src/app/modules/apps/${folder}-management/
-  📁 core/
-    📄 ${module}_models.ts
-    📄 ${module}_requests.ts
-    📄 ListViewProvider.tsx
-    📄 QueryRequestProvider.tsx
-    📄 QueryResponseProvider.tsx
-  📁 components/
-    📁 header/
-      📄 ${Module}ListHeader.tsx
-    📁 listing/
-      📄 ${Module}Table.tsx
-      📄 ${Module}TableFooter.tsx
-    📁 modals/
-      📄 ${Module}EditModal.tsx
-  📁 table-columns/
-    📄 ${Module}Columns.tsx
-    📄 ${Module}InfoCell.tsx
-    📄 ${Module}ImageCell.tsx
-    📄 ${Module}StatusCell.tsx
-    📄 ${Module}ActionsCell.tsx
-    📄 ${Module}CustomHeader.tsx
-  📄 ${Module}ManagementPage.tsx
+📁 ${m.basePath}/${m.name}-management/
+  📄 ${m.capital}Page.tsx
+  📁 ${m.name}-list/
+    📄 ${m.capital}List.tsx
+    📁 components/
+      📁 header/
+        📄 ${m.capital}ListToolbar.tsx
+        📄 ${m.capital}ListFilter.tsx
+        📄 ${m.capital}ListGrouping.tsx
+        📄 ${m.capital}ListHeader.tsx
+        📄 ${m.capital}ListSearchComponent.tsx
+      📁 loading/
+        📄 ${m.capital}ListLoading.tsx
+      📁 pagination/
+        📄 ${m.capital}ListPagination.tsx
+    📁 core/
+      📄 _models.ts
+      📄 _requests.ts
+      📄 ListViewProvider.tsx
+      📄 QueryRequestProvider.tsx
+      📄 QueryResponseProvider.tsx
+    📁 table/
+      📄 ${m.capital}Table.tsx
+      📁 columns/
+        📄 _columns.tsx
+        📄 CustomHeaderColumn.tsx
+        📄 CustomRow.tsx
+        📄 ${m.capital}ActionsCell.tsx
+        📄 ${m.capital}CustomHeader.tsx
+        📄 ${m.capital}DepartmentCell.tsx
+        📄 ${m.capital}EmailCell.tsx
+        📄 ${m.capital}InfoCell.tsx
+        📄 ${m.capital}LeaveDaysCell.tsx
+        📄 ${m.capital}PositionCell.tsx
+        📄 ${m.capital}SelectionCell.tsx
+        📄 ${m.capital}SelectionHeader.tsx
+        📄 ${m.capital}StatusCell.tsx
+  📁 ${m.name}-edit-modal/
+    📄 ChangePasswordModal.tsx
+    📄 CreateDepartmentModal.tsx
+    📄 ${m.capital}EditModal.tsx
+    📄 ${m.capital}EditModalForm.tsx
+    📄 ${m.capital}EditModalFormWrapper.tsx
+    📄 ${m.capital}EditModalHeader.tsx
     `.trim();
     
     document.getElementById('fileTree').innerHTML = tree.replace(/ /g, '&nbsp;').replace(/\n/g, '<br>');
@@ -511,45 +497,96 @@ updatedAt?: string</textarea>
 
   // ========== Code Generators ==========
   
+  function generatePageCode() {
+    const m = currentModule;
+    return `import { FC } from 'react'
+import { ListViewProvider } from './${m.name}-list/core/ListViewProvider'
+import { QueryRequestProvider } from './${m.name}-list/core/QueryRequestProvider'
+import { QueryResponseProvider } from './${m.name}-list/core/QueryResponseProvider'
+import { ${m.capital}List } from './${m.name}-list/${m.capital}List'
+
+const ${m.capital}Page: FC = () => {
+  return (
+    <QueryRequestProvider>
+      <QueryResponseProvider>
+        <ListViewProvider>
+          <${m.capital}List />
+        </ListViewProvider>
+      </QueryResponseProvider>
+    </QueryRequestProvider>
+  )
+}
+
+export { ${m.capital}Page }`;
+  }
+
+  function generateListCode() {
+    const m = currentModule;
+    return `import { FC } from 'react'
+import { ${m.capital}ListHeader } from './components/header/${m.capital}ListHeader'
+import { ${m.capital}Table } from './table/${m.capital}Table'
+import { ${m.capital}ListLoading } from './components/loading/${m.capital}ListLoading'
+import { ${m.capital}ListPagination } from './components/pagination/${m.capital}ListPagination'
+import { useQueryResponseLoading } from './core/QueryResponseProvider'
+
+const ${m.capital}List: FC = () => {
+  const isLoading = useQueryResponseLoading()
+
+  return (
+    <div className="card">
+      <${m.capital}ListHeader />
+      <${m.capital}Table />
+      {isLoading && <${m.capital}ListLoading />}
+      <${m.capital}ListPagination />
+    </div>
+  )
+}
+
+export { ${m.capital}List }`;
+  }
+
   function generateModelsCode() {
-    const fields = currentModule.fields.map(f => `  ${f.name}: ${f.type}`).join('\n');
-    return `export interface ${currentModule.interface} {
-${fields}
+    return `export interface User {
+  id?: string
+  username: string
+  email: string
+  first_name: string
+  last_name: string
+  department_id: string
+  position_id: string
+  leave_days: number
+  status: 'Active' | 'Inactive' | 'On Leave'
+  image_url: string
+  createdAt?: string
+  updatedAt?: string
 }`;
   }
 
   function generateRequestsCode() {
-    const module = currentModule.name;
-    const Module = currentModule.interface.replace('Data', '');
-    const collection = currentModule.folder;
+    const m = currentModule;
     
-    if (currentModule.backendType === 'firebase') {
+    if (m.backendType === 'firebase') {
       return `import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { db, storage } from '${currentModule.firebasePath}'
-import { ${currentModule.interface} } from './${module}_models'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '${m.firebasePath}'
+import { User } from './_models'
 
-const COLLECTION = '${collection}'
+const COLLECTION = 'users'
 
 // Get all
-export const get${Module}s = async (): Promise<${currentModule.interface}[]> => {
+export const getUsers = async (): Promise<User[]> => {
   const querySnapshot = await getDocs(collection(db, COLLECTION))
-  return querySnapshot.docs.map(doc => ({ 
-    id: doc.id, 
-    ...doc.data() 
-  } as ${currentModule.interface}))
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User))
 }
 
 // Get by ID
-export const get${Module}ById = async (id: string): Promise<${currentModule.interface} | null> => {
+export const getUserById = async (id: string): Promise<User | null> => {
   const docSnap = await getDoc(doc(db, COLLECTION, id))
-  return docSnap.exists() 
-    ? { id: docSnap.id, ...docSnap.data() } as ${currentModule.interface} 
-    : null
+  return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as User : null
 }
 
 // Create
-export const create${Module} = async (data: ${currentModule.interface}): Promise<${currentModule.interface}> => {
+export const createUser = async (data: User): Promise<User> => {
   const docRef = await addDoc(collection(db, COLLECTION), {
     ...data,
     createdAt: new Date().toISOString(),
@@ -559,7 +596,7 @@ export const create${Module} = async (data: ${currentModule.interface}): Promise
 }
 
 // Update
-export const update${Module} = async (id: string, data: Partial<${currentModule.interface}>): Promise<void> => {
+export const updateUser = async (id: string, data: Partial<User>): Promise<void> => {
   await updateDoc(doc(db, COLLECTION, id), {
     ...data,
     updatedAt: new Date().toISOString()
@@ -567,53 +604,47 @@ export const update${Module} = async (id: string, data: Partial<${currentModule.
 }
 
 // Delete
-export const delete${Module} = async (id: string): Promise<void> => {
+export const deleteUser = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, COLLECTION, id))
 }
 
 // Delete selected
-export const deleteSelected${Module}s = async (ids: string[]): Promise<void> => {
-  const promises = ids.map(id => delete${Module}(id))
+export const deleteSelectedUsers = async (ids: string[]): Promise<void> => {
+  const promises = ids.map(id => deleteUser(id))
   await Promise.all(promises)
 }`;
     } else {
       return `import axios from 'axios'
-import { ${currentModule.interface} } from './${module}_models'
+import { User } from './_models'
 
-const API_URL = '${currentModule.apiUrl || 'http://localhost:8000/api'}/${collection}'
+const API_URL = '${m.apiUrl || 'http://localhost:8000/api'}/users'
 
-// Get all
-export const get${Module}s = async (): Promise<${currentModule.interface}[]> => {
+export const getUsers = async (): Promise<User[]> => {
   const response = await axios.get(API_URL)
   return response.data
 }
 
-// Get by ID
-export const get${Module}ById = async (id: string): Promise<${currentModule.interface}> => {
+export const getUserById = async (id: string): Promise<User> => {
   const response = await axios.get(\`\${API_URL}/\${id}\`)
   return response.data
 }
 
-// Create
-export const create${Module} = async (data: ${currentModule.interface}): Promise<${currentModule.interface}> => {
+export const createUser = async (data: User): Promise<User> => {
   const response = await axios.post(API_URL, data)
   return response.data
 }
 
-// Update
-export const update${Module} = async (id: string, data: Partial<${currentModule.interface}>): Promise<${currentModule.interface}> => {
+export const updateUser = async (id: string, data: Partial<User>): Promise<User> => {
   const response = await axios.put(\`\${API_URL}/\${id}\`, data)
   return response.data
 }
 
-// Delete
-export const delete${Module} = async (id: string): Promise<void> => {
+export const deleteUser = async (id: string): Promise<void> => {
   await axios.delete(\`\${API_URL}/\${id}\`)
 }
 
-// Delete selected
-export const deleteSelected${Module}s = async (ids: string[]): Promise<void> => {
-  const promises = ids.map(id => delete${Module}(id))
+export const deleteSelectedUsers = async (ids: string[]): Promise<void> => {
+  const promises = ids.map(id => deleteUser(id))
   await Promise.all(promises)
 }`;
     }
@@ -694,21 +725,19 @@ export { QueryRequestProvider, useQueryRequest }`;
   }
 
   function generateQueryResponseProvider() {
-    const module = currentModule.name;
-    const Module = currentModule.interface.replace('Data', '');
+    const m = currentModule;
     
     return `import { FC, useContext, useState, useEffect, useMemo, createContext } from 'react'
 import { useQuery } from 'react-query'
 import {
   initialQueryResponse,
   initialQueryState,
-  PaginationState,
   QUERIES,
   stringifyRequestQuery,
   WithChildren,
 } from '../../../../../../_metronic/helpers'
-import { get${Module}s } from './${module}_requests'
-import { ${currentModule.interface} } from './${module}_models'
+import { getUsers } from './_requests'
+import { User } from './_models'
 import { useQueryRequest } from './QueryRequestProvider'
 
 type QueryResponseContextProps = {
@@ -732,12 +761,11 @@ const QueryResponseProvider: FC<WithChildren> = ({ children }) => {
   }, [updatedQuery])
 
   const { isFetching, refetch, data: response } = useQuery(
-    \`\${QUERIES.USERS_LIST}-${module}s-\${query}\`,
+    \`\${QUERIES.USERS_LIST}-${m.name}s-\${query}\`,
     async () => {
       try {
-        let items = await get${Module}s()
+        let items = await getUsers()
         
-        // Apply search
         if (state.search) {
           const searchTerm = state.search.toLowerCase()
           items = items.filter(item => 
@@ -747,7 +775,6 @@ const QueryResponseProvider: FC<WithChildren> = ({ children }) => {
           )
         }
 
-        // Apply pagination
         const page = state.page || 1
         const itemsPerPage = state.items_per_page || 10
         const total = items.length
@@ -790,7 +817,7 @@ const useQueryResponse = () => {
   return context
 }
 
-const useQueryResponseData = (): ${currentModule.interface}[] => {
+const useQueryResponseData = (): User[] => {
   const { response } = useQueryResponse()
   return response?.data || []
 }
@@ -814,51 +841,17 @@ export {
 }`;
   }
 
-  function generateListHeader() {
-    const Module = currentModule.interface.replace('Data', '');
-    
+  function generateTableCode() {
+    const m = currentModule;
     return `import { FC } from 'react'
-import { KTIcon } from '../../../../../../../_metronic/helpers'
-import { useListView } from '../../core/ListViewProvider'
-
-const ${Module}ListHeader: FC = () => {
-  const { setItemIdForUpdate } = useListView()
-
-  const openAddModal = () => {
-    setItemIdForUpdate(undefined)
-  }
-
-  return (
-    <div className='card-header border-0 pt-6'>
-      <div className='card-title'>
-        <h2>${Module} List</h2>
-      </div>
-      <div className='card-toolbar'>
-        <button className='btn btn-primary' onClick={openAddModal}>
-          <KTIcon iconName='plus' className='fs-2' />
-          Add ${Module}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-export { ${Module}ListHeader }`;
-  }
-
-  function generateTable() {
-    const module = currentModule.name;
-    const Module = currentModule.interface.replace('Data', '');
-    
-    return `import { FC } from 'react'
-import { useQueryResponseData, useQueryResponseLoading } from '../../core/QueryResponseProvider'
-import { ${module}Columns } from '../../table-columns/${Module}Columns'
+import { useQueryResponseData, useQueryResponseLoading } from '../core/QueryResponseProvider'
+import { UsersList } from './columns/_columns'
 import { Table } from '../../../../../../../_metronic/partials/table/Table'
 
-const ${Module}Table: FC = () => {
+const ${m.capital}Table: FC = () => {
   const data = useQueryResponseData()
   const isLoading = useQueryResponseLoading()
-  const columns = ${module}Columns
+  const columns = UsersList
 
   return (
     <Table
@@ -869,310 +862,177 @@ const ${Module}Table: FC = () => {
   )
 }
 
-export { ${Module}Table }`;
-  }
-
-  function generateTableFooter() {
-    const Module = currentModule.interface.replace('Data', '');
-    
-    return `import { FC } from 'react'
-import { useQueryResponsePagination } from '../../core/QueryResponseProvider'
-
-const ${Module}TableFooter: FC = () => {
-  const pagination = useQueryResponsePagination()
-
-  return (
-    <div className='card-footer d-flex justify-content-between align-items-center'>
-      <div className='text-muted'>
-        Showing {pagination.from} to {pagination.to} of {pagination.total} entries
-      </div>
-      <div className='pagination'>
-        {/* Add pagination controls here */}
-      </div>
-    </div>
-  )
-}
-
-export { ${Module}TableFooter }`;
-  }
-
-  function generateEditModal() {
-    const module = currentModule.name;
-    const Module = currentModule.interface.replace('Data', '');
-    const fields = currentModule.fields.filter(f => !f.name.includes('?') && !f.name.includes('id') && !f.name.includes('At'));
-    
-    const formFields = fields.map(f => `
-          <div className="mb-7">
-            <label className="required fw-bold fs-6 mb-2">${f.name}</label>
-            <input
-              type="${f.type.includes('number') ? 'number' : 'text'}"
-              name="${f.name}"
-              className="form-control form-control-solid"
-              value={formData.${f.name} || ''}
-              onChange={handleChange}
-            />
-          </div>`).join('');
-
-    return `import { FC, useState, useEffect, useRef } from 'react'
-import { useQueryClient, useMutation } from 'react-query'
-import { useListView } from '../core/ListViewProvider'
-import { useQueryResponse } from '../core/QueryResponseProvider'
-import { create${Module}, update${Module}, get${Module}ById } from '../core/${module}_requests'
-import { ${currentModule.interface} } from '../core/${module}_models'
-import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
-import Swal from 'sweetalert2'
-${currentModule.backendType === 'firebase' ? `import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { storage } from '${currentModule.firebasePath}'` : ''}
-
-const ${Module}EditModal: FC = () => {
-  const { itemIdForUpdate, setItemIdForUpdate } = useListView()
-  const { refetch } = useQueryResponse()
-  const queryClient = useQueryClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const [formData, setFormData] = useState<Partial<${currentModule.interface}>>({})
-  const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
-
-  useEffect(() => {
-    if (itemIdForUpdate) {
-      const fetchData = async () => {
-        try {
-          setLoading(true)
-          const data = await get${Module}ById(itemIdForUpdate)
-          setFormData(data || {})
-        } catch (error) {
-          console.error('Error fetching:', error)
-        } finally {
-          setLoading(false)
-        }
-      }
-      fetchData()
-    } else {
-      setFormData({})
-    }
-  }, [itemIdForUpdate])
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploading(true)
-    try {
-      const filename = \`${module}s/\${Date.now()}_\${file.name}\`
-      const storageRef = ref(storage, filename)
-      await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(storageRef)
-      setFormData(prev => ({ ...prev, image_url: url }))
-    } catch (error) {
-      Swal.fire({ icon: 'error', title: 'Upload failed' })
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const createMutation = useMutation(() => create${Module}(formData as ${currentModule.interface}), {
-    onSuccess: () => {
-      Swal.fire({ icon: 'success', title: 'Created!', timer: 2000, showConfirmButton: false })
-      queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${module}s\`)
-      refetch()
-      setItemIdForUpdate(undefined)
-    },
-    onError: (error: any) => {
-      Swal.fire({ icon: 'error', title: 'Error!', text: error.message })
-    }
-  })
-
-  const updateMutation = useMutation(() => update${Module}(itemIdForUpdate!, formData), {
-    onSuccess: () => {
-      Swal.fire({ icon: 'success', title: 'Updated!', timer: 2000, showConfirmButton: false })
-      queryClient.invalidateQueries(\`\${QUERIES.USERS_LIST}-${module}s\`)
-      refetch()
-      setItemIdForUpdate(undefined)
-    },
-    onError: (error: any) => {
-      Swal.fire({ icon: 'error', title: 'Error!', text: error.message })
-    }
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (itemIdForUpdate) {
-      await updateMutation.mutateAsync()
-    } else {
-      await createMutation.mutateAsync()
-    }
-  }
-
-  return (
-    <div className="modal-content">
-      <div className="modal-header">
-        <h2>{itemIdForUpdate ? 'Edit' : 'Add'} ${Module}</h2>
-        <div className="btn btn-icon btn-sm" onClick={() => setItemIdForUpdate(undefined)}>
-          <KTIcon iconName="cross" className="fs-1" />
-        </div>
-      </div>
-      <div className="modal-body">
-        <form onSubmit={handleSubmit}>
-          ${formFields || '          {/* Add form fields here */}'}
-          
-          <div className="mb-7">
-            <label className="fw-bold fs-6 mb-2">Image</label>
-            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" />
-          </div>
-        </form>
-      </div>
-      <div className="modal-footer">
-        <button type="button" className="btn btn-light" onClick={() => setItemIdForUpdate(undefined)}>
-          Cancel
-        </button>
-        <button type="submit" className="btn btn-primary" disabled={loading || uploading}>
-          {loading ? 'Saving...' : 'Save'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-export { ${Module}EditModal }`;
+export { ${m.capital}Table }`;
   }
 
   function generateColumnsCode() {
-    const module = currentModule.name;
-    const Module = currentModule.interface.replace('Data', '');
-    const selectedFields = currentModule.selectedFields;
-    
-    let columnDefinitions = '';
-    
-    // Always add No column
-    columnDefinitions += `  {
-    Header: () => <th className="min-w-50px text-center">No</th>,
-    id: 'no',
-    Cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
-  },\n`;
-
-    // Add selected fields as columns
-    selectedFields.forEach(field => {
-      if (field === 'image_url') {
-        columnDefinitions += `  {
-    Header: (props) => <${Module}CustomHeader tableProps={props} title="Image" className="min-w-100px" />,
-    accessor: 'image_url',
-    Cell: ({ value }) => <${Module}ImageCell image_url={value} />,
-  },\n`;
-      } else if (field === 'status') {
-        columnDefinitions += `  {
-    Header: (props) => <${Module}CustomHeader tableProps={props} title="Status" className="min-w-100px" />,
-    accessor: 'status',
-    Cell: ({ value }) => <${Module}StatusCell status={value} />,
-  },\n`;
-      } else if (field.includes('name')) {
-        columnDefinitions += `  {
-    Header: (props) => <${Module}CustomHeader tableProps={props} title="${field}" className="min-w-150px" />,
-    accessor: '${field}',
-    Cell: ({ row }) => <${Module}InfoCell data={row.original} />,
-  },\n`;
-      } else {
-        columnDefinitions += `  {
-    Header: (props) => <${Module}CustomHeader tableProps={props} title="${field}" className="min-w-120px" />,
-    accessor: '${field}',
-    Cell: ({ value }) => <div>${`{value}`}</div>,
-  },\n`;
-      }
-    });
-
-    // Always add Actions column
-    columnDefinitions += `  {
-    Header: (props) => <${Module}CustomHeader tableProps={props} title="Actions" className="text-end min-w-100px" />,
-    id: 'actions',
-    Cell: ({ row }) => <${Module}ActionsCell id={row.original.id} />,
-  }`;
-
     return `import { Column } from 'react-table'
-import { ${currentModule.interface} } from '../core/${module}_models'
-import { ${Module}InfoCell } from './${Module}InfoCell'
-import { ${Module}ImageCell } from './${Module}ImageCell'
-import { ${Module}StatusCell } from './${Module}StatusCell'
-import { ${Module}ActionsCell } from './${Module}ActionsCell'
-import { ${Module}CustomHeader } from './${Module}CustomHeader'
+import { User } from '../../core/_models'
+import { UserSelectionCell } from './UserSelectionCell'
+import { UserSelectionHeader } from './UserSelectionHeader'
+import { UserInfoCell } from './UserInfoCell'
+import { UserEmailCell } from './UserEmailCell'
+import { UserDepartmentCell } from './UserDepartmentCell'
+import { UserPositionCell } from './UserPositionCell'
+import { UserLeaveDaysCell } from './UserLeaveDaysCell'
+import { UserStatusCell } from './UserStatusCell'
+import { UserActionsCell } from './UserActionsCell'
+import { CustomHeaderColumn } from './CustomHeaderColumn'
 
-const ${module}Columns: ReadonlyArray<Column<${currentModule.interface}>> = [
-${columnDefinitions}
+const UsersList: ReadonlyArray<Column<User>> = [
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="#" className="w-50px" />,
+    id: 'selection',
+    Cell: ({ row }) => <UserSelectionCell id={row.original.id} />,
+    Header: <UserSelectionHeader />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="User" className="min-w-200px" />,
+    id: 'info',
+    Cell: ({ row }) => <UserInfoCell user={row.original} />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="Email" className="min-w-150px" />,
+    accessor: 'email',
+    Cell: ({ value }) => <UserEmailCell email={value} />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="Department" className="min-w-125px" />,
+    accessor: 'department_id',
+    Cell: ({ value }) => <UserDepartmentCell department_id={value} />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="Position" className="min-w-125px" />,
+    accessor: 'position_id',
+    Cell: ({ value }) => <UserPositionCell position_id={value} />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="Leave Days" className="min-w-100px" />,
+    accessor: 'leave_days',
+    Cell: ({ value }) => <UserLeaveDaysCell leave_days={value} />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="Status" className="min-w-100px" />,
+    accessor: 'status',
+    Cell: ({ value }) => <UserStatusCell status={value} />,
+  },
+  {
+    Header: (props) => <CustomHeaderColumn tableProps={props} name="Actions" className="text-end min-w-100px" />,
+    id: 'actions',
+    Cell: ({ row }) => <UserActionsCell id={row.original.id} />,
+  },
 ]
 
-export { ${module}Columns }`;
+export { UsersList }`;
   }
 
-  function generateInfoCell() {
-    const Module = currentModule.interface.replace('Data', '');
-    const nameField = currentModule.fields.find(f => f.name.includes('name'))?.name || 'name';
-    
+  function generateInfoCellCode() {
+    const m = currentModule;
     return `import { FC } from 'react'
-import { ${currentModule.interface} } from '../core/${currentModule.name}_models'
+import { User } from '../../core/_models'
 
 type Props = {
-  data: ${currentModule.interface}
+  user: User
 }
 
-const ${Module}InfoCell: FC<Props> = ({ data }) => {
+const ${m.capital}InfoCell: FC<Props> = ({ user }) => {
   return (
     <div className="d-flex align-items-center">
       <div className="d-flex flex-column">
         <span className="text-gray-800 fw-bold text-hover-primary mb-1">
-          {data.${nameField}}
+          {user.first_name} {user.last_name}
         </span>
         <span className="text-gray-600 fw-semibold d-block fs-7">
-          {data.id}
+          @{user.username}
         </span>
       </div>
     </div>
   )
 }
 
-export { ${Module}InfoCell }`;
+export { ${m.capital}InfoCell }`;
   }
 
-  function generateImageCell() {
-    const Module = currentModule.interface.replace('Data', '');
-    
+  function generateEmailCellCode() {
     return `import { FC } from 'react'
-import { KTIcon } from '../../../../../../../_metronic/helpers'
 
 type Props = {
-  image_url: string
+  email: string
 }
 
-const ${Module}ImageCell: FC<Props> = ({ image_url }) => {
+const UserEmailCell: FC<Props> = ({ email }) => {
   return (
-    <div className="symbol symbol-75px">
-      {image_url ? (
-        <img src={image_url} alt="avatar" className="symbol-label" />
-      ) : (
-        <div className="symbol-label bg-light-primary">
-          <KTIcon iconName="profile" className="fs-1 text-primary" />
-        </div>
-      )}
+    <div className="text-gray-800">
+      {email}
     </div>
   )
 }
 
-export { ${Module}ImageCell }`;
+export { UserEmailCell }`;
   }
 
-  function generateStatusCell() {
-    const Module = currentModule.interface.replace('Data', '');
-    
+  function generateDepartmentCellCode() {
+    return `import { FC } from 'react'
+
+type Props = {
+  department_id: string
+}
+
+const UserDepartmentCell: FC<Props> = ({ department_id }) => {
+  return (
+    <div className="badge badge-light-info">
+      {department_id || 'N/A'}
+    </div>
+  )
+}
+
+export { UserDepartmentCell }`;
+  }
+
+  function generatePositionCellCode() {
+    return `import { FC } from 'react'
+
+type Props = {
+  position_id: string
+}
+
+const UserPositionCell: FC<Props> = ({ position_id }) => {
+  return (
+    <div className="badge badge-light-primary">
+      {position_id || 'N/A'}
+    </div>
+  )
+}
+
+export { UserPositionCell }`;
+  }
+
+  function generateLeaveDaysCellCode() {
+    return `import { FC } from 'react'
+
+type Props = {
+  leave_days: number
+}
+
+const UserLeaveDaysCell: FC<Props> = ({ leave_days }) => {
+  return (
+    <div className="text-gray-800">
+      {leave_days} days
+    </div>
+  )
+}
+
+export { UserLeaveDaysCell }`;
+  }
+
+  function generateStatusCellCode() {
     return `import { FC } from 'react'
 
 type Props = {
   status: string
 }
 
-const ${Module}StatusCell: FC<Props> = ({ status }) => {
+const UserStatusCell: FC<Props> = ({ status }) => {
   const getBadgeClass = (status: string) => {
     switch(status?.toLowerCase()) {
       case 'active': return 'badge-light-success'
@@ -1189,17 +1049,16 @@ const ${Module}StatusCell: FC<Props> = ({ status }) => {
   )
 }
 
-export { ${Module}StatusCell }`;
+export { UserStatusCell }`;
   }
 
-  function generateActionsCell() {
-    const Module = currentModule.interface.replace('Data', '');
-    
+  function generateActionsCellCode() {
+    const m = currentModule;
     return `import { FC } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
-import { useListView } from '../core/ListViewProvider'
-import { useQueryResponse } from '../core/QueryResponseProvider'
-import { delete${Module} } from '../core/${currentModule.name}_requests'
+import { useListView } from '../../core/ListViewProvider'
+import { useQueryResponse } from '../../core/QueryResponseProvider'
+import { deleteUser } from '../../core/_requests'
 import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
 
@@ -1207,15 +1066,15 @@ type Props = {
   id: string
 }
 
-const ${Module}ActionsCell: FC<Props> = ({ id }) => {
+const ${m.capital}ActionsCell: FC<Props> = ({ id }) => {
   const { setItemIdForUpdate } = useListView()
   const { query } = useQueryResponse()
   const queryClient = useQueryClient()
 
-  const deleteMutation = useMutation(() => delete${Module}(id), {
+  const deleteMutation = useMutation(() => deleteUser(id), {
     onSuccess: () => {
       Swal.fire({ icon: 'success', title: 'Deleted!', timer: 2000, showConfirmButton: false })
-      queryClient.invalidateQueries([\`\${QUERIES.USERS_LIST}-${currentModule.name}s-\${query}\`])
+      queryClient.invalidateQueries([\`\${QUERIES.USERS_LIST}-${m.name}s-\${query}\`])
     }
   })
 
@@ -1244,64 +1103,76 @@ const ${Module}ActionsCell: FC<Props> = ({ id }) => {
   )
 }
 
-export { ${Module}ActionsCell }`;
+export { ${m.capital}ActionsCell }`;
   }
 
-  function generateCustomHeader() {
-    const Module = currentModule.interface.replace('Data', '');
-    
+  function generateEditModalCode() {
+    const m = currentModule;
     return `import { FC } from 'react'
-import { HeaderProps } from 'react-table'
-import { ${currentModule.interface} } from '../core/${currentModule.name}_models'
+import { ${m.capital}EditModalHeader } from './${m.capital}EditModalHeader'
+import { ${m.capital}EditModalFormWrapper } from './${m.capital}EditModalFormWrapper'
 
-type Props = {
-  tableProps: HeaderProps<${currentModule.interface}>
-  title: string
-  className?: string
-}
-
-const ${Module}CustomHeader: FC<Props> = ({ tableProps, title, className }) => {
+const ${m.capital}EditModal: FC = () => {
   return (
-    <th {...tableProps.column.getHeaderProps()} className={className}>
-      {tableProps.column.render('Header')}
-      <span className="text-gray-700 fw-bold">{title}</span>
-    </th>
-  )
-}
-
-export { ${Module}CustomHeader }`;
-  }
-
-  function generatePage() {
-    const Module = currentModule.interface.replace('Data', '');
-    
-    return `import { FC } from 'react'
-import { ListViewProvider } from './core/ListViewProvider'
-import { QueryRequestProvider } from './core/QueryRequestProvider'
-import { QueryResponseProvider } from './core/QueryResponseProvider'
-import { ${Module}ListHeader } from './components/header/${Module}ListHeader'
-import { ${Module}Table } from './components/listing/${Module}Table'
-import { ${Module}TableFooter } from './components/listing/${Module}TableFooter'
-import { ${Module}EditModal } from './components/modals/${Module}EditModal'
-
-const ${Module}ManagementPage: FC = () => {
-  return (
-    <QueryRequestProvider>
-      <QueryResponseProvider>
-        <ListViewProvider>
-          <div className="card">
-            <${Module}ListHeader />
-            <${Module}Table />
-            <${Module}TableFooter />
-            <${Module}EditModal />
+    <div className="modal fade show d-block" id="kt_modal_${m.name}_edit" aria-modal="true" role="dialog">
+      <div className="modal-dialog modal-dialog-centered mw-650px">
+        <div className="modal-content">
+          <${m.capital}EditModalHeader />
+          <div className="modal-body scroll-y mx-5 mx-xl-15 my-7">
+            <${m.capital}EditModalFormWrapper />
           </div>
-        </ListViewProvider>
-      </QueryResponseProvider>
-    </QueryRequestProvider>
+        </div>
+      </div>
+    </div>
   )
 }
 
-export { ${Module}ManagementPage }`;
+export { ${m.capital}EditModal }`;
+  }
+
+  function generateEditModalFormCode() {
+    const m = currentModule;
+    return `import { FC, useState, useEffect } from 'react'
+import { useMutation, useQueryClient } from 'react-query'
+import { useListView } from '../../core/ListViewProvider'
+import { useQueryResponse } from '../../core/QueryResponseProvider'
+import { createUser, updateUser, getUserById } from '../../core/_requests'
+import { User } from '../../core/_models'
+import { KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
+import Swal from 'sweetalert2'
+
+const ${m.capital}EditModalForm: FC = () => {
+  const { itemIdForUpdate, setItemIdForUpdate } = useListView()
+  const { refetch } = useQueryResponse()
+  const queryClient = useQueryClient()
+
+  const [formData, setFormData] = useState<Partial<User>>({})
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (itemIdForUpdate) {
+      // Fetch data
+    }
+  }, [itemIdForUpdate])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // Handle submit
+  }
+
+  return (
+    <form className="form" onSubmit={handleSubmit}>
+      {/* Form fields */}
+      <div className="text-center pt-15">
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+export { ${m.capital}EditModalForm }`;
   }
 
   function copyCurrentCode() {
