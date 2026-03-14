@@ -1,64 +1,74 @@
-
-
-import {useState} from 'react'
-import {Link} from 'react-router-dom'
-import clsx from 'clsx'
-import {useLayout} from '../../core'
-import {KTIcon, toAbsoluteUrl} from '../../../helpers'
-import {AsideTabs} from './AsideTabs'
-import {AsideFooter} from './AsideFooter'
-import {TabsBase} from './Tabs/_TabsBase'
-import { HeaderUserMenu } from '../../../partials'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import clsx from "clsx";
+import { useLayout } from "../../core";
+import { KTIcon, toAbsoluteUrl } from "../../../helpers";
+import { AsideTabs } from "./AsideTabs";
+import { AsideFooter } from "./AsideFooter";
+import { TabsBase } from "./Tabs/_TabsBase";
+import { HeaderUserMenu } from "../../../partials";
 
 const AsideDefault = () => {
-  const {config} = useLayout()
-  const {classes} = useLayout()
-  const [link, setLink] = useState<string>('projects')
+  const { config } = useLayout();
+  const { classes } = useLayout();
+  const [link, setLink] = useState<string>("projects");
 
   return (
     <div
-      id='kt_aside'
-      className={clsx('aside aside-extended', classes.aside.join(' '))}
-      data-kt-drawer='true'
-      data-kt-drawer-name='aside'
-      data-kt-drawer-activate='{default: true, lg: false}'
-      data-kt-drawer-overlay='true'
-      data-kt-drawer-width='auto'
-      data-kt-drawer-direction='start'
-      data-kt-drawer-toggle='#kt_aside_toggle'
+      id="kt_aside"
+      className={clsx("aside aside-extended", classes.aside.join(" "))}
+      data-kt-drawer="true"
+      data-kt-drawer-name="aside"
+      data-kt-drawer-activate="{default: true, lg: false}"
+      data-kt-drawer-overlay="true"
+      data-kt-drawer-width="auto"
+      data-kt-drawer-direction="start"
+      data-kt-drawer-toggle="#kt_aside_toggle"
     >
       {/* begin::Primary */}
-      <div className='aside-primary d-flex flex-column align-items-lg-center flex-row-auto'>
+      <div className="aside-primary d-flex flex-column align-items-lg-center flex-row-auto">
         {/* begin::Logo */}
         <div
-          className='aside-logo d-none d-lg-flex flex-column align-items-center flex-column-auto py-10'
-          id='kt_aside_logo'
+          className="aside-logo d-none d-lg-flex flex-column align-items-center flex-column-auto py-10"
+          id="kt_aside_logo"
         >
-          <Link to='/dashboard'>
-            <img src={toAbsoluteUrl('media/logos/sys.png')} alt='logo' className='h-60px' />
+          <Link to="/dashboard">
+            <img
+              src={toAbsoluteUrl("media/logos/sys.png")}
+              alt="logo"
+              className="h-60px"
+            />
           </Link>
         </div>
         {/* end::Logo */}
-        <div className='d-flex align-items-center mb-10' id='kt_header_user_menu_toggle'>
-        {/* begin::Menu wrapper */}
-       
-      </div>
+        <div
+          className="d-flex align-items-center mb-10"
+          id="kt_header_user_menu_toggle"
+        >
+          {/* begin::Menu wrapper */}
+        </div>
         {/* begin::Nav */}
         <div
-          className='aside-nav d-flex flex-column align-items-center flex-column-fluid w-100 pt-5 pt-lg-0'
-          id='kt_aside_nav'
+          className="aside-nav d-flex flex-column align-items-center flex-column-fluid w-100 pt-5 pt-lg-0"
+          id="kt_aside_nav"
         >
-          <div> <div
-          className='cursor-pointer symbol symbol-40px'
-          data-kt-menu-trigger='click'
-          data-kt-menu-overflow='false'
-          data-kt-menu-placement='top-start'
-          title='User profile'
-        >
-          <img src={toAbsoluteUrl('media/avatars/blank.png')} alt='avatar' />
-        </div>
-        {/* end::Menu wrapper */}
-        <HeaderUserMenu /></div>
+          <div>
+            {" "}
+            <div
+              className="cursor-pointer symbol symbol-40px"
+              data-kt-menu-trigger="click"
+              data-kt-menu-overflow="false"
+              data-kt-menu-placement="top-start"
+              title="User profile"
+            >
+              <img
+                src={toAbsoluteUrl("media/avatars/blank.png")}
+                alt="avatar"
+              />
+            </div>
+            {/* end::Menu wrapper */}
+            <HeaderUserMenu />
+          </div>
           <AsideTabs link={link} setLink={setLink} />
         </div>
         {/* end::Nav */}
@@ -68,9 +78,9 @@ const AsideDefault = () => {
       {config.aside.secondaryDisplay && (
         <>
           {/* begin::Secondary */}
-          <div className='aside-secondary d-flex flex-row-fluid'>
+          <div className="aside-secondary d-flex flex-row-fluid">
             {/* begin::Workspace */}
-            <div className='aside-workspace my-5 p-5' id='kt_aside_wordspace'>
+            <div className="aside-workspace my-5 p-5" id="kt_aside_wordspace">
               <TabsBase link={link} />
             </div>
             {/* end::Workspace */}
@@ -95,7 +105,7 @@ const AsideDefault = () => {
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
-export {AsideDefault}
+export { AsideDefault };
