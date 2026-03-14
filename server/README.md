@@ -1,5 +1,5 @@
 
-firebase emulators:start --import=./zang-export-1773336240855PuGlJq --export-on-exit=./zang-export-1773336240855PuGlJq
+firebase emulators:start --import=./firebase-export-1773394176095qUQO0V --export-on-exit=./firebase-export-1773394176095qUQO0V
 
 
 ///ເອົາໄວ້ລັນ

@@ -76,7 +76,7 @@ export function Login() {
           role         = (d.role as UserRole) ?? 'employee'
           phone_number = d.phone_number ?? ''
         } else {
-          name = firebaseUser.email?.split('@')[0] ?? 'User'
+          name = firebaseUser.email?.split('@')[0] ?? 'Users'
         }
 
         // Step 3: Build UserModel
