@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { ShipEditModalHeader } from './ShipEditModalHeader'
 import { ShipEditModalForm } from './ShipEditModalForm'
 
 const ShipEditModal = () => {

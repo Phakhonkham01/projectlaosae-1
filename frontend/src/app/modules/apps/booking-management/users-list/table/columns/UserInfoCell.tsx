@@ -1,10 +1,13 @@
+
 import {FC} from 'react'
+import {toAbsoluteUrl} from '../../../../../../../_metronic/helpers'
+import {ShipData} from '../../core/ship_models'
 
 type Props = {
-  email?: string
+  name: string
 }
 
-const UserEmailCell: FC<Props> = ({email}) => (
+const UserInfoCell: FC<Props> = ({name}) => (
   <div className='d-flex align-items-center'>
     {/* begin:: Avatar */}
     {/* <div className='symbol symbol-circle symbol-50px overflow-hidden me-3'>
@@ -27,9 +30,9 @@ const UserEmailCell: FC<Props> = ({email}) => (
       </a>
     </div> */}
     <div className='d-flex flex-column'>
-      <p>{email}</p>
+      <p>{name}</p>
     </div>
   </div>
 )
 
-export {UserEmailCell}
+export {UserInfoCell}

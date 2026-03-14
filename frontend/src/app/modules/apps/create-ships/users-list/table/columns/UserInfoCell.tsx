@@ -1,7 +1,7 @@
 
 import {FC} from 'react'
 import {toAbsoluteUrl} from '../../../../../../../_metronic/helpers'
-import {User} from '../../core/ship_models'
+import {ShipData} from '../../core/ship_models'
 
 type Props = {
   name: string

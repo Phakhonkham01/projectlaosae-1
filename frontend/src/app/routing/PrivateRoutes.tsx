@@ -21,7 +21,7 @@ const PrivateRoutes = () => {
   const UserRequired = lazy(() => import('../modules/apps/user-required/UserRequired'))
   const ShipsPage = lazy(() => import('../modules/apps/create-ships/ShipsPage'))
   const AddFood  = lazy(()=> import('../modules/apps/addFood/addFoodPage'))
-  
+  const BookingShipsPage = lazy(() => import('../modules/apps/booking-management/BookingShipsPage'))
   return (
     <Routes>
       <Route element={<MasterLayout />}>
@@ -45,6 +45,14 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <ShipsPage />
+            </SuspensedView>
+          }
+        />
+        <Route
+          path='apps/booking-management/*'
+          element={
+            <SuspensedView>
+              <BookingShipsPage />
             </SuspensedView>
           }
         />
