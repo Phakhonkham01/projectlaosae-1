@@ -1,57 +1,44 @@
 import { Column } from 'react-table'
 import { User } from '../../core/_models'
-import { UserSelectionCell } from './UserSelectionCell'
-import { UserSelectionHeader } from './UserSelectionHeader'
-import { UserInfoCell } from './UserInfoCell'
-import { UserEmailCell } from './UserEmailCell'
-import { UserDepartmentCell } from './UserDepartmentCell'
-import { UserPositionCell } from './UserPositionCell'
-import { UserLeaveDaysCell } from './UserLeaveDaysCell'
-import { UserStatusCell } from './UserStatusCell'
-import { UserActionsCell } from './UserActionsCell'
-import { CustomHeaderColumn } from './CustomHeaderColumn'
+import { EmployeesSelectionCell } from './EmployeesSelectionCell'
+import { EmployeesSelectionHeader } from './EmployeesSelectionHeader'
+import { EmployeesInfoCell } from './EmployeesInfoCell'
+import { EmployeesEmailCell } from './EmployeesEmailCell'
+import { UserStatusCell } from './EmployeesStatusCell'
+import { EmployeesActionsCell } from './EmployeesActionsCell'
+import { EmployeesListHeader } from '../../components/header/EmployeesListHeader'
+import { UserRoleCell } from './EmployeeRoleCell'
 
 const UsersList: ReadonlyArray<Column<User>> = [
-  {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="#" className="w-50px" />,
+ {
+    Header: (props) => <EmployeesSelectionHeader tableProps={props} />,  // ← ส่ง props
     id: 'selection',
-    Cell: ({ row }) => <UserSelectionCell id={row.original.id} />,
-    Header: <UserSelectionHeader />,
+    Cell: ({ row }) => <EmployeesSelectionCell id={row.original._id} />,
   },
   {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="User" className="min-w-200px" />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='User' className='min-w-200px' />,
     id: 'info',
-    Cell: ({ row }) => <UserInfoCell user={row.original} />,
+    Cell: ({ row }) => <EmployeesInfoCell user={row.original} />,
   },
   {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="Email" className="min-w-150px" />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Email' className='min-w-150px' />,
     accessor: 'email',
-    Cell: ({ value }) => <UserEmailCell email={value} />,
+    Cell: ({ value }) => <EmployeesEmailCell email={value} />,
   },
   {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="Department" className="min-w-125px" />,
-    accessor: 'department_id',
-    Cell: ({ value }) => <UserDepartmentCell department_id={value} />,
-  },
-  {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="Position" className="min-w-125px" />,
-    accessor: 'position_id',
-    Cell: ({ value }) => <UserPositionCell position_id={value} />,
-  },
-  {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="Leave Days" className="min-w-100px" />,
-    accessor: 'leave_days',
-    Cell: ({ value }) => <UserLeaveDaysCell leave_days={value} />,
-  },
-  {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="Status" className="min-w-100px" />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Status' className='min-w-100px' />,
     accessor: 'status',
     Cell: ({ value }) => <UserStatusCell status={value} />,
   },
   {
-    Header: (props) => <CustomHeaderColumn tableProps={props} name="Actions" className="text-end min-w-100px" />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Status' className='min-w-100px' />,
+    accessor: 'role',
+    Cell: ({ value }) => <UserRoleCell role={value} />,
+  },
+  {
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Actions' className='text-end min-w-100px' />,
     id: 'actions',
-    Cell: ({ row }) => <UserActionsCell id={row.original.id} />,
+    Cell: ({ row }) => <EmployeesActionsCell id={row.original._id} />,
   },
 ]
 

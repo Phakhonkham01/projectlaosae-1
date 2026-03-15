@@ -1,19 +1,39 @@
-import { FC } from 'react'
-import { ListViewProvider } from './employees-list/core/ListViewProvider'
-import { QueryRequestProvider } from './employees-list/core/QueryRequestProvider'
-import { QueryResponseProvider } from './employees-list/core/QueryResponseProvider'
-import { EmployeesList } from './employees-list/EmployeesList'
+import {Route, Routes, Outlet, Navigate} from 'react-router-dom'
+import {PageLink, PageTitle} from '../../../../_metronic/layout/core'
+import {UsersListWrapper} from './employees-list/EmployeesList'
 
-const EmployeesPage: FC = () => {
+const usersBreadcrumbs: Array<PageLink> = [
+  {
+    title: 'User Management',
+    path: '',
+    isSeparator: false,
+    isActive: false,
+  },
+  {
+    title: '',
+    path: '',
+    isSeparator: true,
+    isActive: false,
+  },
+]
+
+const UsersPage = () => {
   return (
-    <QueryRequestProvider>
-      <QueryResponseProvider>
-        <ListViewProvider>
-          <EmployeesList />
-        </ListViewProvider>
-      </QueryResponseProvider>
-    </QueryRequestProvider>
+    <Routes>
+      <Route element={<Outlet />}>
+        <Route
+          index  // ← ใช้ index แทน path=''
+          element={
+            <>
+              <PageTitle breadcrumbs={usersBreadcrumbs}>Users list</PageTitle>
+              <UsersListWrapper />
+            </>
+          }
+        />
+      </Route>
+      {/* ลบ <Route index element={<Navigate to='' />} /> ออก */}
+    </Routes>
   )
 }
 
-export { EmployeesPage }
+export default UsersPage

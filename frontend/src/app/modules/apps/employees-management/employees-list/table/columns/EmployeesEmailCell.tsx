@@ -4,7 +4,7 @@ type Props = {
   email: string
 }
 
-const UserEmailCell: FC<Props> = ({ email }) => {
+const EmployeesEmailCell: FC<Props> = ({ email }) => {
   return (
     <div className="text-gray-800">
       {email}
@@ -12,4 +12,4 @@ const UserEmailCell: FC<Props> = ({ email }) => {
   )
 }
 
-export { UserEmailCell }
+export { EmployeesEmailCell }

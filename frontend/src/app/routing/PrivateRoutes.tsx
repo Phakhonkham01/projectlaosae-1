@@ -22,6 +22,7 @@ const PrivateRoutes = () => {
   const ShipsPage = lazy(() => import('../modules/apps/create-ships/ShipsPage'))
   const AddFood  = lazy(()=> import('../modules/apps/addFood/addFoodPage'))
   const BookingShipsPage = lazy(() => import('../modules/apps/booking-management/BookingShipsPage'))
+  const EmployeePage = lazy(()=> import('../modules/apps/employees-management/EmployeesPage'))
   return (
     <Routes>
       <Route element={<MasterLayout />}>
@@ -57,10 +58,10 @@ const PrivateRoutes = () => {
           }
         />
              <Route
-          path='apps/employees-management/employees/*'
+          path='/apps/employees-management/*'
           element={
             <SuspensedView>
-              <ShipsPage />
+              <EmployeePage />
             </SuspensedView>
           }
         />

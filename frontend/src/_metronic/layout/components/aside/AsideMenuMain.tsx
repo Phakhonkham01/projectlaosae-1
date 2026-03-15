@@ -119,7 +119,7 @@ export function AsideMenuMain() {
         fontIcon='bi-calendar-event'
       />
              <AsideMenuItem
-        to='/apps/employees-management/employees'
+        to='/apps/employees-management'
         icon='check-circle'
         title='Employees-management'
         fontIcon='bi-calendar-event'

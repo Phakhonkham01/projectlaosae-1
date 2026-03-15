@@ -1,32 +1,51 @@
-import { FC, useContext, useState, createContext } from 'react'
-import { WithChildren } from '../../../../../../_metronic/helpers'
+/* eslint-disable react-refresh/only-export-components */
+import {FC, useState, createContext, useContext, useMemo} from 'react'
+import {
+  ID,
+  calculatedGroupingIsDisabled,
+  calculateIsAllDataSelected,
+  groupingOnSelect,
+  initialListView,
+  ListViewContextProps,
+  groupingOnSelectAll,
+  WithChildren,
+} from '../../../../../../_metronic/helpers'
+import {useQueryResponse, useQueryResponseData} from './QueryResponseProvider'
 
-type ListViewContextProps = {
-  itemIdForUpdate: string | undefined
-  setItemIdForUpdate: (id: string | undefined) => void
-  selected: Array<string>
-  setSelected: (selected: Array<string>) => void
-}
+const ListViewContext = createContext<ListViewContextProps>(initialListView)
 
-const ListViewContext = createContext<ListViewContextProps | undefined>(undefined)
-
-const ListViewProvider: FC<WithChildren> = ({ children }) => {
-  const [itemIdForUpdate, setItemIdForUpdate] = useState<string | undefined>()
-  const [selected, setSelected] = useState<Array<string>>([])
+const ListViewProvider: FC<WithChildren> = ({children}) => {
+  const [selected, setSelected] = useState<Array<ID>>(initialListView.selected)
+  const [itemIdForUpdate, setItemIdForUpdate] = useState<ID>(initialListView.itemIdForUpdate)
+  const {isLoading} = useQueryResponse()
+  const data = useQueryResponseData()
+  const disabled = useMemo(() => calculatedGroupingIsDisabled(isLoading, data), [isLoading, data])
+  const isAllSelected = useMemo(() => calculateIsAllDataSelected(data, selected), [data, selected])
 
   return (
-    <ListViewContext.Provider value={{ itemIdForUpdate, setItemIdForUpdate, selected, setSelected }}>
+    <ListViewContext.Provider
+      value={{
+        selected,
+        itemIdForUpdate,
+        setItemIdForUpdate,
+        disabled,
+        isAllSelected,
+        onSelect: (id: ID) => {
+          groupingOnSelect(id, selected, setSelected)
+        },
+        onSelectAll: () => {
+          groupingOnSelectAll(isAllSelected, setSelected, data)
+        },
+        clearSelected: () => {
+          setSelected([])
+        },
+      }}
+    >
       {children}
     </ListViewContext.Provider>
   )
 }
 
-const useListView = () => {
-  const context = useContext(ListViewContext)
-  if (!context) {
-    throw new Error('useListView must be used within ListViewProvider')
-  }
-  return context
-}
+const useListView = () => useContext(ListViewContext)
 
-export { ListViewProvider, useListView }
+export {ListViewProvider, useListView}
