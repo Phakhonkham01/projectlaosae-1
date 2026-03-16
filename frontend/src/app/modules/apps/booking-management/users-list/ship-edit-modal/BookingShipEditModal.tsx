@@ -18,8 +18,18 @@ const BookingShipEditModal = () => {
         tabIndex={-1}
         aria-modal="true"
       >
-        <div className="modal-dialog modal-dialog-centered mw-650px">
-          <BookingShipEditModalForm />
+        {/* เพิ่ม style ตรงนี้ */}
+        <div 
+          className="modal-dialog modal-dialog-centered mw-650px"
+          style={{
+            maxHeight: '800px',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          <div className="modal-content" style={{ maxHeight: '900px', overflowY: 'auto' }}>
+            <BookingShipEditModalForm />
+          </div>
         </div>
       </div>
       <div className="modal-backdrop fade show"></div>
