@@ -22,12 +22,16 @@ const BookingShipEditModal = () => {
         <div 
           className="modal-dialog modal-dialog-centered mw-650px"
           style={{
-            maxHeight: '800px',
+            height: '900px',
+            maxHeight: '900px',
             display: 'flex',
             alignItems: 'center'
           }}
         >
-          <div className="modal-content" style={{ maxHeight: '900px', overflowY: 'auto' }}>
+          <div
+            className="modal-content"
+            style={{ height: '900px', maxHeight: '900px', overflow: 'hidden' }}
+          >
             <BookingShipEditModalForm />
           </div>
         </div>

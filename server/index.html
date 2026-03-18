@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Firebase Emulator Test</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
+    rel="stylesheet" />
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -14,18 +17,22 @@
 
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #12121a;
-      --border: #1e1e2e;
-      --accent: #00ffe0;
+      --bg: #080c14;
+      --surface: #0e1420;
+      --border: #1a2540;
+      --accent: #4d9fff;
       --accent2: #ff4d6d;
       --accent3: #ffe066;
       --accent4: #ff9800;
-      --text: #e0e0f0;
-      --muted: #555570;
+      --text: #d0dff5;
+      --muted: #4a5880;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       background: var(--bg);
@@ -45,21 +52,33 @@
     }
 
     .logo {
-      width: 42px; height: 42px;
+      width: 42px;
+      height: 42px;
       background: var(--accent);
       border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; font-weight: 800; color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #000;
     }
 
-    h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
-    h1 span { color: var(--accent); }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
 
     .badge {
       margin-left: auto;
-      background: #1a2a1a;
-      color: #4ade80;
-      border: 1px solid #4ade8044;
+      background: #0e1a2e;
+      color: #4da6ff;
+      border: 1px solid #4da6ff44;
       padding: 0.3rem 0.8rem;
       border-radius: 999px;
       font-size: 0.75rem;
@@ -83,22 +102,39 @@
     }
 
     .card-header {
-      display: flex; align-items: center; gap: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
 
     .dot {
-      width: 10px; height: 10px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: var(--accent);
       box-shadow: 0 0 8px var(--accent);
     }
-    .dot.red    { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
-    .dot.yellow { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
-    .dot.orange { background: var(--accent4); box-shadow: 0 0 8px var(--accent4); }
+
+    .dot.red {
+      background: var(--accent2);
+      box-shadow: 0 0 8px var(--accent2);
+    }
+
+    .dot.yellow {
+      background: var(--accent3);
+      box-shadow: 0 0 8px var(--accent3);
+    }
+
+    .dot.orange {
+      background: var(--accent4);
+      box-shadow: 0 0 8px var(--accent4);
+    }
 
     .card-title {
-      font-size: 1rem; font-weight: 700;
-      letter-spacing: 0.5px; text-transform: uppercase;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .port-badge {
@@ -106,14 +142,15 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.72rem;
       color: var(--muted);
-      background: #1a1a28;
+      background: #0e1628;
       padding: 0.2rem 0.6rem;
       border-radius: 6px;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
-      background: #0d0d18;
+      background: #080e1c;
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
@@ -123,7 +160,10 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    input:focus { border-color: var(--accent); }
+
+    input:focus {
+      border-color: var(--accent);
+    }
 
     .btn {
       padding: 0.6rem 1.2rem;
@@ -136,23 +176,49 @@
       transition: opacity 0.2s, transform 0.1s;
       letter-spacing: 0.3px;
     }
-    .btn:hover { opacity: 0.85; }
-    .btn:active { transform: scale(0.97); }
 
-    .btn-cyan   { background: var(--accent);  color: #000; }
-    .btn-red    { background: var(--accent2); color: #fff; }
-    .btn-yellow { background: var(--accent3); color: #000; }
-    .btn-orange { background: var(--accent4); color: #000; }
-    .btn-ghost  {
+    .btn:hover {
+      opacity: 0.85;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-cyan {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-red {
+      background: var(--accent2);
+      color: #fff;
+    }
+
+    .btn-yellow {
+      background: var(--accent3);
+      color: #000;
+    }
+
+    .btn-orange {
+      background: var(--accent4);
+      color: #000;
+    }
+
+    .btn-ghost {
       background: transparent;
       border: 1px solid var(--border);
       color: var(--muted);
     }
 
-    .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
 
     .log-box {
-      background: #07070f;
+      background: #060c18;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 0.8rem;
@@ -166,13 +232,21 @@
       color: #7a7a9a;
     }
 
-    .log-ok   { color: #4ade80; }
-    .log-err  { color: var(--accent2); }
-    .log-info { color: var(--accent); }
+    .log-ok {
+      color: #4ade80;
+    }
+
+    .log-err {
+      color: var(--accent2);
+    }
+
+    .log-info {
+      color: var(--accent);
+    }
 
     /* Command result box */
     .cmd-box {
-      background: #07070f;
+      background: #060c18;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 0.8rem;
@@ -184,13 +258,15 @@
       user-select: all;
     }
 
-    .cmd-placeholder { color: var(--muted); }
+    .cmd-placeholder {
+      color: var(--muted);
+    }
 
     .file-label {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: #0d0d18;
+      background: #080e1c;
       border: 1px dashed var(--border);
       border-radius: 8px;
       padding: 0.6rem 0.9rem;
@@ -199,15 +275,23 @@
       color: var(--muted);
       transition: border-color 0.2s;
     }
-    .file-label:hover { border-color: var(--accent3); color: var(--text); }
-    input[type="file"] { display: none; }
+
+    .file-label:hover {
+      border-color: var(--accent3);
+      color: var(--text);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
 
     .copy-toast {
       position: fixed;
-      bottom: 2rem; right: 2rem;
-      background: #1a2a1a;
-      color: #4ade80;
-      border: 1px solid #4ade8044;
+      bottom: 2rem;
+      right: 2rem;
+      background: #0e1a2e;
+      color: #4da6ff;
+      border: 1px solid #4da6ff44;
       padding: 0.5rem 1.2rem;
       border-radius: 999px;
       font-family: 'JetBrains Mono', monospace;
@@ -217,250 +301,253 @@
       transition: opacity 0.3s, transform 0.3s;
       pointer-events: none;
     }
+
     .copy-toast.show {
       opacity: 1;
       transform: translateY(0);
     }
   </style>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">🔥</div>
-  <h1>Firebase <span>Emulator</span> Test</h1>
-  <span class="badge">● LOCAL</span>
-</header>
+  <header>
+    <div class="logo">🔥</div>
+    <h1>Firebase <span>Emulator</span> Test</h1>
+    <span class="badge">● LOCAL</span>
+  </header>
 
-<div class="grid">
+  <div class="grid">
 
-  <!-- AUTH CARD -->
-  <div class="card">
-    <div class="card-header">
-      <div class="dot"></div>
-      <span class="card-title">Authentication</span>
-      <span class="port-badge">:9099</span>
+    <!-- AUTH CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="dot"></div>
+        <span class="card-title">Authentication</span>
+        <span class="port-badge">:9099</span>
+      </div>
+      <input id="auth-email" type="email" placeholder="email@example.com" />
+      <input id="auth-pass" type="password" placeholder="password" />
+      <div class="btn-row">
+        <button class="btn btn-cyan" onclick="signUp()">Sign Up</button>
+        <button class="btn btn-ghost" onclick="signIn()">Sign In</button>
+        <button class="btn btn-ghost" onclick="signOut()">Sign Out</button>
+      </div>
+      <div class="log-box" id="auth-log">— waiting —</div>
     </div>
-    <input id="auth-email" type="email" placeholder="email@example.com" />
-    <input id="auth-pass" type="password" placeholder="password" />
-    <div class="btn-row">
-      <button class="btn btn-cyan" onclick="signUp()">Sign Up</button>
-      <button class="btn btn-ghost" onclick="signIn()">Sign In</button>
-      <button class="btn btn-ghost" onclick="signOut()">Sign Out</button>
+
+    <!-- FIRESTORE CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="dot red"></div>
+        <span class="card-title">Firestore</span>
+        <span class="port-badge">:8081</span>
+      </div>
+      <input id="fs-collection" placeholder="collection name" value="test" />
+      <input id="fs-key" placeholder="field key" value="message" />
+      <input id="fs-value" placeholder="field value" value="Hello Firebase!" />
+      <div class="btn-row">
+        <button class="btn btn-red" onclick="fsWrite()">Write</button>
+        <button class="btn btn-ghost" onclick="fsRead()">Read All</button>
+      </div>
+      <div class="log-box" id="fs-log">— waiting —</div>
     </div>
-    <div class="log-box" id="auth-log">— waiting —</div>
+
+    <!-- STORAGE CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="dot yellow"></div>
+        <span class="card-title">Storage</span>
+        <span class="port-badge">:9199</span>
+      </div>
+      <label class="file-label" for="storage-file">
+        📁 <span id="file-name">Choose a file to upload</span>
+      </label>
+      <input type="file" id="storage-file" onchange="updateFileName(this)" />
+      <div class="btn-row">
+        <button class="btn btn-yellow" onclick="uploadFile()">Upload</button>
+      </div>
+      <div class="log-box" id="storage-log">— waiting —</div>
+    </div>
+
+    <!-- COMMAND GENERATOR CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="dot orange"></div>
+        <span class="card-title">Command Generator</span>
+        <span class="port-badge">CLI</span>
+      </div>
+      <input type="text" id="pathInput" placeholder="Export folder name (e.g. emulator-data)" />
+      <div class="btn-row">
+        <button class="btn btn-orange" onclick="generateCommand()">Generate</button>
+        <button class="btn btn-ghost" onclick="copyCommand()">Copy</button>
+      </div>
+      <div class="cmd-box" id="cmd-result">
+        <span class="cmd-placeholder">— command will appear here —</span>
+      </div>
+    </div>
+
   </div>
 
-  <!-- FIRESTORE CARD -->
-  <div class="card">
-    <div class="card-header">
-      <div class="dot red"></div>
-      <span class="card-title">Firestore</span>
-      <span class="port-badge">:8081</span>
-    </div>
-    <input id="fs-collection" placeholder="collection name" value="test" />
-    <input id="fs-key" placeholder="field key" value="message" />
-    <input id="fs-value" placeholder="field value" value="Hello Firebase!" />
-    <div class="btn-row">
-      <button class="btn btn-red" onclick="fsWrite()">Write</button>
-      <button class="btn btn-ghost" onclick="fsRead()">Read All</button>
-    </div>
-    <div class="log-box" id="fs-log">— waiting —</div>
-  </div>
+  <!-- Toast notification -->
+  <div class="copy-toast" id="copy-toast">✅ Copied to clipboard!</div>
 
-  <!-- STORAGE CARD -->
-  <div class="card">
-    <div class="card-header">
-      <div class="dot yellow"></div>
-      <span class="card-title">Storage</span>
-      <span class="port-badge">:9199</span>
-    </div>
-    <label class="file-label" for="storage-file">
-      📁 <span id="file-name">Choose a file to upload</span>
-    </label>
-    <input type="file" id="storage-file" onchange="updateFileName(this)"/>
-    <div class="btn-row">
-      <button class="btn btn-yellow" onclick="uploadFile()">Upload</button>
-    </div>
-    <div class="log-box" id="storage-log">— waiting —</div>
-  </div>
+  <script>
+    // ── Firebase Init ──────────────────────────────────────────
+    const firebaseConfig = {
+      apiKey: "demo-api-key",
+      authDomain: "languages-164bd.firebaseapp.com",
+      projectId: "languages-164bd",
+      storageBucket: "languages-164bd.appspot.com",
+    };
+    firebase.initializeApp(firebaseConfig);
 
-  <!-- COMMAND GENERATOR CARD -->
-  <div class="card">
-    <div class="card-header">
-      <div class="dot orange"></div>
-      <span class="card-title">Command Generator</span>
-      <span class="port-badge">CLI</span>
-    </div>
-    <input type="text" id="pathInput" placeholder="Export folder name (e.g. emulator-data)" />
-    <div class="btn-row">
-      <button class="btn btn-orange" onclick="generateCommand()">Generate</button>
-      <button class="btn btn-ghost" onclick="copyCommand()">Copy</button>
-    </div>
-    <div class="cmd-box" id="cmd-result">
-      <span class="cmd-placeholder">— command will appear here —</span>
-    </div>
-  </div>
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
-</div>
+    // Connect to Emulators
+    auth.useEmulator("http://127.0.0.1:9099");
+    db.useEmulator("127.0.0.1", 8081);
+    storage.useEmulator("127.0.0.1", 9199);
 
-<!-- Toast notification -->
-<div class="copy-toast" id="copy-toast">✅ Copied to clipboard!</div>
-
-<script>
-  // ── Firebase Init ──────────────────────────────────────────
-  const firebaseConfig = {
-    apiKey: "demo-api-key",
-    authDomain: "languages-164bd.firebaseapp.com",
-    projectId: "languages-164bd",
-    storageBucket: "languages-164bd.appspot.com",
-  };
-  firebase.initializeApp(firebaseConfig);
-
-  const auth    = firebase.auth();
-  const db      = firebase.firestore();
-  const storage = firebase.storage();
-
-  // Connect to Emulators
-  auth.useEmulator("http://127.0.0.1:9099");
-  db.useEmulator("127.0.0.1", 8081);
-  storage.useEmulator("127.0.0.1", 9199);
-
-  // ── Helpers ───────────────────────────────────────────────
-  function log(id, msg, type = "info") {
-    const box = document.getElementById(id);
-    const span = document.createElement("span");
-    span.className = `log-${type}`;
-    span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
-    box.appendChild(span);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function clearLog(id) {
-    document.getElementById(id).innerHTML = "";
-  }
-
-  // ── AUTH ──────────────────────────────────────────────────
-  async function signUp() {
-    const email = document.getElementById("auth-email").value;
-    const pass  = document.getElementById("auth-pass").value;
-    clearLog("auth-log");
-    try {
-      const u = await auth.createUserWithEmailAndPassword(email, pass);
-      log("auth-log", `✅ Signed up: ${u.user.email}`, "ok");
-    } catch (e) {
-      log("auth-log", `❌ ${e.message}`, "err");
+    // ── Helpers ───────────────────────────────────────────────
+    function log(id, msg, type = "info") {
+      const box = document.getElementById(id);
+      const span = document.createElement("span");
+      span.className = `log-${type}`;
+      span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+      box.appendChild(span);
+      box.scrollTop = box.scrollHeight;
     }
-  }
 
-  async function signIn() {
-    const email = document.getElementById("auth-email").value;
-    const pass  = document.getElementById("auth-pass").value;
-    clearLog("auth-log");
-    try {
-      const u = await auth.signInWithEmailAndPassword(email, pass);
-      log("auth-log", `✅ Signed in: ${u.user.email}`, "ok");
-    } catch (e) {
-      log("auth-log", `❌ ${e.message}`, "err");
+    function clearLog(id) {
+      document.getElementById(id).innerHTML = "";
     }
-  }
 
-  async function signOut() {
-    clearLog("auth-log");
-    try {
-      await auth.signOut();
-      log("auth-log", "✅ Signed out", "ok");
-    } catch (e) {
-      log("auth-log", `❌ ${e.message}`, "err");
+    // ── AUTH ──────────────────────────────────────────────────
+    async function signUp() {
+      const email = document.getElementById("auth-email").value;
+      const pass = document.getElementById("auth-pass").value;
+      clearLog("auth-log");
+      try {
+        const u = await auth.createUserWithEmailAndPassword(email, pass);
+        log("auth-log", `✅ Signed up: ${u.user.email}`, "ok");
+      } catch (e) {
+        log("auth-log", `❌ ${e.message}`, "err");
+      }
     }
-  }
 
-  auth.onAuthStateChanged(u => {
-    if (u) log("auth-log", `ℹ️ Logged in as: ${u.email}`, "info");
-  });
-
-  // ── FIRESTORE ─────────────────────────────────────────────
-  async function fsWrite() {
-    const col = document.getElementById("fs-collection").value;
-    const key = document.getElementById("fs-key").value;
-    const val = document.getElementById("fs-value").value;
-    clearLog("fs-log");
-    try {
-      const ref = await db.collection(col).add({ [key]: val, timestamp: new Date() });
-      log("fs-log", `✅ Written! ID: ${ref.id}`, "ok");
-    } catch (e) {
-      log("fs-log", `❌ ${e.message}`, "err");
+    async function signIn() {
+      const email = document.getElementById("auth-email").value;
+      const pass = document.getElementById("auth-pass").value;
+      clearLog("auth-log");
+      try {
+        const u = await auth.signInWithEmailAndPassword(email, pass);
+        log("auth-log", `✅ Signed in: ${u.user.email}`, "ok");
+      } catch (e) {
+        log("auth-log", `❌ ${e.message}`, "err");
+      }
     }
-  }
 
-  async function fsRead() {
-    const col = document.getElementById("fs-collection").value;
-    clearLog("fs-log");
-    try {
-      const snap = await db.collection(col).get();
-      if (snap.empty) { log("fs-log", "⚠️ No documents found", "info"); return; }
-      snap.forEach(doc => {
-        log("fs-log", `📄 ${doc.id}: ${JSON.stringify(doc.data())}`, "ok");
-      });
-    } catch (e) {
-      log("fs-log", `❌ ${e.message}`, "err");
+    async function signOut() {
+      clearLog("auth-log");
+      try {
+        await auth.signOut();
+        log("auth-log", "✅ Signed out", "ok");
+      } catch (e) {
+        log("auth-log", `❌ ${e.message}`, "err");
+      }
     }
-  }
 
-  // ── STORAGE ───────────────────────────────────────────────
-  function updateFileName(input) {
-    const name = input.files[0]?.name || "Choose a file to upload";
-    document.getElementById("file-name").textContent = name;
-  }
-
-  async function uploadFile() {
-    const fileInput = document.getElementById("storage-file");
-    const file = fileInput.files[0];
-    clearLog("storage-log");
-    if (!file) { log("storage-log", "⚠️ No file selected", "info"); return; }
-    try {
-      const ref = storage.ref(`uploads/${Date.now()}_${file.name}`);
-      const task = ref.put(file);
-      task.on("state_changed",
-        snap => {
-          const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-          log("storage-log", `⏳ Uploading... ${pct}%`, "info");
-        },
-        err => log("storage-log", `❌ ${err.message}`, "err"),
-        async () => {
-          const url = await task.snapshot.ref.getDownloadURL();
-          log("storage-log", `✅ Uploaded!\n🔗 ${url}`, "ok");
-        }
-      );
-    } catch (e) {
-      log("storage-log", `❌ ${e.message}`, "err");
-    }
-  }
-
-  // ── COMMAND GENERATOR ─────────────────────────────────────
-  function generateCommand() {
-    const path = document.getElementById("pathInput").value.trim();
-    const resultEl = document.getElementById("cmd-result");
-    if (!path) {
-      resultEl.innerHTML = `<span class="cmd-placeholder">⚠️ Please enter a folder name</span>`;
-      return;
-    }
-    const command = `firebase emulators:start --import=./${path} --export-on-exit=./${path}`;
-    resultEl.textContent = command;
-  }
-
-  function copyCommand() {
-    const text = document.getElementById("cmd-result").textContent;
-    if (!text || text.includes("—") || text.includes("⚠️")) {
-      document.getElementById("cmd-result").innerHTML =
-        `<span class="cmd-placeholder">⚠️ Generate a command first</span>`;
-      return;
-    }
-    navigator.clipboard.writeText(text).then(() => {
-      const toast = document.getElementById("copy-toast");
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 2000);
+    auth.onAuthStateChanged(u => {
+      if (u) log("auth-log", `ℹ️ Logged in as: ${u.email}`, "info");
     });
-  }
-</script>
+
+    // ── FIRESTORE ─────────────────────────────────────────────
+    async function fsWrite() {
+      const col = document.getElementById("fs-collection").value;
+      const key = document.getElementById("fs-key").value;
+      const val = document.getElementById("fs-value").value;
+      clearLog("fs-log");
+      try {
+        const ref = await db.collection(col).add({ [key]: val, timestamp: new Date() });
+        log("fs-log", `✅ Written! ID: ${ref.id}`, "ok");
+      } catch (e) {
+        log("fs-log", `❌ ${e.message}`, "err");
+      }
+    }
+
+    async function fsRead() {
+      const col = document.getElementById("fs-collection").value;
+      clearLog("fs-log");
+      try {
+        const snap = await db.collection(col).get();
+        if (snap.empty) { log("fs-log", "⚠️ No documents found", "info"); return; }
+        snap.forEach(doc => {
+          log("fs-log", `📄 ${doc.id}: ${JSON.stringify(doc.data())}`, "ok");
+        });
+      } catch (e) {
+        log("fs-log", `❌ ${e.message}`, "err");
+      }
+    }
+
+    // ── STORAGE ───────────────────────────────────────────────
+    function updateFileName(input) {
+      const name = input.files[0]?.name || "Choose a file to upload";
+      document.getElementById("file-name").textContent = name;
+    }
+
+    async function uploadFile() {
+      const fileInput = document.getElementById("storage-file");
+      const file = fileInput.files[0];
+      clearLog("storage-log");
+      if (!file) { log("storage-log", "⚠️ No file selected", "info"); return; }
+      try {
+        const ref = storage.ref(`uploads/${Date.now()}_${file.name}`);
+        const task = ref.put(file);
+        task.on("state_changed",
+          snap => {
+            const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+            log("storage-log", `⏳ Uploading... ${pct}%`, "info");
+          },
+          err => log("storage-log", `❌ ${err.message}`, "err"),
+          async () => {
+            const url = await task.snapshot.ref.getDownloadURL();
+            log("storage-log", `✅ Uploaded!\n🔗 ${url}`, "ok");
+          }
+        );
+      } catch (e) {
+        log("storage-log", `❌ ${e.message}`, "err");
+      }
+    }
+
+    // ── COMMAND GENERATOR ─────────────────────────────────────
+    function generateCommand() {
+      const path = document.getElementById("pathInput").value.trim();
+      const resultEl = document.getElementById("cmd-result");
+      if (!path) {
+        resultEl.innerHTML = `<span class="cmd-placeholder">⚠️ Please enter a folder name</span>`;
+        return;
+      }
+      const command = `firebase emulators:start --import=./${path} --export-on-exit=./${path}`;
+      resultEl.textContent = command;
+    }
+
+    function copyCommand() {
+      const text = document.getElementById("cmd-result").textContent;
+      if (!text || text.includes("—") || text.includes("⚠️")) {
+        document.getElementById("cmd-result").innerHTML =
+          `<span class="cmd-placeholder">⚠️ Generate a command first</span>`;
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById("copy-toast");
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2000);
+      });
+    }
+  </script>
 </body>
+
 </html>

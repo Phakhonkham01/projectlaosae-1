@@ -97,13 +97,13 @@ export function AsideMenuMain() {
       <AsideMenuItem
         to='/apps/booking-management/booking-ships'
         icon='people'
-        title='Booking Ships'
+        title='Booking Management'
         fontIcon='bi-layers'
       />
       <AsideMenuItem
         to='/apps/create-ships/ships'
         icon='people'
-        title='Create Ships'
+        title='Ships Management'
         fontIcon='bi-layers'
       />
       <AsideMenuItem
@@ -121,7 +121,7 @@ export function AsideMenuMain() {
              <AsideMenuItem
         to='/apps/employees-management'
         icon='check-circle'
-        title='Employees-management'
+        title='Employees Management'
         fontIcon='bi-calendar-event'
       />
        <AsideMenuItem
@@ -139,7 +139,7 @@ export function AsideMenuMain() {
       <AsideMenuItem
         to='/apps/add-food'
         icon='tree'
-        title='Add Food'
+        title='Products Management'
         fontIcon='bi-calendar-event'
       />
     </>

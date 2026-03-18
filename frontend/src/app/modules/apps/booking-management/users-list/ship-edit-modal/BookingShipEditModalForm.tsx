@@ -231,7 +231,7 @@ const BookingShipEditModalForm: FC = () => {
   // ─── Loading skeleton ──────────────────────────────────────────────────────
   if (loading && !shipData) {
     return (
-      <div className='modal-content'>
+      <div className='modal-content h-100 border-0' style={{ height: '100%' }}>
         <div className='modal-body d-flex justify-content-center align-items-center py-15'>
           <span className='spinner-border text-primary' />
         </div>
@@ -241,7 +241,10 @@ const BookingShipEditModalForm: FC = () => {
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className='modal-content'>
+    <div
+      className='modal-content h-100 border-0'
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       {/* ── Header ── */}
       <div className='modal-header'>
         <h2 className='fw-bold'>
@@ -305,7 +308,10 @@ const BookingShipEditModalForm: FC = () => {
       </div>
 
       {/* ── Body ── */}
-      <div className='modal-body scroll-y mx-5 mx-xl-12 my-4' style={{ maxHeight: '60vh' }}>
+      <div
+        className='modal-body scroll-y mx-5 mx-xl-12 my-4'
+        style={{ flex: '1 1 auto', minHeight: 0 }}
+      >
 
         {/* ────────── STEP 1: Booking Details ────────── */}
         {currentStep === 1 && (
