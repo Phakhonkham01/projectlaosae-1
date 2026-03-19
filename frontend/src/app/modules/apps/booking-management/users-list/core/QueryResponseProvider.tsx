@@ -3,9 +3,9 @@
 import {FC, useContext, useState, useEffect, useMemo, createContext} from 'react'
 import {useQuery} from 'react-query'
 import {
-  initialQueryResponse,
   initialQueryState,
   PaginationState,
+  QueryResponseContextProps as BaseQueryResponseContextProps,
   QUERIES,
   stringifyRequestQuery,
   WithChildren,
@@ -14,12 +14,30 @@ import { getShips } from './ship_requests'
 import { ShipData } from './ship_models'
 import { useQueryRequest } from './QueryRequestProvider'
 
+type ShipQueryResponse = {
+  data: ShipData[]
+  payload: {
+    pagination: PaginationState
+  }
+}
+
+type ShipFilter = {
+  status?: ShipData['status']
+}
+
+const initialShipQueryResponse: ShipQueryResponse = {
+  data: [],
+  payload: {
+    pagination: {
+      ...initialQueryState,
+      links: [],
+    },
+  },
+}
+
 // Define response context type
-type QueryResponseContextProps = {
-  isLoading: boolean
-  refetch: () => void
-  response: typeof initialQueryResponse
-  query: string
+type QueryResponseContextProps = BaseQueryResponseContextProps<ShipData> & {
+  response: ShipQueryResponse
 }
 
 // Create response context for ships
@@ -29,6 +47,7 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
   const {state} = useQueryRequest()
   const [query, setQuery] = useState<string>(stringifyRequestQuery(state))
   const updatedQuery = useMemo(() => stringifyRequestQuery(state), [state])
+  const filter = (state.filter as ShipFilter | undefined) ?? {}
 
   useEffect(() => {
     if (query !== updatedQuery) {
@@ -40,7 +59,7 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
     isFetching,
     refetch,
     data: response,
-  } = useQuery(
+  } = useQuery<ShipQueryResponse>(
     `${QUERIES.USERS_LIST}-ships-${query}`,
     async () => {
       try {
@@ -61,9 +80,9 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
         }
 
         // Filter by status if provided
-        if (state.filter?.status) {
+        if (filter.status) {
           filteredShips = filteredShips.filter(ship => 
-            ship.status === state.filter?.status
+            ship.status === filter.status
           )
         }
 
@@ -101,12 +120,13 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
         const paginatedShips = filteredShips.slice(start, end)
 
         // Create pagination links
-        const links = []
+        const links: PaginationState['links'] = []
         for (let i = 1; i <= lastPage; i++) {
-          links.push({
+          links?.push({
             url: i === page ? null : `?page=${i}`,
             label: i.toString(),
-            active: i === page
+            active: i === page,
+            page: i,
           })
         }
 
@@ -114,23 +134,21 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
           data: paginatedShips,
           payload: {
             pagination: {
-              current_page: page,
-              from: start + 1,
-              last_page: lastPage,
-              per_page: itemsPerPage,
-              to: end,
-              total: total,
+              page,
+              items_per_page: itemsPerPage,
               links: [
                 {
                   url: page > 1 ? `?page=${page - 1}` : null,
                   label: '&laquo; Previous',
-                  active: false
+                  active: false,
+                  page: page > 1 ? page - 1 : null,
                 },
-                ...links,
+                ...(links ?? []),
                 {
                   url: page < lastPage ? `?page=${page + 1}` : null,
                   label: 'Next &raquo;',
-                  active: false
+                  active: false,
+                  page: page < lastPage ? page + 1 : null,
                 }
               ]
             }
@@ -142,12 +160,7 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
           data: [],
           payload: {
             pagination: {
-              current_page: 1,
-              from: 0,
-              last_page: 1,
-              per_page: 10,
-              to: 0,
-              total: 0,
+              ...initialQueryState,
               links: []
             }
           }
@@ -164,7 +177,7 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
   const value = {
     isLoading: isFetching,
     refetch,
-    response: response || initialQueryResponse,
+    response: response || initialShipQueryResponse,
     query
   }
 

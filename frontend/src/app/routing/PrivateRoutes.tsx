@@ -7,6 +7,7 @@ import {MenuTestPage} from '../pages/MenuTestPage'
 import {getCSSVariableValue} from '../../_metronic/assets/ts/_utils'
 import {WithChildren} from '../../_metronic/helpers'
 import BuilderPageWrapper from '../pages/layout-builder/BuilderPageWrapper'
+import BillPage from '../modules/apps/bills-management/BillPage'
 
 const PrivateRoutes = () => {
   const ProfilePage = lazy(() => import('../modules/profile/ProfilePage'))
@@ -46,6 +47,14 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <ShipsPage />
+            </SuspensedView>
+          }
+        />
+           <Route
+          path='apps/check-bill/*'
+          element={
+            <SuspensedView>
+              <BillPage />
             </SuspensedView>
           }
         />

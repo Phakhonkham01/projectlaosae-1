@@ -1,0 +1,49 @@
+
+> demo7@8.2.6 build
+> tsc && vite build
+
+src/_metronic/assets/ts/components/_ScrollTopComponent.ts(42,16): error TS2454: Variable 'timer' is used before being assigned.
+src/app/modules/apps/addFood/users-list/table/columns/UserDepartmentCell.tsx(2,10): error TS2305: Module '"../../core/_models"' has no exported member 'Department'.
+src/app/modules/apps/addFood/users-list/table/columns/UserPositionCell.tsx(2,10): error TS2305: Module '"../../core/_models"' has no exported member 'Position'.
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(64,27): error TS2339: Property 'status' does not exist on type '{}'.
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(66,43): error TS2339: Property 'status' does not exist on type '{}'.
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(172,36): error TS2322: Type '{ isLoading: boolean; refetch: <TPageData>(options?: (RefetchOptions & RefetchQueryFilters<TPageData>) | undefined) => Promise<QueryObserverResult<{ data: ShipData[]; payload: { ...; }; } | { ...; }, unknown>>; response: { ...; } | ... 1 more ... | { ...; }; query: string; }' is not assignable to type 'QueryResponseContextProps'.
+  Types of property 'response' are incompatible.
+    Type '{ refetch: () => void; isLoading: boolean; query: string; } | { data: ShipData[]; payload: { pagination: { current_page: number; from: number; last_page: number; per_page: 100 | 10 | 30 | 50 | 9999999999; to: number; total: number; links: { ...; }[]; }; }; } | { ...; }' is not assignable to type '{ refetch: () => void; isLoading: boolean; query: string; }'.
+      Type '{ data: ShipData[]; payload: { pagination: { current_page: number; from: number; last_page: number; per_page: 100 | 10 | 30 | 50 | 9999999999; to: number; total: number; links: { url: string | null; label: string; active: boolean; }[]; }; }; }' is missing the following properties from type '{ refetch: () => void; isLoading: boolean; query: string; }': refetch, isLoading, query
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(192,20): error TS2339: Property 'data' does not exist on type '{ refetch: () => void; isLoading: boolean; query: string; }'.
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(202,30): error TS2339: Property 'payload' does not exist on type '{ refetch: () => void; isLoading: boolean; query: string; }'.
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(202,51): error TS2339: Property 'payload' does not exist on type '{ refetch: () => void; isLoading: boolean; query: string; }'.
+src/app/modules/apps/create-ships/users-list/core/QueryResponseProvider.tsx(206,19): error TS2339: Property 'payload' does not exist on type '{ refetch: () => void; isLoading: boolean; query: string; }'.
+src/app/modules/apps/create-ships/users-list/ship-edit-modal/ShipEditModalForm.tsx(19,54): error TS2345: Argument of type '{ ship_name: string; capacity: number; image_url: string; price: number; quantity: number; status: "Active"; createdAt: string; updatedAt: string; }' is not assignable to parameter of type 'ShipData | (() => ShipData)'.
+  Property 'name' is missing in type '{ ship_name: string; capacity: number; image_url: string; price: number; quantity: number; status: "Active"; createdAt: string; updatedAt: string; }' but required in type 'ShipData'.
+src/app/modules/apps/create-ships/users-list/ship-edit-modal/ShipEditModalForm.tsx(72,19): error TS2345: Argument of type '{ ship_name: string; capacity: number; image_url: string; price: number; quantity: number; status: "Active"; createdAt: string; updatedAt: string; }' is not assignable to parameter of type 'SetStateAction<ShipData>'.
+  Property 'name' is missing in type '{ ship_name: string; capacity: number; image_url: string; price: number; quantity: number; status: "Active"; createdAt: string; updatedAt: string; }' but required in type 'ShipData'.
+src/app/modules/apps/create-ships/users-list/ship-edit-modal/UserEditModalFormWrapper.tsx(31,31): error TS2322: Type '{ isUserLoading: boolean; user: { id: undefined; }; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'isUserLoading' does not exist on type 'IntrinsicAttributes'.
+src/app/modules/apps/create-ships/users-list/ship-edit-modal/UserEditModalFormWrapper.tsx(35,31): error TS2322: Type '{ isUserLoading: false; user: User; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'isUserLoading' does not exist on type 'IntrinsicAttributes'.
+src/app/modules/apps/create-ships/users-list/table/columns/CustomHeaderColumn.tsx(3,9): error TS2305: Module '"../../core/ship_models"' has no exported member 'User'.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModal.tsx(2,42): error TS2306: File 'D:/projectlaosae-1/frontend/src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalHeader.tsx' is not a module.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModal.tsx(3,47): error TS2306: File 'D:/projectlaosae-1/frontend/src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalFormWrapper.tsx' is not a module.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalForm.tsx(3,29): error TS2307: Cannot find module '../../../../../../../../../../../../../../core/ListViewProvider' or its corresponding type declarations.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalForm.tsx(4,34): error TS2307: Cannot find module '../../../../../../../core/QueryResponseProvider' or its corresponding type declarations.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalForm.tsx(5,53): error TS2307: Cannot find module '../../core/_requests' or its corresponding type declarations.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalForm.tsx(6,22): error TS2307: Cannot find module '../../core/_models' or its corresponding type declarations.
+src/app/modules/apps/employees-management/employees-edit-modal/EmployeesEditModalForm.tsx(7,33): error TS2307: Cannot find module '../../../../../../../_metronic/helpers' or its corresponding type declarations.
+src/app/modules/apps/employees-management/employees-list/components/pagination/EmployeesListPagination.tsx(25,42): error TS2339: Property 'page' does not exist on type 'QueryState | { current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+  Property 'page' does not exist on type '{ current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+src/app/modules/apps/employees-management/employees-list/components/pagination/EmployeesListPagination.tsx(29,51): error TS2339: Property 'items_per_page' does not exist on type 'QueryState | { current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+  Property 'items_per_page' does not exist on type '{ current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+src/app/modules/apps/employees-management/employees-list/components/pagination/EmployeesListPagination.tsx(93,52): error TS2345: Argument of type 'QueryState | { current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }' is not assignable to parameter of type 'PaginationState | undefined'.
+  Type '{ current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }' is missing the following properties from type 'PaginationState': page, items_per_page
+src/app/modules/apps/employees-management/employees-list/components/pagination/EmployeesListPagination.tsx(103,51): error TS2339: Property 'page' does not exist on type 'QueryState | { current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+  Property 'page' does not exist on type '{ current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+src/app/modules/apps/employees-management/employees-list/components/pagination/EmployeesListPagination.tsx(118,40): error TS2339: Property 'page' does not exist on type 'QueryState | { current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+  Property 'page' does not exist on type '{ current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+src/app/modules/apps/employees-management/employees-list/components/pagination/EmployeesListPagination.tsx(138,51): error TS2339: Property 'page' does not exist on type 'QueryState | { current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+  Property 'page' does not exist on type '{ current_page: number; last_page: number; per_page: number; total: number; from: number; to: number; links: any[]; }'.
+src/app/modules/apps/holiday/users-list/table/columns/CustomRow.tsx(4,9): error TS2305: Module '"../../core/_models"' has no exported member 'Event'.
+src/app/modules/apps/request/users-list/table/UsersTable.tsx(434,15): error TS2322: Type '{ eventId: string; onClose: () => void; currentUser: UserModel | undefined; onRefetch: () => Promise<void>; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'onRefetch' does not exist on type 'IntrinsicAttributes & Props'.
+src/app/modules/apps/user-management/users-list/user-edit-modal/UserEditModalFormWrapper.tsx(30,57): error TS2740: Type '{ id: undefined; }' is missing the following properties from type 'User': user_name, user_email, role, leave_days, and 8 more.

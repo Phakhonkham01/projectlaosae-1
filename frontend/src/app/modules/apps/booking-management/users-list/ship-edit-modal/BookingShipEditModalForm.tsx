@@ -17,6 +17,13 @@ interface CurrentUser {
   role: string
 }
 
+interface BookingShipEditModalFormProps {
+  isUserLoading?: boolean
+  user?: Partial<CurrentUser> & {
+    id?: unknown
+  }
+}
+
 interface Product {
   product_id: string
   name: string
@@ -40,7 +47,10 @@ const STEPS = ['Booking Details', 'Select Food', 'Summary', 'Payment']
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const BookingShipEditModalForm: FC = () => {
+const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
+  isUserLoading = false,
+  user,
+}) => {
   const { itemIdForUpdate, setItemIdForUpdate } = useListView()
   const { refetch } = useQueryResponse()
 
@@ -49,6 +59,10 @@ const BookingShipEditModalForm: FC = () => {
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const customerName = currentUser?.user_name ?? user?.user_name
+  const customerEmail = currentUser?.user_email ?? user?.user_email
+  const customerRole = currentUser?.role ?? user?.role
+  const customerInitial = customerName?.charAt(0)?.toUpperCase() ?? '?'
 
   // ─── Load user from localStorage ──────────────────────────────────────────
   useEffect(() => {
@@ -322,16 +336,22 @@ const BookingShipEditModalForm: FC = () => {
                 className='w-40px h-40px rounded-circle bg-primary d-flex align-items-center
                   justify-content-center text-white fw-bolder fs-5 me-3 flex-shrink-0'
               >
-                {currentUser?.user_name?.charAt(0)?.toUpperCase() ?? '?'}
+                {customerInitial}
               </div>
               <div className='flex-grow-1'>
                 <div className='fw-bold fs-6 lh-1 mb-1'>
-                  {currentUser?.user_name ?? <span className='text-muted'>Unknown</span>}
+                  {isUserLoading ? (
+                    <span className='text-muted'>Loading user...</span>
+                  ) : (
+                    customerName ?? <span className='text-muted'>Unknown</span>
+                  )}
                 </div>
-                <div className='text-muted fs-8'>{currentUser?.user_email ?? '-'}</div>
+                <div className='text-muted fs-8'>
+                  {isUserLoading ? 'Loading...' : customerEmail ?? '-'}
+                </div>
               </div>
               <span className='badge badge-light-primary fs-9'>
-                {currentUser?.role ?? '-'}
+                {isUserLoading ? 'Loading...' : customerRole ?? '-'}
               </span>
             </div>
 

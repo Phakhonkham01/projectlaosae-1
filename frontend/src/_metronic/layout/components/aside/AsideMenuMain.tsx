@@ -112,6 +112,12 @@ export function AsideMenuMain() {
         title='Events'
         fontIcon='bi-calendar-event'
       />
+        <AsideMenuItem
+        to='/apps/check-bill/check-bills'
+        icon='calendar-edit'
+        title='Bills Management'  
+        fontIcon='bi-calendar-event'
+      />
        <AsideMenuItem
         to='/apps/requests'
         icon='check-circle'
