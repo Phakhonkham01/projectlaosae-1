@@ -1,0 +1,36 @@
+import { useState } from 'react'
+import { Timestamp } from 'firebase/firestore'
+ 
+// ─── Types ─────────────────────────────────────────────────────
+interface FoodItem {
+  image: string
+  name: string
+  price: number
+  product_id: string
+  quantity: number
+}
+ 
+interface HistoryBooking {
+  id: string
+  booking_date: string
+  booking_time: string
+  createdAt: Timestamp | string
+  foods: FoodItem[]
+  grand_total: number
+  num_hours: number
+  num_people: number
+  payment_method: string
+  payment_status: string
+  ship_id: string
+  ship_name: string
+  ship_price_per_hour: number
+  slip_url: string
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  total_food_price: number
+  total_ship_price: number
+  user_email: string
+  user_id: string
+  user_name: string
+}
+
+export type { HistoryBooking, FoodItem }
