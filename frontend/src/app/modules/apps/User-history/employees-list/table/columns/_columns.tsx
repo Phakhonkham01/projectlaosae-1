@@ -93,7 +93,7 @@ const PaymentCell = ({ booking }: { booking: HistoryBooking }) => {
 // ─── Grand Total Cell ───────────────────────────────────────────
 const GrandTotalCell = ({ value }: { value: number }) => (
   <span className='text-gray-800 fw-bold'>
-    ฿{value?.toLocaleString() ?? '-'}
+    {value != null ? `${value.toLocaleString()} LAK` : '-'}
   </span>
 )
 

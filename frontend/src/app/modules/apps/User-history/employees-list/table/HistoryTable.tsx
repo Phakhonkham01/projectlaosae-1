@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTable, ColumnInstance, Row } from 'react-table'
 import { useQueryResponseData, useQueryResponseLoading } from '../core/QueryResponseProvider'
 import { HistoryBooking } from '../core/_models'
@@ -8,6 +8,16 @@ import { CustomHeaderColumn } from './columns/CustomHeaderColumn'
 import { CustomRow } from './columns/CustomRow'
 import { EmployeesListLoading } from '../components/loading/EmployeesListLoading'
 import { EmployeesListPagination } from '../components/pagination/EmployeesListPagination'
+
+type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 'payment_failed'
+
+const tabs: { label: string; value: StatusTab; color: string }[] = [
+  { label: 'All',            value: 'all',            color: '#64748b' },
+  { label: 'Pending',        value: 'pending',        color: '#f59e0b' },
+  { label: 'Approved',       value: 'approved',       color: '#10b981' },
+  { label: 'Rejected',       value: 'rejected',       color: '#ef4444' },
+  { label: 'Payment Failed', value: 'payment_failed', color: '#8b5cf6' },
+]
 
 const getCurrentUserId = (): string | null => {
   try {
@@ -23,12 +33,15 @@ const getCurrentUserId = (): string | null => {
 const HistoryTable = () => {
   const allData = useQueryResponseData()
   const isLoading = useQueryResponseLoading()
+  const [activeTab, setActiveTab] = useState<StatusTab>('all')
 
   const data = useMemo(() => {
     const currentUserId = getCurrentUserId()
     if (!currentUserId) return []
-    return allData.filter(item => item.user_id === currentUserId)
-  }, [allData])
+    return allData
+      .filter(item => item.user_id === currentUserId)
+      .filter(item => activeTab === 'all' || item.status === activeTab)
+  }, [allData, activeTab])
 
   const columns = useMemo(() => HistoryBookingColumns, [])
 
@@ -37,8 +50,44 @@ const HistoryTable = () => {
     data,
   })
 
+  // นับจำนวนแต่ละ status
+  const counts = useMemo(() => {
+    const currentUserId = getCurrentUserId()
+    const userItems = allData.filter(item => item.user_id === currentUserId)
+    return tabs.reduce((acc, tab) => {
+      acc[tab.value] = tab.value === 'all'
+        ? userItems.length
+        : userItems.filter(item => item.status === tab.value).length
+      return acc
+    }, {} as Record<StatusTab, number>)
+  }, [allData])
+
   return (
     <KTCardBody className='py-4'>
+     
+      <div className='d-flex justify-content-end mb-4'>
+        <ul className='nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0'>
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.value
+            return (
+              <li key={tab.value} className='nav-item'>
+                <a
+                  className={`nav-link fw-bold ${isActive ? 'active' : 'text-muted'}`}
+                  onClick={() => setActiveTab(tab.value)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {tab.label}
+                  <span className={`ms-2 badge ${isActive ? 'badge-primary' : 'badge-light'}`}>
+                    {counts[tab.value] ?? 0}
+                  </span>
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
+      {/* Table */}
       <div className='table-responsive'>
         <table
           id='kt_table_users'
