@@ -148,6 +148,12 @@ export function AsideMenuMain() {
         title='Products Management'
         fontIcon='bi-calendar-event'
       />
+      <AsideMenuItem
+        to='/apps/user-history'
+        icon='tree'
+        title='User-History'
+        fontIcon='bi-calendar-event'
+      />
     </>
   )
 }
