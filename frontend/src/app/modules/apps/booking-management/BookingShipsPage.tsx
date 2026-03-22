@@ -4,7 +4,7 @@ import {UsersListWrapper} from './users-list/BookingShips'
 
 const usersBreadcrumbs: Array<PageLink> = [
   {
-    title: 'Booking Ships',
+    title: 'ຈອງເຮືອ',
     path: '/apps/booking-ships/ships',
     isSeparator: false,
     isActive: false,
@@ -25,7 +25,7 @@ const BookingShipsPage = () => {
           path='booking-ships'
           element={
             <>
-              <PageTitle breadcrumbs={usersBreadcrumbs}>Booking Ships</PageTitle>
+              <PageTitle breadcrumbs={usersBreadcrumbs}>ຈອງເຮືອ</PageTitle>
               <UsersListWrapper />
             </>
           }

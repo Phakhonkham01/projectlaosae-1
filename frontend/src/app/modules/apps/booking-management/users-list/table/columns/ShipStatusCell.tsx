@@ -5,6 +5,19 @@ type Props = {
 }
 
 const ShipStatusCell: FC<Props> = ({ status }) => {
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'Active':
+        return 'ໃຊ້ງານ'
+      case 'Inactive':
+        return 'ບໍ່ໃຊ້ງານ'
+      case 'Maintenance':
+        return 'ກຳລັງບຳລຸງ'
+      default:
+        return status
+    }
+  }
+
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'Active':
@@ -21,7 +34,7 @@ const ShipStatusCell: FC<Props> = ({ status }) => {
   return (
     <div className="text-center">
       <span className={`badge ${getStatusClass(status)} fw-bold px-3 py-2`}>
-        {status}
+        {getStatusLabel(status)}
       </span>
     </div>
   )

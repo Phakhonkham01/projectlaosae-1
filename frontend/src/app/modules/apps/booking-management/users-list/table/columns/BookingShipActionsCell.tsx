@@ -33,7 +33,7 @@ const BookingShipActionsCell: FC<Props> = ({ id }) => {
         data-kt-menu-placement='bottom-end'
         onClick={openEditModal}
       >
-        Book Now
+        ຈອງດຽວນີ້
         {/* <KTIcon iconName='down' className='fs-5 m-0' /> */}
       
       

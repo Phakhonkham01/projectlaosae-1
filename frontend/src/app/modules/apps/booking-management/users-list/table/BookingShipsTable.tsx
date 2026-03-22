@@ -33,7 +33,7 @@ const ShipTable = () => {
             type='button'
             className={`btn btn-sm ${viewMode === 'card' ? 'btn-primary' : 'btn-light'}`}
             onClick={() => setViewMode('card')}
-            title='Card View'
+            title='ມຸມມອງແບບກາດ'
           >
             <i className='ki-duotone ki-element-equal fs-4 m-0'>
               <span className='path1' />
@@ -41,19 +41,19 @@ const ShipTable = () => {
               <span className='path3' />
               <span className='path4' />
             </i>
-            <span className='ms-1'>Card</span>
+            <span className='ms-1'>ກາດ</span>
           </button>
           <button
             type='button'
             className={`btn btn-sm ${viewMode === 'table' ? 'btn-primary' : 'btn-light'}`}
             onClick={() => setViewMode('table')}
-            title='Table View'
+            title='ມຸມມອງແບບຕາຕະລາງ'
           >
             <i className='ki-duotone ki-row-horizontal fs-4 m-0'>
               <span className='path1' />
               <span className='path2' />
             </i>
-            <span className='ms-1'>Table</span>
+            <span className='ms-1'>ຕາຕະລາງ</span>
           </button>
         </div>
       </div>
@@ -93,7 +93,7 @@ const ShipTable = () => {
                   <tr>
                     <td colSpan={7}>
                       <div className='d-flex text-center w-100 align-content-center justify-content-center'>
-                        No matching records found
+                        ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັນ
                       </div>
                     </td>
                   </tr>

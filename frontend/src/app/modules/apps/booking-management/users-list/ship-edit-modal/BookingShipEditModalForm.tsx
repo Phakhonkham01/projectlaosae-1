@@ -43,7 +43,7 @@ interface SelectedFood {
 
 // ─── Step Labels ──────────────────────────────────────────────────────────────
 
-const STEPS = ['Booking Details', 'Select Food', 'Summary', 'Payment']
+const STEPS = ['ລາຍລະອຽດການຈອງ', 'ເລືອກອາຫານ', 'ສະຫຼຸບລາຍການ', 'ການຊຳລະ']
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      Swal.fire({ icon: 'error', title: 'Error!', text: 'Please upload an image file' })
+      Swal.fire({ icon: 'error', title: 'ຜິດພາດ', text: 'ກະລຸນາອັບໂຫຼດໄຟລ໌ຮູບພາບ' })
       return
     }
     setSlipUploading(true)
@@ -132,10 +132,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       await uploadBytes(storageRef, file)
       const url = await getDownloadURL(storageRef)
       setSlipUrl(url)
-      Swal.fire({ icon: 'success', title: 'Slip uploaded!', timer: 1200, showConfirmButton: false })
+      Swal.fire({ icon: 'success', title: 'ອັບໂຫຼດສະລິບແລ້ວ', timer: 1200, showConfirmButton: false })
     } catch (err) {
       console.error(err)
-      Swal.fire({ icon: 'error', title: 'Upload failed', text: 'Please try again' })
+      Swal.fire({ icon: 'error', title: 'ອັບໂຫຼດບໍ່ສຳເລັດ', text: 'ກະລຸນາລອງໃໝ່' })
     } finally {
       setSlipUploading(false)
       if (slipInputRef.current) slipInputRef.current.value = ''
@@ -145,12 +145,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   // ─── Validation ────────────────────────────────────────────────────────────
   const validateStep1 = (): boolean => {
     const errs: Record<string, string> = {}
-    if (!bookingDate) errs.date = 'Please select a date'
-    if (!bookingTime) errs.time = 'Please select a time'
-    if (numPeople < 1) errs.people = 'At least 1 person required'
+    if (!bookingDate) errs.date = 'ກະລຸນາເລືອກວັນທີ'
+    if (!bookingTime) errs.time = 'ກະລຸນາເລືອກເວລາ'
+    if (numPeople < 1) errs.people = 'ຕ້ອງມີຢ່າງໜ້ອຍ 1 ຄົນ'
     if (shipData && numPeople > shipData.capacity)
-      errs.people = `Exceeds ship capacity (max ${shipData.capacity})`
-    if (numHours < 1) errs.hours = 'At least 1 hour required'
+      errs.people = `ເກີນຄວາມຈຸຂອງເຮືອ (ສູງສຸດ ${shipData.capacity})`
+    if (numHours < 1) errs.hours = 'ຕ້ອງຈອງຢ່າງໜ້ອຍ 1 ຊົ່ວໂມງ'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -187,7 +187,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const nextStep = () => {
     if (currentStep === 1 && !validateStep1()) return
     if (currentStep === 4 && paymentMethod === 'transfer' && !slipUrl) {
-      Swal.fire({ icon: 'warning', title: 'No slip uploaded', text: 'Please upload your transfer slip before confirming.' })
+      Swal.fire({ icon: 'warning', title: 'ຍັງບໍ່ໄດ້ອັບໂຫຼດສະລິບ', text: 'ກະລຸນາອັບໂຫຼດສະລິບໂອນເງິນກ່ອນຢືນຢັນ' })
       return
     }
     setCurrentStep((s) => s + 1)
@@ -227,8 +227,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
       Swal.fire({
         icon: 'success',
-        title: 'Booking Confirmed!',
-        text: 'Your booking has been saved successfully.',
+        title: 'ຢືນຢັນການຈອງແລ້ວ',
+        text: 'ບັນທຶກການຈອງສຳເລັດແລ້ວ',
         timer: 2000,
         showConfirmButton: false,
       })
@@ -236,7 +236,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       setItemIdForUpdate(undefined)
     } catch (error) {
       console.error('Save error:', error)
-      Swal.fire({ icon: 'error', title: 'Error!', text: 'Failed to save booking.' })
+      Swal.fire({ icon: 'error', title: 'ຜິດພາດ', text: 'ບັນທຶກການຈອງບໍ່ສຳເລັດ' })
     } finally {
       setLoading(false)
     }
@@ -262,7 +262,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       {/* ── Header ── */}
       <div className='modal-header'>
         <h2 className='fw-bold'>
-          Booking —{' '}
+          ຈອງເຮືອ:{' '}
           <span className='text-primary'>{shipData?.ship_name}</span>
         </h2>
         <div
@@ -341,17 +341,17 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               <div className='flex-grow-1'>
                 <div className='fw-bold fs-6 lh-1 mb-1'>
                   {isUserLoading ? (
-                    <span className='text-muted'>Loading user...</span>
+                    <span className='text-muted'>ກຳລັງໂຫຼດຜູ້ໃຊ້...</span>
                   ) : (
-                    customerName ?? <span className='text-muted'>Unknown</span>
+                    customerName ?? <span className='text-muted'>ບໍ່ຮູ້ຂໍ້ມູນ</span>
                   )}
                 </div>
                 <div className='text-muted fs-8'>
-                  {isUserLoading ? 'Loading...' : customerEmail ?? '-'}
+                  {isUserLoading ? 'ກຳລັງໂຫຼດ...' : customerEmail ?? '-'}
                 </div>
               </div>
               <span className='badge badge-light-primary fs-9'>
-                {isUserLoading ? 'Loading...' : customerRole ?? '-'}
+                {isUserLoading ? 'ກຳລັງໂຫຼດ...' : customerRole ?? '-'}
               </span>
             </div>
 
@@ -368,8 +368,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               <div>
                 <div className='fw-bolder fs-5'>{shipData?.ship_name}</div>
                 <div className='text-muted fs-7'>
-                  Capacity: <strong>{shipData?.capacity}</strong> people &nbsp;·&nbsp;{' '}
-                  <strong>{shipData?.price?.toLocaleString()} LAK</strong> / hr
+                  ຄວາມຈຸ: <strong>{shipData?.capacity}</strong> ຄົນ &nbsp;·&nbsp;{' '}
+                  <strong>{shipData?.price?.toLocaleString()} LAK</strong> / ຊົ່ວໂມງ
                 </div>
               </div>
             </div>
@@ -377,7 +377,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {/* Date & Time */}
             <div className='row mb-5'>
               <div className='col-6'>
-                <label className='required fw-bold fs-6 mb-2'>Date</label>
+                <label className='required fw-bold fs-6 mb-2'>ວັນທີ</label>
                 <input
                   type='date'
                   className={`form-control form-control-solid ${errors.date ? 'is-invalid' : ''}`}
@@ -397,7 +397,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 )}
               </div>
               <div className='col-6'>
-                <label className='required fw-bold fs-6 mb-2'>Time</label>
+                <label className='required fw-bold fs-6 mb-2'>ເວລາ</label>
                 <input
                   type='time'
                   className={`form-control form-control-solid ${errors.time ? 'is-invalid' : ''}`}
@@ -420,8 +420,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {/* Number of People */}
             <div className='mb-5'>
               <label className='required fw-bold fs-6 mb-2'>
-                Number of People{' '}
-                <span className='text-muted fw-normal'>(max {shipData?.capacity})</span>
+                ຈຳນວນຄົນ{' '}
+                <span className='text-muted fw-normal'>(ສູງສຸດ {shipData?.capacity})</span>
               </label>
               <input
                 type='number'
@@ -445,7 +445,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
             {/* Duration */}
             <div className='mb-6'>
-              <label className='required fw-bold fs-6 mb-3'>Duration (Hours)</label>
+              <label className='required fw-bold fs-6 mb-3'>ໄລຍະເວລາ (ຊົ່ວໂມງ)</label>
               <div className='d-flex flex-wrap gap-2'>
                 {[1, 2, 3, 4, 5, 6, 8, 10, 12].map((h) => (
                   <button
@@ -454,7 +454,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     className={`btn btn-sm ${numHours === h ? 'btn-primary' : 'btn-light'}`}
                     onClick={() => setNumHours(h)}
                   >
-                    {h} hr{h > 1 ? 's' : ''}
+                    {h} ຊົ່ວໂມງ
                   </button>
                 ))}
               </div>
@@ -466,14 +466,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {/* Price preview */}
             <div className='p-4 rounded bg-light-success'>
               <div className='d-flex justify-content-between'>
-                <span className='fw-semibold'>Ship Rental Cost</span>
+                <span className='fw-semibold'>ຄ່າເຊົ່າເຮືອ</span>
                 <span className='fw-bolder text-success fs-5'>
                   {totalShipPrice.toLocaleString()} LAK
                 </span>
               </div>
               <div className='text-muted fs-8 mt-1'>
-                {numHours} hr{numHours > 1 ? 's' : ''} ×{' '}
-                {shipPricePerHour.toLocaleString()} LAK/hr
+                {numHours} ຊົ່ວໂມງ × {shipPricePerHour.toLocaleString()} LAK/ຊົ່ວໂມງ
               </div>
             </div>
           </div>
@@ -482,12 +481,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         {/* ────────── STEP 2: Select Food ────────── */}
         {currentStep === 2 && (
           <div>
-            <div className='fw-bold fs-5 mb-4'>Select Food &amp; Beverages</div>
+            <div className='fw-bold fs-5 mb-4'>ເລືອກອາຫານ ແລະ ເຄື່ອງດື່ມ</div>
 
             {products.length === 0 ? (
               <div className='text-center text-muted py-12'>
                 <i className='bi bi-basket2 fs-2x mb-3 d-block' />
-                No products available
+                ບໍ່ມີສິນຄ້າ
               </div>
             ) : (
               <div className='row g-3'>
@@ -555,13 +554,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {selectedFoods.length > 0 && (
               <div className='mt-5 p-4 rounded bg-light-info'>
                 <div className='fw-bold mb-2'>
-                  Selected:{' '}
+                  ເລືອກແລ້ວ:{' '}
                   <span className='text-info'>
-                    {selectedFoods.reduce((s, f) => s + f.quantity, 0)} item(s)
+                    {selectedFoods.reduce((s, f) => s + f.quantity, 0)} ລາຍການ
                   </span>
                 </div>
                 <div className='d-flex justify-content-between'>
-                  <span className='text-muted'>Food Total</span>
+                  <span className='text-muted'>ລວມຄ່າອາຫານ</span>
                   <span className='fw-bolder text-info'>
                     {totalFoodPrice.toLocaleString()} LAK
                   </span>
@@ -574,18 +573,18 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         {/* ────────── STEP 3: Summary ────────── */}
         {currentStep === 3 && (
           <div>
-            <div className='fw-bold fs-5 mb-5'>Booking Summary</div>
+            <div className='fw-bold fs-5 mb-5'>ສະຫຼຸບການຈອງ</div>
 
             {/* Customer info */}
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
-                <div className='fw-bold text-dark mb-3'>👤 Booked By</div>
+                <div className='fw-bold text-dark mb-3'>ຜູ້ຈອງ</div>
                 <div className='d-flex justify-content-between mb-2'>
-                  <span className='text-muted'>Name</span>
+                  <span className='text-muted'>ຊື່</span>
                   <span className='fw-semibold'>{currentUser?.user_name ?? '-'}</span>
                 </div>
                 <div className='d-flex justify-content-between'>
-                  <span className='text-muted'>Email</span>
+                  <span className='text-muted'>ອີເມວ</span>
                   <span className='fw-semibold'>{currentUser?.user_email ?? '-'}</span>
                 </div>
               </div>
@@ -594,14 +593,14 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {/* Ship details */}
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
-                <div className='fw-bold text-primary mb-3'>🚢 Ship Details</div>
+                <div className='fw-bold text-primary mb-3'>ລາຍລະອຽດເຮືອ</div>
                 {(
                   [
-                    ['Ship', shipData?.ship_name],
-                    ['Date', bookingDate],
-                    ['Time', bookingTime],
-                    ['People', `${numPeople} person(s)`],
-                    ['Duration', `${numHours} hr${numHours > 1 ? 's' : ''}`],
+                    ['ເຮືອ', shipData?.ship_name],
+                    ['ວັນທີ', bookingDate],
+                    ['ເວລາ', bookingTime],
+                    ['ຈຳນວນຄົນ', `${numPeople} ຄົນ`],
+                    ['ໄລຍະເວລາ', `${numHours} ຊົ່ວໂມງ`],
                   ] as [string, string | undefined][]
                 ).map(([label, value]) => (
                   <div
@@ -613,7 +612,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   </div>
                 ))}
                 <div className='d-flex justify-content-between border-top pt-2 mt-2'>
-                  <span className='text-muted'>Ship Cost</span>
+                  <span className='text-muted'>ຄ່າເຮືອ</span>
                   <span className='text-success fw-bolder'>
                     {totalShipPrice.toLocaleString()} LAK
                   </span>
@@ -626,7 +625,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               <div className='card bg-light mb-4'>
                 <div className='card-body py-4 px-5'>
                   <div className='fw-bold text-info mb-3'>
-                    🍽️ Food &amp; Beverages
+                    ອາຫານ ແລະ ເຄື່ອງດື່ມ
                   </div>
                   {selectedFoods.map((f) => (
                     <div
@@ -640,7 +639,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     </div>
                   ))}
                   <div className='d-flex justify-content-between border-top pt-2 mt-2'>
-                    <span className='text-muted'>Food Total</span>
+                  <span className='text-muted'>ລວມຄ່າອາຫານ</span>
                     <span className='text-info fw-bolder'>
                       {totalFoodPrice.toLocaleString()} LAK
                     </span>
@@ -653,7 +652,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             <div className='card border-primary'>
               <div className='card-body py-4 px-5'>
                 <div className='d-flex justify-content-between align-items-center'>
-                  <span className='fw-bolder fs-5'>Grand Total</span>
+                  <span className='fw-bolder fs-5'>ລວມທັງໝົດ</span>
                   <span className='fw-bolder fs-3 text-primary'>
                     {grandTotal.toLocaleString()} LAK
                   </span>
@@ -666,7 +665,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         {/* ────────── STEP 4: Payment ────────── */}
         {currentStep === 4 && (
           <div>
-            <div className='fw-bold fs-5 mb-5'>Payment Method</div>
+            <div className='fw-bold fs-5 mb-5'>ວິທີການຊຳລະ</div>
 
             {/* Method selector */}
             <div className='d-flex gap-3 mb-6'>
@@ -685,7 +684,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     {method === 'cash' ? '💵' : '📱'}
                   </div>
                   <div className='fw-bold'>
-                    {method === 'cash' ? 'Cash' : 'Transfer'}
+                    {method === 'cash' ? 'ເງິນສົດ' : 'ໂອນເງິນ'}
                   </div>
                 </div>
               ))}
@@ -695,9 +694,9 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {paymentMethod === 'cash' && (
               <div className='p-5 rounded bg-light-warning text-center'>
                 <div className='fs-2 mb-2'>💵</div>
-                <div className='fw-bold fs-5'>Pay at the counter</div>
+                <div className='fw-bold fs-5'>ຊຳລະທີ່ໜ້າເຄົາເຕີ</div>
                 <div className='text-muted fs-7 mt-1'>
-                  Amount due:{' '}
+                  ຈຳນວນທີ່ຕ້ອງຊຳລະ:{' '}
                   <strong className='text-warning'>
                     {grandTotal.toLocaleString()} LAK
                   </strong>
@@ -711,7 +710,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 {/* QR Code */}
                 <div className='text-center mb-6'>
                   <div className='fw-bold fs-6 mb-3'>
-                    Step 1 — Scan QR Code to Pay
+                    ຂັ້ນຕອນ 1: ສະແກນ QR Code ເພື່ອຊຳລະ
                   </div>
                   {/* ── Replace src with your actual QR image path ── */}
                   <div
@@ -727,12 +726,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                         const el = e.target as HTMLImageElement
                         el.style.display = 'none'
                         el.parentElement!.innerHTML =
-                          '<span class="text-muted fs-7">Place your QR<br/>image here</span>'
+                          '<span class="text-muted fs-7">ວາງຮູບ QR<br/>ໄວ້ບ່ອນນີ້</span>'
                       }}
                     />
                   </div>
                   <div className='text-muted fs-7 mt-2'>
-                    Amount:{' '}
+                    ຈຳນວນເງິນ:{' '}
                     <strong className='text-primary'>
                       {grandTotal.toLocaleString()} LAK
                     </strong>
@@ -742,7 +741,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 {/* Slip Upload */}
                 <div className='separator separator-dashed mb-5' />
                 <div className='fw-bold fs-6 mb-3 text-center'>
-                  Step 2 — Upload Transfer Slip
+                  ຂັ້ນຕອນ 2: ອັບໂຫຼດສະລິບໂອນເງິນ
                 </div>
 
                 <input
@@ -760,7 +759,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     <div className='position-relative d-inline-block mb-3'>
                       <img
                         src={slipUrl}
-                        alt='Transfer slip'
+                        alt='ສະລິບໂອນເງິນ'
                         className='rounded border border-success'
                         style={{ maxWidth: 200, maxHeight: 280, objectFit: 'contain' }}
                       />
@@ -768,14 +767,14 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                         type='button'
                         className='btn btn-sm btn-icon btn-light-danger position-absolute top-0 end-0'
                         onClick={() => setSlipUrl('')}
-                        title='Remove slip'
+                        title='ລຶບສະລິບ'
                       >
                         <KTIcon iconName='cross' className='fs-4' />
                       </button>
                     </div>
                     <div className='text-success fw-bold d-flex align-items-center justify-content-center gap-2'>
                       <KTIcon iconName='check-circle' className='fs-3 text-success' />
-                      Slip uploaded — ready to confirm
+                      ອັບໂຫຼດສະລິບແລ້ວ ພ້ອມຢືນຢັນ
                     </div>
                   </div>
                 ) : (
@@ -789,12 +788,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       {slipUploading ? (
                         <>
                           <span className='spinner-border spinner-border-sm me-2' />
-                          Uploading...
+                          ກຳລັງອັບໂຫຼດ...
                         </>
                       ) : (
                         <>
                           <KTIcon iconName='folder-up' className='fs-3 me-2' />
-                          Upload Slip
+                          ອັບໂຫຼດສະລິບ
                         </>
                       )}
                     </button>
@@ -820,17 +819,17 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
           }
         >
           {currentStep === 1 ? (
-            'Cancel'
+            'ຍົກເລີກ'
           ) : (
             <>
-              <KTIcon iconName='arrow-left' className='fs-4 me-1' /> Back
+              <KTIcon iconName='arrow-left' className='fs-4 me-1' /> ກັບຄືນ
             </>
           )}
         </button>
 
         {currentStep < STEPS.length ? (
           <button type='button' className='btn btn-primary' onClick={nextStep}>
-            Next <KTIcon iconName='arrow-right' className='fs-4 ms-1' />
+            ຕໍ່ໄປ <KTIcon iconName='arrow-right' className='fs-4 ms-1' />
           </button>
         ) : (
           <button
@@ -842,11 +841,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             {loading ? (
               <>
                 <span className='spinner-border spinner-border-sm me-2' />
-                Saving...
+                ກຳລັງບັນທຶກ...
               </>
             ) : (
               <>
-                <KTIcon iconName='check' className='fs-4 me-1' /> Confirm Booking
+                <KTIcon iconName='check' className='fs-4 me-1' /> ຢືນຢັນການຈອງ
               </>
             )}
           </button>

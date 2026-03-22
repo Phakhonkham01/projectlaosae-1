@@ -21,7 +21,7 @@ const UsersListGrouping = () => {
   return (
     <div className='d-flex justify-content-end align-items-center'>
       <div className='fw-bolder me-5'>
-        <span className='me-2'>{selected.length}</span> Selected
+        <span className='me-2'>{selected.length}</span> ລາຍການທີ່ເລືອກ
       </div>
 
       <button
@@ -29,7 +29,7 @@ const UsersListGrouping = () => {
         className='btn btn-danger'
         onClick={async () => await deleteSelectedItems.mutateAsync()}
       >
-        Delete Selected
+        ລຶບລາຍການທີ່ເລືອກ
       </button>
     </div>
   )

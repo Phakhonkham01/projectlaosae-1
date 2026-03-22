@@ -47,7 +47,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
         <div className='d-flex justify-content-between align-items-center flex-wrap gap-2'>
           {/* Capacity */}
           <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Capacity</span>
+            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ຄວາມຈຸ</span>
             <span className='text-gray-700 fw-bold fs-6'>
               {ship.capacity?.toLocaleString() ?? '—'}
             </span>
@@ -55,7 +55,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
 
           {/* Price */}
           <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Price</span>
+            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ລາຄາ</span>
             <span className='text-primary fw-bold fs-6'>
               ${ship.price?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? '—'}
             </span>
@@ -63,7 +63,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
 
           {/* Quantity */}
           <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Qty</span>
+            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ຈຳນວນ</span>
             <span className='text-gray-700 fw-bold fs-6'>{ship.quantity ?? '—'}</span>
           </div>
         </div>

@@ -48,14 +48,14 @@ const UsersListFilter = () => {
         data-kt-menu-placement='bottom-end'
       >
         <KTIcon iconName='filter' className='fs-2' />
-        Filter
+        ກັ່ນຕອງ
       </button>
 
       {/* เมนู dropdown */}
       <div className='menu menu-sub menu-sub-dropdown w-300px w-md-325px' data-kt-menu='true'>
         {/* Header */}
         <div className='px-7 py-5'>
-          <div className='fs-5 text-gray-900 fw-bolder'>Filter Options</div>
+          <div className='fs-5 text-gray-900 fw-bolder'>ຕົວເລືອກການກັ່ນຕອງ</div>
         </div>
 
         <div className='separator border-gray-200'></div>
@@ -64,40 +64,40 @@ const UsersListFilter = () => {
         <div className='px-7 py-5' data-kt-user-table-filter='form'>
           {/* Role */}
           <div className='mb-10'>
-            <label className='form-label fs-6 fw-bold'>Role:</label>
+            <label className='form-label fs-6 fw-bold'>ບົດບາດ:</label>
             <select
               className='form-select form-select-solid fw-bolder'
               data-kt-select2='true'
-              data-placeholder='Select option'
+              data-placeholder='ເລືອກລາຍການ'
               data-allow-clear='true'
               data-kt-user-table-filter='role'
               data-hide-search='true'
               onChange={(e) => setRole(e.target.value)}
               value={role}
             >
-              <option value=''>Select Role</option>
-              <option value='admin'>Admin</option>
-              <option value='employee'>Employee</option>
-              <option value='supervisor'>Supervisor</option>
+              <option value=''>ເລືອກບົດບາດ</option>
+              <option value='admin'>ແອັດມິນ</option>
+              <option value='employee'>ພະນັກງານ</option>
+              <option value='supervisor'>ຫົວໜ້າງານ</option>
             </select>
           </div>
 
           {/* Status */}
           <div className='mb-10'>
-            <label className='form-label fs-6 fw-bold'>Status:</label>
+            <label className='form-label fs-6 fw-bold'>ສະຖານະ:</label>
             <select
               className='form-select form-select-solid fw-bolder'
               data-kt-select2='true'
-              data-placeholder='Select status'
+              data-placeholder='ເລືອກສະຖານະ'
               data-allow-clear='true'
               data-hide-search='true'
               onChange={(e) => setStatus(e.target.value || undefined)}
               value={status || ''}
             >
-              <option value=''>All Status</option>
-              <option value='Active'>Active</option>
-              <option value='Inactive'>Inactive</option>
-              <option value='On Leave'>On Leave</option>
+              <option value=''>ທຸກສະຖານະ</option>
+              <option value='Active'>ໃຊ້ງານ</option>
+              <option value='Inactive'>ບໍ່ໃຊ້ງານ</option>
+              <option value='On Leave'>ພັກວຽກ</option>
             </select>
           </div>
 
@@ -111,7 +111,7 @@ const UsersListFilter = () => {
               data-kt-menu-dismiss='true'
               data-kt-user-table-filter='reset'
             >
-              Reset
+              ຣີເຊັດ
             </button>
             <button
               disabled={isLoading}
@@ -121,7 +121,7 @@ const UsersListFilter = () => {
               data-kt-menu-dismiss='true'
               data-kt-user-table-filter='filter'
             >
-              Apply
+              ນຳໃຊ້
             </button>
           </div>
         </div>

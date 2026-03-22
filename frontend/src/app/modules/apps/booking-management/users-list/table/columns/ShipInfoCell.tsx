@@ -6,6 +6,15 @@ type Props = {
 }
 
 const ShipInfoCell: FC<Props> = ({ ship_name, status }) => {
+  const statusLabel =
+    status === 'Active'
+      ? 'ໃຊ້ງານ'
+      : status === 'Inactive'
+      ? 'ບໍ່ໃຊ້ງານ'
+      : status === 'Maintenance'
+      ? 'ກຳລັງບຳລຸງ'
+      : status
+
   return (
     <div className="d-flex align-items-center">
       <div className="d-flex flex-column">
@@ -14,7 +23,7 @@ const ShipInfoCell: FC<Props> = ({ ship_name, status }) => {
         </span>
         {status && (
           <span className="text-gray-600 fw-semibold d-block fs-7">
-            Status: {status}
+            ສະຖານະ: {statusLabel}
           </span>
         )}
       </div>

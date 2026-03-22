@@ -65,11 +65,11 @@ const STATUS_META: Record<
   PaymentStatus,
   { label: string; badge: string; icon: string }
 > = {
-  pending:        { label: 'Pending',        badge: 'badge-light-warning', icon: 'time'         },
-  slip_submitted: { label: 'Slip Submitted', badge: 'badge-light-info',    icon: 'document'     },
-  approved:       { label: 'Approved',       badge: 'badge-light-success', icon: 'check-circle' },
-  rejected:       { label: 'Rejected',       badge: 'badge-light-danger',  icon: 'cross-circle' },
-  re_submitted:   { label: 'Re-Submitted',   badge: 'badge-light-primary', icon: 'arrows-circle'},
+  pending:        { label: 'ລໍຖ້າ',           badge: 'badge-light-warning', icon: 'time'         },
+  slip_submitted: { label: 'ສົ່ງສະລິບແລ້ວ',    badge: 'badge-light-info',    icon: 'document'     },
+  approved:       { label: 'ອະນຸມັດແລ້ວ',      badge: 'badge-light-success', icon: 'check-circle' },
+  rejected:       { label: 'ປະຕິເສດ',         badge: 'badge-light-danger',  icon: 'cross-circle' },
+  re_submitted:   { label: 'ສົ່ງໃໝ່ແລ້ວ',      badge: 'badge-light-primary', icon: 'arrows-circle'},
 }
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
@@ -96,11 +96,11 @@ const BillDetailModal: FC<{
     try {
       await updateDoc(doc(db, 'bill', bill.id), { payment_status: 'approved' })
       await updateDoc(doc(db, 'history_booking', bill.id), { payment_status: 'approved' }).catch(() => {})
-      Swal.fire({ icon: 'success', title: 'Approved!', timer: 1500, showConfirmButton: false })
+      Swal.fire({ icon: 'success', title: 'ອະນຸມັດແລ້ວ', timer: 1500, showConfirmButton: false })
       onRefresh()
       onClose()
     } catch (e) {
-      Swal.fire({ icon: 'error', title: 'Failed', text: 'Could not approve.' })
+      Swal.fire({ icon: 'error', title: 'ບໍ່ສຳເລັດ', text: 'ບໍ່ສາມາດອະນຸມັດໄດ້' })
     } finally {
       setActionLoading(false)
     }
@@ -109,7 +109,7 @@ const BillDetailModal: FC<{
   // Employee: reject bill
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      Swal.fire({ icon: 'warning', title: 'Reason required', text: 'Please enter a rejection reason.' })
+      Swal.fire({ icon: 'warning', title: 'ຈຳເປັນຕ້ອງລະບຸເຫດຜົນ', text: 'ກະລຸນາໃສ່ເຫດຜົນໃນການປະຕິເສດ' })
       return
     }
     setActionLoading(true)
@@ -117,11 +117,11 @@ const BillDetailModal: FC<{
       const update = { payment_status: 'rejected', reject_reason: rejectReason }
       await updateDoc(doc(db, 'bill', bill.id), update)
       await updateDoc(doc(db, 'history_booking', bill.id), update).catch(() => {})
-      Swal.fire({ icon: 'info', title: 'Rejected', text: 'User will be notified to re-pay.', timer: 2000, showConfirmButton: false })
+      Swal.fire({ icon: 'info', title: 'ປະຕິເສດແລ້ວ', text: 'ຈະແຈ້ງໃຫ້ຜູ້ໃຊ້ຊຳລະໃໝ່', timer: 2000, showConfirmButton: false })
       onRefresh()
       onClose()
     } catch (e) {
-      Swal.fire({ icon: 'error', title: 'Failed', text: 'Could not reject.' })
+      Swal.fire({ icon: 'error', title: 'ບໍ່ສຳເລັດ', text: 'ບໍ່ສາມາດປະຕິເສດໄດ້' })
     } finally {
       setActionLoading(false)
     }
@@ -132,7 +132,7 @@ const BillDetailModal: FC<{
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      Swal.fire({ icon: 'error', title: 'Image only', text: 'Please select an image file.' })
+      Swal.fire({ icon: 'error', title: 'ຮັບສະເພາະຮູບພາບ', text: 'ກະລຸນາເລືອກໄຟລ໌ຮູບພາບ' })
       return
     }
     setReUploadLoading(true)
@@ -143,11 +143,11 @@ const BillDetailModal: FC<{
       const update = { slip_url: url, payment_status: 're_submitted', reject_reason: '' }
       await updateDoc(doc(db, 'bill', bill.id), update)
       await updateDoc(doc(db, 'history_booking', bill.id), update).catch(() => {})
-      Swal.fire({ icon: 'success', title: 'Slip Re-submitted!', text: 'Waiting for employee review.', timer: 2000, showConfirmButton: false })
+      Swal.fire({ icon: 'success', title: 'ສົ່ງສະລິບໃໝ່ແລ້ວ', text: 'ກຳລັງລໍຖ້າພະນັກງານກວດສອບ', timer: 2000, showConfirmButton: false })
       onRefresh()
       onClose()
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Upload failed', text: 'Please try again.' })
+      Swal.fire({ icon: 'error', title: 'ອັບໂຫຼດບໍ່ສຳເລັດ', text: 'ກະລຸນາລອງໃໝ່' })
     } finally {
       setReUploadLoading(false)
       if (reUploadRef.current) reUploadRef.current.value = ''
@@ -181,12 +181,12 @@ const BillDetailModal: FC<{
               <div className='alert alert-danger d-flex align-items-start gap-3 mb-5'>
                 <KTIcon iconName='cross-circle' className='fs-2 text-danger mt-1' />
                 <div>
-                  <div className='fw-bold'>Payment Rejected</div>
+                  <div className='fw-bold'>ການຊຳລະຖືກປະຕິເສດ</div>
                   {bill.reject_reason && (
                     <div className='fs-7 mt-1'>{bill.reject_reason}</div>
                   )}
                   <div className='fs-7 text-muted mt-1'>
-                    Please re-upload a correct transfer slip below.
+                    ກະລຸນາອັບໂຫຼດສະລິບໂອນເງິນທີ່ຖືກຕ້ອງອີກຄັ້ງ
                   </div>
                 </div>
               </div>
@@ -197,14 +197,14 @@ const BillDetailModal: FC<{
               <div className='col-12'>
                 <div className='card bg-light'>
                   <div className='card-body py-4 px-5'>
-                    <div className='fw-bold text-dark mb-3'>👤 Customer</div>
+                    <div className='fw-bold text-dark mb-3'>ລູກຄ້າ</div>
                     <div className='row'>
                       <div className='col-6'>
-                        <span className='text-muted fs-7'>Name</span>
+                        <span className='text-muted fs-7'>ຊື່</span>
                         <div className='fw-semibold'>{bill.user_name}</div>
                       </div>
                       <div className='col-6'>
-                        <span className='text-muted fs-7'>Email</span>
+                        <span className='text-muted fs-7'>ອີເມວ</span>
                         <div className='fw-semibold'>{bill.user_email}</div>
                       </div>
                     </div>
@@ -216,15 +216,15 @@ const BillDetailModal: FC<{
             {/* Booking Info */}
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
-                <div className='fw-bold text-primary mb-3'>🚢 Booking Info</div>
+                <div className='fw-bold text-primary mb-3'>ຂໍ້ມູນການຈອງ</div>
                 <div className='row g-3'>
                   {[
-                    ['Ship', bill.ship_name],
-                    ['Date', bill.booking_date],
-                    ['Time', bill.booking_time],
-                    ['People', `${bill.num_people} person(s)`],
-                    ['Duration', `${bill.num_hours} hr(s)`],
-                    ['Rate', fmt(bill.ship_price_per_hour) + '/hr'],
+                    ['ເຮືອ', bill.ship_name],
+                    ['ວັນທີ', bill.booking_date],
+                    ['ເວລາ', bill.booking_time],
+                    ['ຈຳນວນຄົນ', `${bill.num_people} ຄົນ`],
+                    ['ໄລຍະເວລາ', `${bill.num_hours} ຊົ່ວໂມງ`],
+                    ['ອັດຕາ', fmt(bill.ship_price_per_hour) + '/ຊົ່ວໂມງ'],
                   ].map(([l, v]) => (
                     <div key={l} className='col-6'>
                       <span className='text-muted fs-7'>{l}</span>
@@ -239,7 +239,7 @@ const BillDetailModal: FC<{
             {bill.foods?.length > 0 && (
               <div className='card bg-light mb-4'>
                 <div className='card-body py-4 px-5'>
-                  <div className='fw-bold text-info mb-3'>🍽️ Food & Beverages</div>
+                  <div className='fw-bold text-info mb-3'>ອາຫານ ແລະ ເຄື່ອງດື່ມ</div>
                   {bill.foods.map((f) => (
                     <div key={f.product_id} className='d-flex justify-content-between mb-1'>
                       <span>{f.name} × {f.quantity}</span>
@@ -247,7 +247,7 @@ const BillDetailModal: FC<{
                     </div>
                   ))}
                   <div className='d-flex justify-content-between border-top pt-2 mt-2'>
-                    <span className='text-muted'>Food Total</span>
+                    <span className='text-muted'>ລວມຄ່າອາຫານ</span>
                     <span className='text-info fw-bold'>{fmt(bill.total_food_price)}</span>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ const BillDetailModal: FC<{
             {/* Grand Total */}
             <div className='card border-primary mb-4'>
               <div className='card-body py-3 px-5 d-flex justify-content-between align-items-center'>
-                <span className='fw-bolder fs-5'>Grand Total</span>
+                <span className='fw-bolder fs-5'>ລວມທັງໝົດ</span>
                 <span className='fw-bolder fs-3 text-primary'>{fmt(bill.grand_total)}</span>
               </div>
             </div>
@@ -265,16 +265,16 @@ const BillDetailModal: FC<{
             {/* Payment */}
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
-                <div className='fw-bold mb-3'>💳 Payment</div>
+                <div className='fw-bold mb-3'>ການຊຳລະ</div>
                 <div className='d-flex justify-content-between mb-3'>
-                  <span className='text-muted'>Method</span>
-                  <span className='fw-semibold text-capitalize'>{bill.payment_method}</span>
+                  <span className='text-muted'>ວິທີ</span>
+                  <span className='fw-semibold text-capitalize'>{bill.payment_method === 'transfer' ? 'ໂອນເງິນ' : 'ເງິນສົດ'}</span>
                 </div>
 
                 {/* Slip preview */}
                 {bill.payment_method === 'transfer' && bill.slip_url && (
                   <div>
-                    <div className='text-muted fs-7 mb-2'>Transfer Slip</div>
+                    <div className='text-muted fs-7 mb-2'>ສະລິບໂອນເງິນ</div>
                     <a href={bill.slip_url} target='_blank' rel='noreferrer'>
                       <img
                         src={bill.slip_url}
@@ -287,7 +287,7 @@ const BillDetailModal: FC<{
                 )}
 
                 {bill.payment_method === 'transfer' && !bill.slip_url && (
-                  <div className='text-danger fs-7'>No slip uploaded</div>
+                  <div className='text-danger fs-7'>ຍັງບໍ່ໄດ້ອັບໂຫຼດສະລິບ</div>
                 )}
               </div>
             </div>
@@ -298,15 +298,15 @@ const BillDetailModal: FC<{
                 bill.payment_status === 're_submitted') && (
               <div className='card border-warning mb-4'>
                 <div className='card-body py-4 px-5'>
-                  <div className='fw-bold mb-3'>⚙️ Employee Action</div>
+                  <div className='fw-bold mb-3'>ການຈັດການຂອງພະນັກງານ</div>
                   <div className='mb-3'>
                     <label className='fw-semibold fs-7 mb-1 d-block'>
-                      Rejection Reason <span className='text-muted'>(required if rejecting)</span>
+                      ເຫດຜົນໃນການປະຕິເສດ <span className='text-muted'>(ຈຳເປັນເມື່ອປະຕິເສດ)</span>
                     </label>
                     <textarea
                       className='form-control form-control-solid'
                       rows={2}
-                      placeholder='e.g. Amount incorrect, wrong account...'
+                      placeholder='ຕົວຢ່າງ: ຈຳນວນເງິນບໍ່ຖືກ, ບັນຊີຜິດ...'
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                     />
@@ -322,7 +322,7 @@ const BillDetailModal: FC<{
                       ) : (
                         <KTIcon iconName='check' className='fs-4 me-1' />
                       )}
-                      Approve
+                      ອະນຸມັດ
                     </button>
                     <button
                       className='btn btn-danger flex-fill'
@@ -334,7 +334,7 @@ const BillDetailModal: FC<{
                       ) : (
                         <KTIcon iconName='cross' className='fs-4 me-1' />
                       )}
-                      Reject
+                      ປະຕິເສດ
                     </button>
                   </div>
                 </div>
@@ -346,7 +346,7 @@ const BillDetailModal: FC<{
               <div className='card border-danger'>
                 <div className='card-body py-4 px-5'>
                   <div className='fw-bold mb-3 text-danger'>
-                    🔄 Re-upload Transfer Slip
+                    ອັບໂຫຼດສະລິບໂອນເງິນອີກຄັ້ງ
                   </div>
                   <input
                     type='file'
@@ -364,12 +364,12 @@ const BillDetailModal: FC<{
                     {reUploadLoading ? (
                       <>
                         <span className='spinner-border spinner-border-sm me-2' />
-                        Uploading...
+                        ກຳລັງອັບໂຫຼດ...
                       </>
                     ) : (
                       <>
                         <KTIcon iconName='folder-up' className='fs-3 me-2' />
-                        Upload New Slip
+                        ອັບໂຫຼດສະລິບໃໝ່
                       </>
                     )}
                   </button>
@@ -384,7 +384,7 @@ const BillDetailModal: FC<{
           {/* Footer */}
           <div className='modal-footer'>
             <button className='btn btn-light' onClick={onClose}>
-              Close
+              ປິດ
             </button>
           </div>
         </div>
@@ -430,7 +430,7 @@ const BillManagement: FC = () => {
       setBills(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Bill)))
     } catch (e) {
       console.error(e)
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load bills.' })
+      Swal.fire({ icon: 'error', title: 'ຜິດພາດ', text: 'ໂຫຼດບິນບໍ່ສຳເລັດ' })
     } finally {
       setLoading(false)
     }
@@ -462,7 +462,7 @@ const BillManagement: FC = () => {
       <div className='card-header border-0 pt-6'>
         <div className='card-title'>
           <h3 className='fw-bold'>
-            {isEmployee ? '🗂 Bill Management' : '📋 My Bookings'}
+            {isEmployee ? 'ຈັດການບິນ' : 'ລາຍການຈອງຂອງຂ້ອຍ'}
           </h3>
         </div>
 
@@ -471,7 +471,7 @@ const BillManagement: FC = () => {
           <input
             type='text'
             className='form-control form-control-solid w-200px'
-            placeholder='Search...'
+            placeholder='ຄົ້ນຫາ...'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -480,7 +480,7 @@ const BillManagement: FC = () => {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as PaymentStatus | 'all')}
           >
-            <option value='all'>All Statuses</option>
+            <option value='all'>ທຸກສະຖານະ</option>
             {(Object.keys(STATUS_META) as PaymentStatus[]).map((s) => (
               <option key={s} value={s}>{STATUS_META[s].label}</option>
             ))}
@@ -497,7 +497,7 @@ const BillManagement: FC = () => {
         ) : filtered.length === 0 ? (
           <div className='text-center text-muted py-12'>
             <KTIcon iconName='document' className='fs-2x mb-3' />
-            <div>No bills found</div>
+            <div>ບໍ່ພົບບິນ</div>
           </div>
         ) : (
           <div className='table-responsive'>
@@ -505,13 +505,13 @@ const BillManagement: FC = () => {
               <thead>
                 <tr className='fw-bold text-muted fs-7 text-uppercase'>
                   <th>Bill ID</th>
-                  {isEmployee && <th>Customer</th>}
-                  <th>Ship</th>
-                  <th>Date / Time</th>
-                  <th>Total</th>
-                  <th>Method</th>
-                  <th>Status</th>
-                  <th className='text-end'>Action</th>
+                  {isEmployee && <th>ລູກຄ້າ</th>}
+                  <th>ເຮືອ</th>
+                  <th>ວັນທີ / ເວລາ</th>
+                  <th>ລວມ</th>
+                  <th>ວິທີ</th>
+                  <th>ສະຖານະ</th>
+                  <th className='text-end'>ຈັດການ</th>
                 </tr>
               </thead>
               <tbody>
@@ -554,7 +554,7 @@ const BillManagement: FC = () => {
                         )}
                         {!isEmployee && b.payment_status === 'rejected' && (
                           <div className='text-danger fs-8 mt-1'>
-                            ⚠ Action needed
+                            ຕ້ອງດຳເນີນການ
                           </div>
                         )}
                       </td>
@@ -563,7 +563,7 @@ const BillManagement: FC = () => {
                           className='btn btn-sm btn-light-primary'
                           onClick={() => setSelectedBill(b)}
                         >
-                          View
+                          ເບິ່ງ
                         </button>
                       </td>
                     </tr>
