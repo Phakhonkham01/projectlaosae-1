@@ -6,6 +6,8 @@ export interface AuthModel {
   role: "CEO" | "admin" | "employee";
   department_id?: DepartmentModel | string | null;
   leave_days: number;
+  avatar?: string;
+  image_url?: string;
   token: string; // ✅ ใช้ token
 }
 
@@ -25,6 +27,8 @@ export interface UserModel {
   role: "owner" | "admin" | "employee" |"CEO";
   department_id?: DepartmentModel | string | null;
   leave_days: number;
+  avatar?: string;
+  image_url?: string;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -80,7 +80,7 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal: FC<EditProfileModalProps> = ({ show, onClose }) => {
-  const { currentUser } = useAuth()
+  const { currentUser, setCurrentUser } = useAuth()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
 
   // Profile state
@@ -168,6 +168,21 @@ const EditProfileModal: FC<EditProfileModalProps> = ({ show, onClose }) => {
         updatedAt: new Date(),
         ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
       })
+
+      const storedUserRaw = localStorage.getItem('user')
+      const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : {}
+      const nextAvatar = avatarUrl || avatarPreview || currentUser.avatar || currentUser.image_url || ''
+      const updatedUser = {
+        ...storedUser,
+        ...currentUser,
+        user_name: userName || currentUser.user_name,
+        user_email: userEmail || currentUser.user_email,
+        avatar: nextAvatar,
+        image_url: nextAvatar,
+      }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setCurrentUser(updatedUser)
+
       await Swal.fire({
         icon: 'success', title: 'Saved!',
         text: 'Your profile has been updated successfully.',

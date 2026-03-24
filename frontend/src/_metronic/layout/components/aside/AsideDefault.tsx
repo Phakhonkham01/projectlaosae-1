@@ -7,11 +7,19 @@ import { AsideTabs } from "./AsideTabs";
 import { AsideFooter } from "./AsideFooter";
 import { TabsBase } from "./Tabs/_TabsBase";
 import { HeaderUserMenu } from "../../../partials";
+import { useAuth } from "../../../../app/modules/auth";
 
 const AsideDefault = () => {
   const { config } = useLayout();
   const { classes } = useLayout();
   const [link, setLink] = useState<string>("projects");
+  const { currentUser } = useAuth();
+  const avatarSrc =
+    currentUser?.avatar || currentUser?.image_url || "/media/avatars/blank.png";
+  const resolvedAvatar =
+    avatarSrc.startsWith("http") || avatarSrc.startsWith("data:")
+      ? avatarSrc
+      : toAbsoluteUrl(avatarSrc.startsWith("/") ? avatarSrc : `/${avatarSrc}`);
 
   return (
     <div
@@ -62,7 +70,7 @@ const AsideDefault = () => {
               title="User profile"
             >
               <img
-                src={toAbsoluteUrl("media/avatars/blank.png")}
+                src={resolvedAvatar}
                 alt="avatar"
               />
             </div>

@@ -13,13 +13,13 @@ import {toAbsoluteUrl} from '../../../../_metronic/helpers'
 // ─── Validation Schema ────────────────────────────────────────────────────────
 const loginSchema = Yup.object().shape({
   user_email: Yup.string()
-    .email('Wrong email format')
-    .min(3, 'Minimum 3 symbols')
-    .max(50, 'Maximum 50 symbols')
-    .required('Email is required'),
+    .email('ຮູບແບບອີ-ເມວ ບໍ່ຖືກຕ້ອງ')
+    .min(3, 'ຕໍ່າສຸດ 3 ສັນຍາລັກ')
+    .max(50, 'ສູງສຸດ 50 ສັນຍາລັກ')
+    .required('ອີ-ເມວ ແມ່ນບໍ່ສາມາດປະຫຍາດໄດ້'),
   password: Yup.string()
-    .min(3, 'Minimum 3 symbols')
-    .required('Password is required'),
+    .min(3, 'ຕໍ່າສຸດ 3 ສັນຍາລັກ')
+    .required('ລະຫັດຜ່ານ ແມ່ນບໍ່ສາມາດປະຫຍາດໄດ້'),
 })
 
 const initialValues = {
@@ -30,14 +30,14 @@ const initialValues = {
 // ─── Firebase Error Messages ──────────────────────────────────────────────────
 const getFirebaseError = (code: string): string => {
   switch (code) {
-    case 'auth/user-not-found':         return 'No account found with this email'
-    case 'auth/wrong-password':         return 'Incorrect password'
-    case 'auth/invalid-credential':     return 'Invalid email or password'
-    case 'auth/invalid-email':          return 'Invalid email format'
-    case 'auth/too-many-requests':      return 'Too many attempts. Please try again later'
-    case 'auth/network-request-failed': return 'Network error. Check your connection'
-    case 'auth/user-disabled':          return 'This account has been disabled'
-    default:                            return 'The login details are incorrect'
+    case 'auth/user-not-found':         return 'ບໍ່ມີບັນຊີທີ່ພົບວ່າມີອີ-ເມວນີ້'
+    case 'auth/wrong-password':         return 'ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ'
+    case 'auth/invalid-credential':     return 'ອີ-ເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ'
+    case 'auth/invalid-email':          return 'ຮູບແບບອີ-ເມວ ບໍ່ຖືກຕ້ອງ'
+    case 'auth/too-many-requests':      return 'ເຄື່ອງພະຍາຍາມຫຼາຍເກີນໄປ. ກະລຸນາລອງໃຫມ່ຕໍ່ມາ'
+    case 'auth/network-request-failed': return 'ຜໍ້າວເຄືອຂ່າຍ. ກວດສອບການເຊື່ອມຕໍ່ຂອງທ່ານ'
+    case 'auth/user-disabled':          return 'ບັນຊີນີ້ຖືກປະຕິເສດໃຊ້'
+    default:                            return 'ລາຍລະອຽດການເຂົ້າສູ່ລະບົບບໍ່ຖືກຕ້ອງ'
   }
 }
 
@@ -126,8 +126,8 @@ export function Login() {
     >
       {/* ── Heading ─────────────────────────────────────────────────────────── */}
       <div className='text-center mb-11'>
-        <h1 className='text-gray-900 fw-bolder mb-3'>Sign In</h1>
-        {/* <div className='text-gray-500 fw-semibold fs-6'>Your Social Campaigns</div> */}
+        <h1 className='text-gray-900 fw-bolder mb-3'>ເຂົ້າສູ່ລະບົບ</h1>
+        {/* <div className='text-gray-500 fw-semibold fs-6'>ລະບາຍສາຍໂຄງການສາທາລະນະສຸກ</div> */}
       </div>
 
       {/* ── Social Login Options ─────────────────────────────────────────────── */}
@@ -167,7 +167,7 @@ export function Login() {
 
       {/* ── Divider ─────────────────────────────────────────────────────────── */}
       <div className='separator separator-content my-14'>
-        <span className='w-125px text-gray-500 fw-semibold fs-7'>Or with email</span>
+        <span className='w-125px text-gray-500 fw-semibold fs-7'>ຫຼື ໂດຍອີ-ເມວ</span>
       </div>
 
       {/* ── Error Alert ─────────────────────────────────────────────────────── */}
@@ -179,10 +179,10 @@ export function Login() {
 
       {/* ── Email ───────────────────────────────────────────────────────────── */}
       <div className='fv-row mb-8'>
-        <label className='form-label fs-6 fw-bolder text-gray-900'>Email</label>
+        <label className='form-label fs-6 fw-bolder text-gray-900'>ອີ-ເມວ</label>
         <input
           type='email'
-          placeholder='Email'
+          placeholder='ອີ-ເມວ'
           autoComplete='off'
           {...formik.getFieldProps('user_email')}
           className={clsx(
@@ -203,15 +203,15 @@ export function Login() {
       {/* ── Password ────────────────────────────────────────────────────────── */}
       <div className='fv-row mb-3'>
         <div className='d-flex justify-content-between align-items-center mb-2'>
-          <label className='form-label fw-bolder text-gray-900 fs-6 mb-0'>Password</label>
+          <label className='form-label fw-bolder text-gray-900 fs-6 mb-0'>ລະຫັດຜ່ານ</label>
           {/* Forgot password link — uncomment if needed */}
           {/* <Link to='/auth/forgot-password' className='link-primary fs-6 fw-bolder'>
-            Forgot Password?
+            ລືມລະຫັດຜ່ານ?
           </Link> */}
         </div>
         <input
           type='password'
-          placeholder='Password'
+          placeholder='ລະຫັດຜ່ານ'
           autoComplete='off'
           {...formik.getFieldProps('password')}
           className={clsx(
@@ -254,11 +254,11 @@ export function Login() {
                 <span className='path1'></span>
                 <span className='path2'></span>
               </i>
-              Sign In
+              ເຂົ້າສູ່ລະບົບ
             </span>
           ) : (
             <span className='indicator-progress' style={{display: 'block'}}>
-              Please wait...
+              ກະລຸນາລໍຖ້າ...
               <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
             </span>
           )}
@@ -267,9 +267,9 @@ export function Login() {
 
       {/* ── Register Link ────────────────────────────────────────────────────── */}
       <div className='text-gray-500 text-center fw-semibold fs-6'>
-        Not a Member yet?{' '}
+        ບໍ່ແມ່ນສະມາຊິກທັນ?{' '}
         <Link to='/auth/registration' className='link-primary fw-bold'>
-          Create an Account
+          ສ້າງບັນຊີ
         </Link>
       </div>
     </form>

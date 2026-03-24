@@ -1,8 +1,9 @@
-import React, {useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {toAbsoluteUrl} from '../../../../../../_metronic/helpers'
 import {IProfileDetails, profileDetailsInitValues as initialValues} from '../SettingsModel'
 import * as Yup from 'yup'
 import {useFormik} from 'formik'
+import {useAuth} from '../../../../auth/core/Auth'
 
 const profileDetailsSchema = Yup.object().shape({
   fName: Yup.string().required('First name is required'),
@@ -17,11 +18,28 @@ const profileDetailsSchema = Yup.object().shape({
 })
 
 const ProfileDetails: React.FC = () => {
+  const {currentUser, setCurrentUser} = useAuth()
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [data, setData] = useState<IProfileDetails>(initialValues)
   const updateData = (fieldsToUpdate: Partial<IProfileDetails>): void => {
     const updatedData = Object.assign(data, fieldsToUpdate)
     setData(updatedData)
   }
+
+  useEffect(() => {
+    const storedUserRaw = localStorage.getItem('user')
+    const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : undefined
+    const avatar = currentUser?.avatar || currentUser?.image_url || storedUser?.avatar
+    const userName = currentUser?.user_name || storedUser?.user_name || ''
+    const [fName = initialValues.fName, lName = initialValues.lName] = userName.split(' ')
+
+    setData((prev) => ({
+      ...prev,
+      avatar: avatar || prev.avatar,
+      fName,
+      lName,
+    }))
+  }, [currentUser])
 
   const [loading, setLoading] = useState(false)
   const formik = useFormik<IProfileDetails>({
@@ -35,10 +53,40 @@ const ProfileDetails: React.FC = () => {
         values.allowMarketing = data.allowMarketing
         const updatedData = Object.assign(data, values)
         setData(updatedData)
+        const storedUserRaw = localStorage.getItem('user')
+        const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : {}
+        const updatedUser = {
+          ...storedUser,
+          ...(currentUser || {}),
+          user_name: `${values.fName} ${values.lName}`.trim(),
+          avatar: updatedData.avatar,
+          image_url: updatedData.avatar,
+        }
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        setCurrentUser(updatedUser)
         setLoading(false)
       }, 1000)
     },
   })
+
+  const avatarPreview =
+    data.avatar.startsWith('http') || data.avatar.startsWith('data:')
+      ? data.avatar
+      : toAbsoluteUrl(data.avatar.startsWith('/') ? data.avatar : `/${data.avatar}`)
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : ''
+      if (result) {
+        updateData({avatar: result})
+      }
+    }
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className='card mb-5 mb-xl-10'>
@@ -68,8 +116,31 @@ const ProfileDetails: React.FC = () => {
                 >
                   <div
                     className='image-input-wrapper w-125px h-125px'
-                    style={{backgroundImage: `url(${toAbsoluteUrl(data.avatar)})`}}
+                    style={{backgroundImage: `url(${avatarPreview})`}}
                   ></div>
+                </div>
+                <div className='mt-3 d-flex gap-3 flex-wrap'>
+                  <input
+                    ref={avatarInputRef}
+                    type='file'
+                    accept='image/*'
+                    className='d-none'
+                    onChange={handleAvatarChange}
+                  />
+                  <button
+                    type='button'
+                    className='btn btn-sm btn-light-primary'
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    Choose Image
+                  </button>
+                  <button
+                    type='button'
+                    className='btn btn-sm btn-light'
+                    onClick={() => updateData({avatar: initialValues.avatar})}
+                  >
+                    Reset
+                  </button>
                 </div>
               </div>
             </div>

@@ -74,6 +74,120 @@ const STATUS_META: Record<
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
 
+const downloadBillAsPng = (bill: Bill) => {
+  const canvas = document.createElement('canvas')
+  const width = 1080
+  const lineHeight = 34
+  const foodsCount = bill.foods?.length ?? 0
+  const foodsHeight = foodsCount > 0 ? foodsCount * lineHeight + 90 : 50
+  const height = 980 + foodsHeight
+
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('Canvas not supported')
+  }
+
+  ctx.fillStyle = '#f1e7d0'
+  ctx.fillRect(0, 0, width, height)
+
+  ctx.fillStyle = '#fffaf0'
+  ctx.fillRect(50, 40, width - 100, height - 80)
+
+  ctx.strokeStyle = '#d5c2a1'
+  ctx.lineWidth = 3
+  ctx.strokeRect(50, 40, width - 100, height - 80)
+
+  ctx.fillStyle = '#3f2e1f'
+  ctx.font = 'bold 42px Georgia'
+  ctx.fillText('Booking Bill', 90, 100)
+
+  ctx.font = '20px Arial'
+  ctx.fillStyle = '#8a6d46'
+  ctx.fillText(`Bill ID: ${bill.id.slice(0, 8).toUpperCase()}`, 90, 142)
+  ctx.fillText(`Status: ${STATUS_META[bill.payment_status]?.label || bill.payment_status}`, 730, 142)
+
+  let y = 210
+
+  const drawRow = (label: string, value: string, color = '#2b2b2b') => {
+    ctx.font = 'bold 22px Arial'
+    ctx.fillStyle = '#8a6d46'
+    ctx.fillText(label, 90, y)
+    ctx.font = '22px Arial'
+    ctx.fillStyle = color
+    ctx.fillText(value, 330, y)
+    y += lineHeight
+  }
+
+  drawRow('Customer', bill.user_name || '-')
+  drawRow('Email', bill.user_email || '-')
+  drawRow('Ship', bill.ship_name || '-')
+  drawRow('Booking Date', `${bill.booking_date || '-'} ${bill.booking_time || ''}`.trim())
+  drawRow('People', `${bill.num_people} people`)
+  drawRow('Hours', `${bill.num_hours} hour(s)`)
+  drawRow('Payment Method', bill.payment_method === 'transfer' ? 'Transfer' : 'Cash')
+
+  y += 12
+  ctx.beginPath()
+  ctx.moveTo(90, y)
+  ctx.lineTo(width - 90, y)
+  ctx.stroke()
+  y += 50
+
+  ctx.font = 'bold 28px Georgia'
+  ctx.fillStyle = '#3f2e1f'
+  ctx.fillText('Charges', 90, y)
+  y += 46
+
+  drawRow('Ship Total', fmt(bill.total_ship_price), '#0d6efd')
+
+  if (foodsCount > 0) {
+    ctx.font = 'bold 24px Arial'
+    ctx.fillStyle = '#3f2e1f'
+    ctx.fillText('Foods', 90, y)
+    y += 38
+
+    bill.foods.forEach((food, index) => {
+      ctx.font = '20px Arial'
+      ctx.fillStyle = '#2b2b2b'
+      ctx.fillText(`${index + 1}. ${food.name}`, 110, y)
+      ctx.fillStyle = '#8a6d46'
+      ctx.fillText(`x${food.quantity}`, 620, y)
+      ctx.fillStyle = '#2b2b2b'
+      ctx.fillText(fmt(food.price * food.quantity), 760, y)
+      y += lineHeight
+    })
+
+    y += 8
+    drawRow('Food Total', fmt(bill.total_food_price), '#0dcaf0')
+  }
+
+  y += 18
+  ctx.beginPath()
+  ctx.moveTo(90, y)
+  ctx.lineTo(width - 90, y)
+  ctx.stroke()
+  y += 60
+
+  ctx.font = 'bold 34px Georgia'
+  ctx.fillStyle = '#3f2e1f'
+  ctx.fillText('Grand Total', 90, y)
+  ctx.fillStyle = '#0d6efd'
+  ctx.fillText(fmt(bill.grand_total), 760, y)
+
+  y += 72
+  ctx.font = 'italic 20px Georgia'
+  ctx.fillStyle = '#8a6d46'
+  ctx.fillText('Thank you for your booking.', 90, y)
+
+  const link = document.createElement('a')
+  link.download = `bill-${bill.id.slice(0, 8).toUpperCase()}.png`
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
+
 // ─── Bill Detail Modal ────────────────────────────────────────────────────────
 
 const BillDetailModal: FC<{
@@ -87,6 +201,7 @@ const BillDetailModal: FC<{
   const [actionLoading, setActionLoading] = useState(false)
   const [reUploadLoading, setReUploadLoading] = useState(false)
   const reUploadRef = useRef<HTMLInputElement>(null)
+  const canDownloadReceipt = bill.payment_status === 'approved'
 
   const meta = STATUS_META[bill.payment_status] ?? STATUS_META.pending
 
@@ -151,6 +266,19 @@ const BillDetailModal: FC<{
     } finally {
       setReUploadLoading(false)
       if (reUploadRef.current) reUploadRef.current.value = ''
+    }
+  }
+
+  const handleDownloadReceipt = () => {
+    try {
+      downloadBillAsPng(bill)
+    } catch (error) {
+      console.error(error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Download failed',
+        text: 'Could not generate the bill PNG.',
+      })
     }
   }
 
@@ -261,6 +389,114 @@ const BillDetailModal: FC<{
                 <span className='fw-bolder fs-3 text-primary'>{fmt(bill.grand_total)}</span>
               </div>
             </div>
+
+            {canDownloadReceipt && (
+              <div
+                className='card mb-4 shadow-sm'
+                style={{background: '#f6efdf', border: '1px solid #d8c3a5'}}
+              >
+                <div className='card-body p-0'>
+                  <div
+                    className='px-8 py-7'
+                    style={{
+                      background: 'linear-gradient(180deg, #fffaf0 0%, #fff7e8 100%)',
+                      borderBottom: '1px dashed #d5c2a1',
+                    }}
+                  >
+                    <div className='d-flex justify-content-between align-items-start flex-wrap gap-4'>
+                      <div>
+                        <div
+                          className='text-uppercase fw-bold fs-7 mb-2'
+                          style={{color: '#8a6d46', letterSpacing: '0.18em'}}
+                        >
+                          Official Bill
+                        </div>
+                        <h3 className='fw-bolder mb-1' style={{color: '#3f2e1f'}}>
+                          Booking Receipt
+                        </h3>
+                        <div className='text-muted fs-7'>#{bill.id.slice(0, 8).toUpperCase()}</div>
+                      </div>
+                      <button
+                        type='button'
+                        className='btn btn-sm btn-dark'
+                        onClick={handleDownloadReceipt}
+                      >
+                        <KTIcon iconName='file-down' className='fs-4 me-2' />
+                        Download PNG
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className='px-8 py-7' style={{background: '#fffaf0'}}>
+                    <div className='row g-8 mb-7'>
+                      <div className='col-md-6'>
+                        <div className='text-muted fs-8 text-uppercase mb-2'>Customer</div>
+                        <div className='fw-bold fs-5'>{bill.user_name}</div>
+                        <div className='text-gray-600'>{bill.user_email}</div>
+                      </div>
+                      <div className='col-md-6'>
+                        <div className='text-muted fs-8 text-uppercase mb-2'>Trip</div>
+                        <div className='fw-bold fs-5'>{bill.ship_name}</div>
+                        <div className='text-gray-600'>
+                          {bill.booking_date} {bill.booking_time}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className='separator separator-dashed mb-6'
+                      style={{borderColor: '#d5c2a1'}}
+                    ></div>
+
+                    <div className='d-flex justify-content-between mb-3'>
+                      <span className='text-muted'>Ship Charge</span>
+                      <span className='fw-bold'>{fmt(bill.total_ship_price)}</span>
+                    </div>
+
+                    {bill.foods?.length > 0 && (
+                      <>
+                        {bill.foods.map((food) => (
+                          <div
+                            key={`${food.product_id}-${food.name}`}
+                            className='d-flex justify-content-between align-items-center mb-3'
+                          >
+                            <div>
+                              <div className='fw-semibold text-gray-900'>{food.name}</div>
+                              <div className='text-muted fs-8'>Qty {food.quantity}</div>
+                            </div>
+                            <span className='fw-semibold'>{fmt(food.price * food.quantity)}</span>
+                          </div>
+                        ))}
+
+                        <div className='d-flex justify-content-between mb-3'>
+                          <span className='text-muted'>Food Total</span>
+                          <span className='fw-bold text-info'>{fmt(bill.total_food_price)}</span>
+                        </div>
+                      </>
+                    )}
+
+                    <div
+                      className='separator separator-dashed my-6'
+                      style={{borderColor: '#d5c2a1'}}
+                    ></div>
+
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <div className='text-muted fs-8 text-uppercase mb-1'>Grand Total</div>
+                        <div className='fw-bolder fs-2 text-primary'>{fmt(bill.grand_total)}</div>
+                      </div>
+                      <div className='text-end'>
+                        <div className='text-muted fs-8 text-uppercase mb-1'>Payment</div>
+                        <div className='fw-bold text-capitalize'>
+                          {bill.payment_method === 'transfer' ? 'Transfer' : 'Cash'}
+                        </div>
+                        <span className={`badge ${meta.badge} mt-2`}>{meta.label}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Payment */}
             <div className='card bg-light mb-4'>

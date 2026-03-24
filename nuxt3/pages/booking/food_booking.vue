@@ -917,7 +917,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRoute } from "nuxt/app";
+import { useRoute, navigateTo, useCookie } from "nuxt/app";
 import {
   getFirestore,
   collection,
@@ -1272,7 +1272,15 @@ const saveBookingData = async (paymentMethod) => {
 
 // Load products and route data on page load
 onMounted(async () => {
-  userEmail.value = route.query.user || "";
+  // ✅ Check if user is logged in
+  if (!userEmail.value && !route.query.user) {
+    console.warn("⚠️ User not logged in, redirecting to login...");
+    alert("ກະລຸນາ ເຂົ້າສູ່ລະບົບ ກ່ອນທີ່ຈະດຳເນີນການຈອງ");
+    await navigateTo("/login");
+    return;
+  }
+
+  userEmail.value = route.query.user || userEmail.value || "";
   shipId.value = route.query.ship || "";
   shipName.value = decodeURIComponent(route.query.ship_name || "");
   reservationDate.value = decodeURIComponent(route.query.date || "");

@@ -24,33 +24,33 @@ const initialValues = {
 // ─── Validation Schema ────────────────────────────────────────────────────────
 const registrationSchema = Yup.object().shape({
   firstname: Yup.string()
-    .min(3, 'Minimum 3 symbols')
-    .max(50, 'Maximum 50 symbols')
-    .required('First name is required'),
+    .min(3, 'ຕໍາ່ສຸດ 3 ຕົວອັກສອນ')
+    .max(50, 'ບໍ່ເກີນ 50 ຕົວອັກສອນ')
+    .required('ຊື່ ແມ່ນບໍ່ສາມາດປ່ອຍໄວ້ໄດ້'),
   lastname: Yup.string()
-    .min(3, 'Minimum 3 symbols')
-    .max(50, 'Maximum 50 symbols')
-    .required('Last name is required'),
+    .min(3, 'ຕໍາ່ສຸດ 3 ຕົວອັກສອນ')
+    .max(50, 'ບໍ່ເກີນ 50 ຕົວອັກສອນ')
+    .required('ນາມສະກຸນ ແມ່ນບໍ່ສາມາດປ່ອຍໄວ້ໄດ້'),
   email: Yup.string()
-    .email('Wrong email format')
-    .min(3, 'Minimum 3 symbols')
-    .max(50, 'Maximum 50 symbols')
-    .required('Email is required'),
+    .email('ຮູບແບບອີເມວ ບໍ່ຖືກຕ້ອງ')
+    .min(3, 'ຕໍາ່ສຸດ 3 ຕົວອັກສອນ')
+    .max(50, 'ບໍ່ເກີນ 50 ຕົວອັກສອນ')
+    .required('ອີເມວ ແມ່ນບໍ່ສາມາດປ່ອຍໄວ້ໄດ້'),
   phone_number: Yup.string()
-    .min(8, 'Minimum 8 digits')
-    .max(15, 'Maximum 15 digits')
-    .matches(/^[0-9+\-\s()]+$/, 'Invalid phone number format')
-    .required('Phone number is required'),
+    .min(8, 'ຕໍາ່ສຸດ 8 ຕົວເລກ')
+    .max(15, 'ບໍ່ເກີນ 15 ຕົວເລກ')
+    .matches(/^[0-9+\-\s()]+$/, 'ຮູບແບບເບີໂທ ບໍ່ຖືກຕ້ອງ')
+    .required('ເບີໂທ ແມ່ນບໍ່ສາມາດປ່ອຍໄວ້ໄດ້'),
   password: Yup.string()
-    .min(8, 'Minimum 8 symbols')
-    .max(50, 'Maximum 50 symbols')
-    .required('Password is required'),
+    .min(8, 'ຕໍາ່ສຸດ 8 ຕົວອັກສອນ')
+    .max(50, 'ບໍ່ເກີນ 50 ຕົວອັກສອນ')
+    .required('ລະຫັດຜ່ານ ແມ່ນບໍ່ສາມາດປ່ອຍໄວ້ໄດ້'),
   changepassword: Yup.string()
-    .min(8, 'Minimum 8 symbols')
-    .max(50, 'Maximum 50 symbols')
-    .required('Password confirmation is required')
-    .oneOf([Yup.ref('password')], "Password and Confirm Password didn't match"),
-  acceptTerms: Yup.bool().oneOf([true], 'You must accept the terms and conditions'),
+    .min(8, 'ຕໍາ່ສຸດ 8 ຕົວອັກສອນ')
+    .max(50, 'ບໍ່ເກີນ 50 ຕົວອັກສອນ')
+    .required('ຢືນຢັນລະຫັດຜ່ານ ແມ່ນບໍ່ສາມາດປ່ອຍໄວ້ໄດ້')
+    .oneOf([Yup.ref('password')], 'ລະຫັດຜ່ານ ແລະ ຢືນຢັນລະຫັດຜ່ານ ບໍ່ກົງກັນ'),
+  acceptTerms: Yup.bool().oneOf([true], 'ທ່ານຕ້ອງຍອມຮັບ ເງື່ອນໄຂ ແລະ ເຄື່ອງ'),
 })
 
 // ─── Registration Component ───────────────────────────────────────────────────
@@ -88,14 +88,14 @@ export function Registration() {
         // Step 4: Show SweetAlert2 success popup
         await Swal.fire({
           icon: 'success',
-          title: 'Create Account Success!',
+          title: 'ສ້າງບັນຊີ ສຳເລັດ!',
           html: `
             <div style="color:#5e6278; font-size:14px; line-height:1.8">
-              Your account has been created successfully.<br/>
-              Please sign in to continue.
+              ບັນຊີຂອງທ່ານ ໄດ້ຖືກສ້າງຂຶ້ນ ສຳເລັດແລ້ວ.<br/>
+              ກະລຸນາ ເຂົ້າສູ່ລະບົບ ເພື່ອ ດຳເນີນການຕໍ່
             </div>
           `,
-          confirmButtonText: 'Go to Sign In',
+          confirmButtonText: 'ໄປ ເຂົ້າສູ່ລະບົບ',
           confirmButtonColor: '#009ef7',
           allowOutsideClick: false,
           customClass: {
@@ -113,16 +113,16 @@ export function Registration() {
         // Firebase-specific error handling
         switch (error.code) {
           case 'auth/email-already-in-use':
-            setStatus('This email address is already registered.')
+            setStatus('ທີ່ຢູ່ອີເມວ ນີ້ ໄດ້ລົງທະບຽນແລ້ວ.')
             break
           case 'auth/weak-password':
-            setStatus('Password is too weak. Please use at least 8 characters.')
+            setStatus('ລະຫັດຜ່ານ ຂ້ອນຂ້າງອ່ອນແອ. ກະລຸນາ ໃຊ້ ຢ່າງໜ້ອຍ 8 ຕົວອັກສອນ.')
             break
           case 'auth/invalid-email':
-            setStatus('Invalid email address format.')
+            setStatus('ຮູບແບບທີ່ຢູ່ອີເມວ ບໍ່ຖືກຕ້ອງ.')
             break
           default:
-            setStatus('Registration failed. Please check your details and try again.')
+            setStatus('ການລົງທະບຽນ ບໍ່ສຳເລັດ. ກະລຸນາ ກວດສອບ ລາຍລະອຽດ ແລະ ລອງໃໝ່.')
         }
 
         setSubmitting(false)
@@ -144,8 +144,8 @@ export function Registration() {
     >
       {/* ── Heading ─────────────────────────────────────────────────────────── */}
       <div className='text-center mb-11'>
-        <h1 className='text-gray-900 fw-bolder mb-3'>Sign Up</h1>
-        <div className='text-gray-500 fw-semibold fs-6'>Your Social Campaigns</div>
+        <h1 className='text-gray-900 fw-bolder mb-3'>ລົງທະບຽນ</h1>
+        <div className='text-gray-500 fw-semibold fs-6'>ລະບົບ ຜູ້ໃຊ້ຂອງທ່ານ</div>
       </div>
 
       {/* ── Social Login Options ─────────────────────────────────────────────── */}
@@ -160,7 +160,7 @@ export function Registration() {
               src={toAbsoluteUrl('media/svg/brand-logos/google-icon.svg')}
               className='h-15px me-3'
             />
-            Sign in with Google
+            ເຂົ້າສູ່ລະບົບ ໂດຍໃຊ້ Google
           </a>
         </div>
         <div className='col-md-6'>
@@ -178,14 +178,14 @@ export function Registration() {
               src={toAbsoluteUrl('media/svg/brand-logos/apple-black-dark.svg')}
               className='theme-dark-show h-15px me-3'
             />
-            Sign in with Apple
+            ເຂົ້າສູ່ລະບົບ ໂດຍໃຊ້ Apple
           </a>
         </div>
       </div>
 
       {/* ── Divider ─────────────────────────────────────────────────────────── */}
       <div className='separator separator-content my-14'>
-        <span className='w-125px text-gray-500 fw-semibold fs-7'>Or with email</span>
+        <span className='w-125px text-gray-500 fw-semibold fs-7'>ຫຼື ໂດຍໃຊ້ອີເມວ</span>
       </div>
 
       {/* ── Error Alert ─────────────────────────────────────────────────────── */}
@@ -197,9 +197,9 @@ export function Registration() {
 
       {/* ── First Name ──────────────────────────────────────────────────────── */}
       <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>First name</label>
+        <label className='form-label fw-bolder text-gray-900 fs-6'>ຊື່</label>
         <input
-          placeholder='First name'
+          placeholder='ຊື່'
           type='text'
           autoComplete='off'
           {...formik.getFieldProps('firstname')}
@@ -220,9 +220,9 @@ export function Registration() {
 
       {/* ── Last Name ───────────────────────────────────────────────────────── */}
       <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>Last name</label>
+        <label className='form-label fw-bolder text-gray-900 fs-6'>ນາມສະກຸນ</label>
         <input
-          placeholder='Last name'
+          placeholder='ນາມສະກຸນ'
           type='text'
           autoComplete='off'
           {...formik.getFieldProps('lastname')}
@@ -243,9 +243,9 @@ export function Registration() {
 
       {/* ── Email ───────────────────────────────────────────────────────────── */}
       <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>Email</label>
+        <label className='form-label fw-bolder text-gray-900 fs-6'>ອີເມວ</label>
         <input
-          placeholder='Email'
+          placeholder='ອີເມວ'
           type='email'
           autoComplete='off'
           {...formik.getFieldProps('email')}
@@ -266,9 +266,9 @@ export function Registration() {
 
       {/* ── Phone Number ────────────────────────────────────────────────────── */}
       <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>Phone Number</label>
+        <label className='form-label fw-bolder text-gray-900 fs-6'>ເບີໂທ</label>
         <input
-          placeholder='e.g. +856 20 XXXX XXXX'
+          placeholder='ຕົວຢ່າງ: +856 20 XXXX XXXX'
           type='tel'
           autoComplete='off'
           {...formik.getFieldProps('phone_number')}
@@ -290,11 +290,11 @@ export function Registration() {
       {/* ── Password ────────────────────────────────────────────────────────── */}
       <div className='fv-row mb-8' data-kt-password-meter='true'>
         <div className='mb-1'>
-          <label className='form-label fw-bolder text-gray-900 fs-6'>Password</label>
+          <label className='form-label fw-bolder text-gray-900 fs-6'>ລະຫັດຜ່ານ</label>
           <div className='position-relative mb-3'>
             <input
               type='password'
-              placeholder='Password'
+              placeholder='ລະຫັດຜ່ານ'
               autoComplete='off'
               {...formik.getFieldProps('password')}
               className={clsx(
@@ -323,16 +323,16 @@ export function Registration() {
           </div>
         </div>
         <div className='text-muted'>
-          Use 8 or more characters with a mix of letters, numbers & symbols.
+          ໃຊ້ 8 ຕົວອັກສອນ ຫຼື ຫຼາຍກວ່າ ທີ່ລວມເອົາ ຕົວອັກษອ, ຕົວເລກ ແລະ ສັນຍາລັກ.
         </div>
       </div>
 
       {/* ── Confirm Password ────────────────────────────────────────────────── */}
       <div className='fv-row mb-5'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>Confirm Password</label>
+        <label className='form-label fw-bolder text-gray-900 fs-6'>ຢືນຢັນລະຫັດຜ່ານ</label>
         <input
           type='password'
-          placeholder='Password confirmation'
+          placeholder='ຢືນຢັນລະຫັດຜ່ານ'
           autoComplete='off'
           {...formik.getFieldProps('changepassword')}
           className={clsx(
@@ -361,14 +361,14 @@ export function Registration() {
             checked={formik.values.acceptTerms}
           />
           <span className='fw-semibold fs-6 text-gray-700'>
-            I Accept the{' '}
+            ຂ້າພະເຈົ້າ ຍອມຮັບ{' '}
             <a
               href='https://keenthemes.com/metronic/?page=faq'
               target='_blank'
               rel='noopener noreferrer'
               className='ms-1 link-primary fw-bold'
             >
-              Terms & Conditions
+              ເງື່ອນໄຂ ແລະ ເຄື່ອງ
             </a>
           </span>
         </label>
@@ -395,11 +395,11 @@ export function Registration() {
                 <span className='path1'></span>
                 <span className='path2'></span>
               </i>
-              Create Account
+              ສ້າງບັນຊີ
             </span>
           ) : (
             <span className='indicator-progress' style={{display: 'block'}}>
-              Please wait...{' '}
+              ກະລຸນາ ລໍຖ້າ...{' '}
               <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
             </span>
           )}
@@ -415,7 +415,7 @@ export function Registration() {
               <span className='path1'></span>
               <span className='path2'></span>
             </i>
-            Already have an account? Sign In
+            ທ່ານ ມີບັນຊີ ແລ້ວ? ເຂົ້າສູ່ລະບົບ
           </button>
         </Link>
       </div>

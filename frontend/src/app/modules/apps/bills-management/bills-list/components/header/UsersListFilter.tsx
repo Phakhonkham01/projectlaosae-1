@@ -1,11 +1,7 @@
 import {useEffect, useState} from 'react'
 import {MenuComponent} from '../../../../../../../_metronic/assets/ts/components'
 import {initialQueryState, KTIcon} from '../../../../../../../_metronic/helpers'
-import {
-  PAYMENT_METHOD_OPTIONS,
-  PAYMENT_STATUS_META,
-  PAYMENT_STATUS_OPTIONS,
-} from '../../core/bill_models'
+import {PAYMENT_METHOD_OPTIONS} from '../../core/bill_models'
 import {useQueryRequest} from '../../core/QueryRequestProvider'
 import {useQueryResponse} from '../../core/QueryResponseProvider'
 
@@ -13,9 +9,7 @@ const UsersListFilter = () => {
   const {updateState} = useQueryRequest()
   const {isLoading} = useQueryResponse()
   const [bookingDateFrom, setBookingDateFrom] = useState('')
-  const [bookingDateTo, setBookingDateTo] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('')
-  const [paymentStatus, setPaymentStatus] = useState('')
 
   useEffect(() => {
     MenuComponent.reinitialization()
@@ -23,9 +17,7 @@ const UsersListFilter = () => {
 
   const resetData = () => {
     setBookingDateFrom('')
-    setBookingDateTo('')
     setPaymentMethod('')
-    setPaymentStatus('')
     updateState({filter: undefined, ...initialQueryState})
     MenuComponent.reinitialization()
   }
@@ -33,9 +25,7 @@ const UsersListFilter = () => {
   const filterData = () => {
     const filter = {
       bookingDateFrom: bookingDateFrom || undefined,
-      bookingDateTo: bookingDateTo || undefined,
       paymentMethod: paymentMethod || undefined,
-      paymentStatus: paymentStatus || undefined,
     }
 
     updateState({
@@ -75,17 +65,7 @@ const UsersListFilter = () => {
             />
           </div>
 
-          <div className='mb-7'>
-            <label className='form-label fs-6 fw-bold'>Booking Date To</label>
-            <input
-              type='date'
-              className='form-control form-control-solid'
-              value={bookingDateTo}
-              onChange={(event) => setBookingDateTo(event.target.value)}
-            />
-          </div>
-
-          <div className='mb-7'>
+          <div className='mb-10'>
             <label className='form-label fs-6 fw-bold'>Payment Method</label>
             <select
               className='form-select form-select-solid'
@@ -96,22 +76,6 @@ const UsersListFilter = () => {
               {PAYMENT_METHOD_OPTIONS.map((method) => (
                 <option key={method} value={method}>
                   {method === 'cash' ? 'Cash' : 'Transfer'}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className='mb-10'>
-            <label className='form-label fs-6 fw-bold'>Payment Status</label>
-            <select
-              className='form-select form-select-solid'
-              value={paymentStatus}
-              onChange={(event) => setPaymentStatus(event.target.value)}
-            >
-              <option value=''>All Statuses</option>
-              {PAYMENT_STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {PAYMENT_STATUS_META[status].label}
                 </option>
               ))}
             </select>

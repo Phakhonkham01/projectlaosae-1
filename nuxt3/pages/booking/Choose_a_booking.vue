@@ -925,12 +925,16 @@ const confirmBooking = () => {
 onMounted(async () => {
   console.log("🔍 Page mounted, initializing...");
 
-  if (userEmailCookie.value) {
-    userEmail.value = userEmailCookie.value;
-    console.log("✅ User email loaded from cookie:", userEmail.value);
-  } else {
-    console.warn("⚠️ No user email found in cookie");
+  // ✅ Check if user is logged in
+  if (!userEmailCookie.value) {
+    console.warn("⚠️ User not logged in, redirecting to login...");
+    alert("ກະລຸນາ ເຂົ້າສູ່ລະບົບ ກ່ອນທີ່ຈະດຳເນີນການຈອງ");
+    await navigateTo("/login");
+    return;
   }
+
+  userEmail.value = userEmailCookie.value;
+  console.log("✅ User email loaded from cookie:", userEmail.value);
 
   if (!reservationDate.value) {
     const tomorrow = new Date();

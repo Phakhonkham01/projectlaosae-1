@@ -41,9 +41,138 @@ interface SelectedFood {
   image: string
 }
 
+interface SavedBill {
+  id: string
+  ship_name: string
+  booking_date: string
+  booking_time: string
+  num_people: number
+  num_hours: number
+  total_ship_price: number
+  foods: SelectedFood[]
+  total_food_price: number
+  grand_total: number
+  payment_method: 'cash' | 'transfer'
+  payment_status: 'pending' | 'slip_submitted'
+  user_name: string
+  user_email: string
+}
+
+type BookingPaymentStatus = SavedBill['payment_status']
+
 // ─── Step Labels ──────────────────────────────────────────────────────────────
 
 const STEPS = ['ລາຍລະອຽດການຈອງ', 'ເລືອກອາຫານ', 'ສະຫຼຸບລາຍການ', 'ການຊຳລະ']
+
+const formatLak = (amount: number) => `${amount.toLocaleString()} LAK`
+
+const downloadReceiptPng = (bill: SavedBill) => {
+  const canvas = document.createElement('canvas')
+  const width = 1080
+  const lineHeight = 34
+  const foodsHeight = bill.foods.length > 0 ? bill.foods.length * lineHeight + 90 : 50
+  const height = 980 + foodsHeight
+
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas not supported')
+
+  ctx.fillStyle = '#efe4cb'
+  ctx.fillRect(0, 0, width, height)
+  ctx.fillStyle = '#fffaf0'
+  ctx.fillRect(50, 40, width - 100, height - 80)
+  ctx.strokeStyle = '#d1bfa1'
+  ctx.lineWidth = 3
+  ctx.strokeRect(50, 40, width - 100, height - 80)
+
+  ctx.fillStyle = '#44311f'
+  ctx.font = 'bold 42px Georgia'
+  ctx.fillText('Booking Receipt', 90, 100)
+
+  ctx.font = '20px Arial'
+  ctx.fillStyle = '#8b6d48'
+  ctx.fillText(`Receipt ID: ${bill.id.slice(0, 8).toUpperCase()}`, 90, 142)
+  ctx.fillText(`Payment: ${bill.payment_method === 'transfer' ? 'Transfer' : 'Cash'}`, 730, 142)
+
+  let y = 210
+  const drawRow = (label: string, value: string, color = '#2b2b2b') => {
+    ctx.font = 'bold 22px Arial'
+    ctx.fillStyle = '#8b6d48'
+    ctx.fillText(label, 90, y)
+    ctx.font = '22px Arial'
+    ctx.fillStyle = color
+    ctx.fillText(value, 330, y)
+    y += lineHeight
+  }
+
+  drawRow('Customer', bill.user_name || '-')
+  drawRow('Email', bill.user_email || '-')
+  drawRow('Ship', bill.ship_name || '-')
+  drawRow('Booking Date', `${bill.booking_date} ${bill.booking_time}`.trim())
+  drawRow('People', `${bill.num_people} people`)
+  drawRow('Hours', `${bill.num_hours} hour(s)`)
+  drawRow('Status', bill.payment_status === 'slip_submitted' ? 'Paid by transfer' : 'Booked')
+
+  y += 12
+  ctx.beginPath()
+  ctx.moveTo(90, y)
+  ctx.lineTo(width - 90, y)
+  ctx.stroke()
+  y += 48
+
+  ctx.font = 'bold 28px Georgia'
+  ctx.fillStyle = '#44311f'
+  ctx.fillText('Charges', 90, y)
+  y += 44
+
+  drawRow('Ship Total', formatLak(bill.total_ship_price), '#0d6efd')
+
+  if (bill.foods.length > 0) {
+    ctx.font = 'bold 24px Arial'
+    ctx.fillStyle = '#44311f'
+    ctx.fillText('Foods', 90, y)
+    y += 38
+
+    bill.foods.forEach((food, index) => {
+      ctx.font = '20px Arial'
+      ctx.fillStyle = '#2b2b2b'
+      ctx.fillText(`${index + 1}. ${food.name}`, 110, y)
+      ctx.fillStyle = '#8b6d48'
+      ctx.fillText(`x${food.quantity}`, 620, y)
+      ctx.fillStyle = '#2b2b2b'
+      ctx.fillText(formatLak(food.price * food.quantity), 760, y)
+      y += lineHeight
+    })
+
+    y += 8
+    drawRow('Food Total', formatLak(bill.total_food_price), '#0dcaf0')
+  }
+
+  y += 18
+  ctx.beginPath()
+  ctx.moveTo(90, y)
+  ctx.lineTo(width - 90, y)
+  ctx.stroke()
+  y += 60
+
+  ctx.font = 'bold 34px Georgia'
+  ctx.fillStyle = '#44311f'
+  ctx.fillText('Grand Total', 90, y)
+  ctx.fillStyle = '#0d6efd'
+  ctx.fillText(formatLak(bill.grand_total), 760, y)
+
+  y += 72
+  ctx.font = 'italic 20px Georgia'
+  ctx.fillStyle = '#8b6d48'
+  ctx.fillText('Thank you for your booking.', 90, y)
+
+  const link = document.createElement('a')
+  link.download = `receipt-${bill.id.slice(0, 8).toUpperCase()}.png`
+  link.href = canvas.toDataURL('image/png')
+  link.click()
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -89,6 +218,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const [slipUrl, setSlipUrl] = useState('')
   const [slipUploading, setSlipUploading] = useState(false)
   const slipInputRef = useRef<HTMLInputElement>(null)
+  const [savedBill, setSavedBill] = useState<SavedBill | null>(null)
 
   // ─── Load ship data ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -117,6 +247,20 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const totalShipPrice = numHours * shipPricePerHour
   const totalFoodPrice = selectedFoods.reduce((sum, f) => sum + f.price * f.quantity, 0)
   const grandTotal = totalShipPrice + totalFoodPrice
+
+  const handleDownloadSavedBill = () => {
+    if (!savedBill) return
+    try {
+      downloadReceiptPng(savedBill)
+    } catch (error) {
+      console.error(error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Download failed',
+        text: 'Could not generate the bill PNG.',
+      })
+    }
+  }
 
   // ─── Upload transfer slip ──────────────────────────────────────────────────
   const handleSlipUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,6 +343,9 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const handleSave = async () => {
     setLoading(true)
     try {
+      const paymentStatus: BookingPaymentStatus =
+        paymentMethod === 'cash' ? 'pending' : 'slip_submitted'
+
       const bookingPayload = {
         ship_id: itemIdForUpdate,
         ship_name: shipData?.ship_name ?? '',
@@ -213,7 +360,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         grand_total: grandTotal,
         payment_method: paymentMethod,
         slip_url: paymentMethod === 'transfer' ? slipUrl : '',
-        payment_status: paymentMethod === 'cash' ? 'pending' : 'slip_submitted',
+        payment_status: paymentStatus,
         // ─── Customer info ───
         user_id: currentUser?._id ?? '',
         user_name: currentUser?.user_name ?? '',
@@ -222,7 +369,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         createdAt: new Date().toISOString(),
       }
 
-      await addDoc(collection(db, 'bill'), bookingPayload)
+      const billRef = await addDoc(collection(db, 'bill'), bookingPayload)
       await addDoc(collection(db, 'history_booking'), bookingPayload)
 
       Swal.fire({
@@ -232,8 +379,23 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         timer: 2000,
         showConfirmButton: false,
       })
+      setSavedBill({
+        id: billRef.id,
+        ship_name: bookingPayload.ship_name,
+        booking_date: bookingPayload.booking_date,
+        booking_time: bookingPayload.booking_time,
+        num_people: bookingPayload.num_people,
+        num_hours: bookingPayload.num_hours,
+        total_ship_price: bookingPayload.total_ship_price,
+        foods: bookingPayload.foods,
+        total_food_price: bookingPayload.total_food_price,
+        grand_total: bookingPayload.grand_total,
+        payment_method: bookingPayload.payment_method,
+        payment_status: bookingPayload.payment_status,
+        user_name: bookingPayload.user_name,
+        user_email: bookingPayload.user_email,
+      })
       refetch()
-      setItemIdForUpdate(undefined)
     } catch (error) {
       console.error('Save error:', error)
       Swal.fire({ icon: 'error', title: 'ຜິດພາດ', text: 'ບັນທຶກການຈອງບໍ່ສຳເລັດ' })
@@ -254,6 +416,131 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   }
 
   // ─── Render ────────────────────────────────────────────────────────────────
+  if (savedBill) {
+    return (
+      <div
+        className='modal-content h-100 border-0'
+        style={{height: '100%', display: 'flex', flexDirection: 'column'}}
+      >
+        <div className='modal-header'>
+          <h2 className='fw-bold text-success mb-0'>ບິນການຈອງ</h2>
+          <div
+            className='btn btn-icon btn-sm btn-active-icon-primary'
+            onClick={() => setItemIdForUpdate(undefined)}
+            style={{cursor: 'pointer'}}
+          >
+            <KTIcon iconName='cross' className='fs-1' />
+          </div>
+        </div>
+
+        <div className='modal-body scroll-y mx-5 mx-xl-12 my-4'>
+          <div
+            className='card shadow-sm mx-auto'
+            style={{
+              maxWidth: 760,
+              background: 'linear-gradient(180deg, #fffaf0 0%, #fff6e8 100%)',
+              border: '1px solid #d8c3a5',
+            }}
+          >
+            <div
+              className='card-body p-8'
+              style={{boxShadow: 'inset 0 0 0 1px rgba(209, 191, 161, 0.35)'}}
+            >
+              <div className='d-flex justify-content-between align-items-start flex-wrap gap-4 mb-8'>
+                <div>
+                  <div
+                    className='text-uppercase fw-bold fs-8 mb-2'
+                    style={{color: '#8b6d48', letterSpacing: '0.18em'}}
+                  >
+                    Official Receipt
+                  </div>
+                  <h3 className='fw-bolder mb-1' style={{color: '#44311f'}}>
+                    Booking Bill
+                  </h3>
+                  <div className='text-muted fs-7'>#{savedBill.id.slice(0, 8).toUpperCase()}</div>
+                </div>
+                <div className='text-end'>
+                  <div className='badge badge-light-success fs-7 mb-2'>
+                    {savedBill.payment_method === 'transfer' ? 'Transfer Paid' : 'Booked'}
+                  </div>
+                  <div className='text-muted fs-8'>
+                    {savedBill.payment_method === 'transfer' ? 'ຊຳລະແລ້ວ' : 'ລໍຊຳລະຫນ້າງານ'}
+                  </div>
+                </div>
+              </div>
+
+              <div className='row g-8 mb-8'>
+                <div className='col-md-6'>
+                  <div className='text-muted fs-8 text-uppercase mb-2'>Customer</div>
+                  <div className='fw-bold fs-5'>{savedBill.user_name || '-'}</div>
+                  <div className='text-gray-600'>{savedBill.user_email || '-'}</div>
+                </div>
+                <div className='col-md-6'>
+                  <div className='text-muted fs-8 text-uppercase mb-2'>Trip</div>
+                  <div className='fw-bold fs-5'>{savedBill.ship_name}</div>
+                  <div className='text-gray-600'>
+                    {savedBill.booking_date} {savedBill.booking_time}
+                  </div>
+                  <div className='text-muted fs-8 mt-1'>
+                    {savedBill.num_people} ຄົນ • {savedBill.num_hours} ຊົ່ວໂມງ
+                  </div>
+                </div>
+              </div>
+
+              <div className='separator separator-dashed my-6' style={{borderColor: '#d1bfa1'}}></div>
+
+              <div className='d-flex justify-content-between align-items-center mb-3'>
+                <span className='text-muted'>Ship Charge</span>
+                <span className='fw-bold'>{formatLak(savedBill.total_ship_price)}</span>
+              </div>
+
+              {savedBill.foods.length > 0 && (
+                <>
+                  {savedBill.foods.map((food) => (
+                    <div
+                      key={`${food.product_id}-${food.name}`}
+                      className='d-flex justify-content-between align-items-center mb-3'
+                    >
+                      <div>
+                        <div className='fw-semibold text-gray-900'>{food.name}</div>
+                        <div className='text-muted fs-8'>Qty {food.quantity}</div>
+                      </div>
+                      <span className='fw-semibold'>{formatLak(food.price * food.quantity)}</span>
+                    </div>
+                  ))}
+
+                  <div className='d-flex justify-content-between align-items-center mb-3'>
+                    <span className='text-muted'>Food Total</span>
+                    <span className='fw-bold text-info'>{formatLak(savedBill.total_food_price)}</span>
+                  </div>
+                </>
+              )}
+
+              <div className='separator separator-dashed my-6' style={{borderColor: '#d1bfa1'}}></div>
+
+              <div className='d-flex justify-content-between align-items-center'>
+                <div>
+                  <div className='text-muted fs-8 text-uppercase mb-1'>Grand Total</div>
+                  <div className='fw-bolder fs-2 text-primary'>{formatLak(savedBill.grand_total)}</div>
+                </div>
+                <button type='button' className='btn btn-dark' onClick={handleDownloadSavedBill}>
+                  <KTIcon iconName='file-down' className='fs-4 me-2' />
+                  Download PNG
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className='modal-footer'>
+          <button type='button' className='btn btn-light' onClick={() => setItemIdForUpdate(undefined)}>
+            ປິດ
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className='modal-content h-100 border-0'
