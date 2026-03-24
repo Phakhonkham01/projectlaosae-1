@@ -11,6 +11,7 @@ import {PrivateRoutes} from './PrivateRoutes'
 import {ErrorsPage} from '../modules/errors/ErrorsPage'
 import {Logout, AuthPage, useAuth} from '../modules/auth'
 import {App} from '../App'
+import { LandingPageShipsFoodsPage } from '../modules/apps/landing/LandingPageShipsFoodsPage'
 
 /**
  * Base URL of the website.
@@ -34,8 +35,10 @@ const AppRoutes: FC = () => {
             </>
           ) : (
             <>
+              <Route path='landing' element={<LandingPageShipsFoodsPage />} />
               <Route path='auth/*' element={<AuthPage />} />
-              <Route path='*' element={<Navigate to='/auth' />} />
+              <Route index element={<LandingPageShipsFoodsPage />} />
+              <Route path='*' element={<Navigate to='/' />} />
             </>
           )}
         </Route>
