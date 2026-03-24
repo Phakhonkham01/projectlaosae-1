@@ -1,34 +1,35 @@
 import { Column } from 'react-table'
-import { collection, getDocs } from 'firebase/firestore'
-import { db } from '../../../../../../../../../firebase/useFirebase' // ✅ ปรับ path
+import { collection, onSnapshot } from 'firebase/firestore'
+import { db } from '../../../../../../../../../firebase/useFirebase'
 import { Product } from '../../core/_models'
 import { UserActionsCell } from './UserActionsCell'
 import { useState, useEffect } from 'react'
 
-// ─── useCategoryMap — fetch categories และ cache ─────────────────────────────
+// ─── useCategoryMap — real-time listener ─────────────────────────────────────
 export const useCategoryMap = () => {
-  const [map, setMap] = useState<Record<string, string>>({})
+  const [map, setMap]         = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
-  const fetchMap = () => {
-    setLoading(true)
-    getDocs(collection(db, 'categories'))
-      .then((snapshot) => {
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'categories'),
+      (snapshot) => {
         const result: Record<string, string> = {}
         snapshot.docs.forEach((d) => {
           result[d.id] = (d.data() as { name: string }).name
         })
         setMap(result)
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    fetchMap()
+        setLoading(false)
+      },
+      (err) => {
+        console.error('Category listener error:', err)
+        setLoading(false)
+      }
+    )
+    return () => unsub()
   }, [])
 
-  return { map, loading, refetch: fetchMap }
+  return { map, loading }
 }
 
 // ─── Cell Components ──────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ const CategoryCell = ({
   return <span className='badge badge-light-info fw-semibold'>{name}</span>
 }
 
-// ─── Column factory — รับ categoryMap จาก ProductsTable ──────────────────────
+// ─── Column factory ───────────────────────────────────────────────────────────
 export const getProductsColumns = (
   categoryMap: Record<string, string>,
   loadingMap: boolean
@@ -98,7 +99,11 @@ export const getProductsColumns = (
     Header: 'Category',
     id: 'category',
     Cell: ({ row }) => (
-      <CategoryCell categoryId={row.original.category_id} categoryMap={categoryMap} loadingMap={loadingMap} />
+      <CategoryCell
+        categoryId={row.original.category_id}
+        categoryMap={categoryMap}
+        loadingMap={loadingMap}
+      />
     ),
   },
   {
