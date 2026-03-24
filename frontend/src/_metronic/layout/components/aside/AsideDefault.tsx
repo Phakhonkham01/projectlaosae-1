@@ -34,7 +34,7 @@ const AsideDefault = () => {
         >
           <Link to="/dashboard">
             <img
-              src={toAbsoluteUrl("media/logos/sys.png")}
+              src={toAbsoluteUrl("media/logos/sys.jpeg")}
               alt="logo"
               className="h-60px"
             />

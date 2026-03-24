@@ -1,157 +1,154 @@
 
-import {useIntl} from 'react-intl'
 import {AsideMenuItemWithSub} from './AsideMenuItemWithSub'
 import {AsideMenuItem} from './AsideMenuItem'
 
 export function AsideMenuMain() {
-  const intl = useIntl()
-
   return (
     <>
       <AsideMenuItem
         to='/dashboard'
         icon='color-swatch'
-        title={intl.formatMessage({id: 'MENU.DASHBOARD'})}
+        title='ໜ້າຫຼັກ'
         fontIcon='bi-app-indicator'
       />
-      <AsideMenuItem to='/builder' icon='switch' title='Layout Builder' fontIcon='bi-layers' />
+      {/* <AsideMenuItem to='/builder' icon='switch' title='ຕັ້ງຄ່າໂຄງຮ່າງ' fontIcon='bi-layers' />
       <div className='menu-item'>
         <div className='menu-content pt-8 pb-2'>
-          <span className='menu-section text-muted text-uppercase fs-8 ls-1'>Crafted</span>
+          <span className='menu-section text-muted text-uppercase fs-8 ls-1'>ເມນູທົ່ວໄປ</span>
         </div>
-      </div>
-      <AsideMenuItemWithSub
+      </div> */}
+      {/* <AsideMenuItemWithSub
         to='/crafted/pages'
-        title='Pages'
+        title='ໜ້າ'
         fontIcon='bi-archive'
         icon='element-plus'
-      >
-        <AsideMenuItemWithSub to='/crafted/pages/profile' title='Profile' hasBullet={true}>
-          <AsideMenuItem to='/crafted/pages/profile/overview' title='Overview' hasBullet={true} />
-          <AsideMenuItem to='/crafted/pages/profile/projects' title='Projects' hasBullet={true} />
-          <AsideMenuItem to='/crafted/pages/profile/campaigns' title='Campaigns' hasBullet={true} />
-          <AsideMenuItem to='/crafted/pages/profile/documents' title='Documents' hasBullet={true} />
+      > */}
+        {/* <AsideMenuItemWithSub to='/crafted/pages/profile' title='ໂປຣໄຟລ໌' hasBullet={true}>
+          <AsideMenuItem to='/crafted/pages/profile/overview' title='ພາບລວມ' hasBullet={true} />
+          <AsideMenuItem to='/crafted/pages/profile/projects' title='ໂຄງການ' hasBullet={true} />
+          <AsideMenuItem to='/crafted/pages/profile/campaigns' title='ແຄມເປນ' hasBullet={true} />
+          <AsideMenuItem to='/crafted/pages/profile/documents' title='ເອກະສານ' hasBullet={true} />
           <AsideMenuItem
             to='/crafted/pages/profile/connections'
-            title='Connections'
+            title='ການເຊື່ອມຕໍ່'
             hasBullet={true}
           />
-        </AsideMenuItemWithSub>
+        </AsideMenuItemWithSub> */}
 
-        <AsideMenuItemWithSub to='/crafted/pages/wizards' title='Wizards' hasBullet={true}>
+        {/* <AsideMenuItemWithSub to='/crafted/pages/wizards' title='ຕົວຊ່ວຍ' hasBullet={true}>
           <AsideMenuItem
             to='/crafted/pages/wizards/horizontal'
-            title='Horizontal'
+            title='ແນວນອນ'
             hasBullet={true}
           />
-          <AsideMenuItem to='/crafted/pages/wizards/vertical' title='Vertical' hasBullet={true} />
-        </AsideMenuItemWithSub>
-      </AsideMenuItemWithSub>
-      <AsideMenuItemWithSub
+          <AsideMenuItem to='/crafted/pages/wizards/vertical' title='ແນວຕັ້ງ' hasBullet={true} />
+        </AsideMenuItemWithSub> */}
+      {/* </AsideMenuItemWithSub> */}
+      {/* <AsideMenuItemWithSub
         to='/crafted/accounts'
-        title='Accounts'
+        title='ບັນຊີ'
         icon='profile-circle'
         fontIcon='bi-person'
       >
-        <AsideMenuItem to='/crafted/account/overview' title='Overview' hasBullet={true} />
-        <AsideMenuItem to='/crafted/account/settings' title='Settings' hasBullet={true} />
+        <AsideMenuItem to='/crafted/account/overview' title='ພາບລວມ' hasBullet={true} />
+        <AsideMenuItem to='/crafted/account/settings' title='ຕັ້ງຄ່າ' hasBullet={true} />
       </AsideMenuItemWithSub>
-      <AsideMenuItemWithSub to='/error' title='Errors' fontIcon='bi-sticky' icon='cross-circle'>
-        <AsideMenuItem to='/error/404' title='Error 404' hasBullet={true} />
-        <AsideMenuItem to='/error/500' title='Error 500' hasBullet={true} />
-      </AsideMenuItemWithSub>
+      <AsideMenuItemWithSub to='/error' title='ຂໍ້ຜິດພາດ' fontIcon='bi-sticky' icon='cross-circle'>
+        <AsideMenuItem to='/error/404' title='ຂໍ້ຜິດພາດ 404' hasBullet={true} />
+        <AsideMenuItem to='/error/500' title='ຂໍ້ຜິດພາດ 500' hasBullet={true} />
+      </AsideMenuItemWithSub> */}
       <AsideMenuItemWithSub
         to='/crafted/widgets'
-        title='Widgets'
+        title='ວິດເຈັດ'
         icon='element-11'
         fontIcon='bi-layers'
       >
-        <AsideMenuItem to='/crafted/widgets/lists' title='Lists' hasBullet={true} />
-        <AsideMenuItem to='/crafted/widgets/statistics' title='Statistics' hasBullet={true} />
-        <AsideMenuItem to='/crafted/widgets/charts' title='Charts' hasBullet={true} />
-        <AsideMenuItem to='/crafted/widgets/mixed' title='Mixed' hasBullet={true} />
-        <AsideMenuItem to='/crafted/widgets/tables' title='Tables' hasBullet={true} />
-        <AsideMenuItem to='/crafted/widgets/feeds' title='Feeds' hasBullet={true} />
+        <AsideMenuItem to='/crafted/widgets/lists' title='ລາຍການ' hasBullet={true} />
+        <AsideMenuItem to='/crafted/widgets/statistics' title='ສະຖິຕິ' hasBullet={true} />
+        <AsideMenuItem to='/crafted/widgets/charts' title='ກຣາຟ' hasBullet={true} />
+        <AsideMenuItem to='/crafted/widgets/mixed' title='ປະສົມ' hasBullet={true} />
+        <AsideMenuItem to='/crafted/widgets/tables' title='ຕາຕະລາງ' hasBullet={true} />
+        <AsideMenuItem to='/crafted/widgets/feeds' title='ຟີດ' hasBullet={true} />
       </AsideMenuItemWithSub>
       <div className='menu-item'>
         <div className='menu-content pt-8 pb-2'>
-          <span className='menu-section text-muted text-uppercase fs-8 ls-1'>Apps</span>
+          <span className='menu-section text-muted text-uppercase fs-8 ls-1'>ແອັບພລິເຄຊັນ</span>
         </div>
       </div>
-      <AsideMenuItemWithSub
+      {/* <AsideMenuItemWithSub
         to='/apps/chat'
-        title='Chat'
+        title='ແຊັດ'
         fontIcon='bi-chat-left'
         icon='message-text-2'
       >
-        <AsideMenuItem to='/apps/chat/private-chat' title='Private Chat' hasBullet={true} />
-        <AsideMenuItem to='/apps/chat/group-chat' title='Group Chart' hasBullet={true} />
-        <AsideMenuItem to='/apps/chat/drawer-chat' title='Drawer Chart' hasBullet={true} />
-      </AsideMenuItemWithSub>
-      <AsideMenuItem
+        <AsideMenuItem to='/apps/chat/private-chat' title='ແຊັດສ່ວນຕົວ' hasBullet={true} />
+        <AsideMenuItem to='/apps/chat/group-chat' title='ແຊັດກຸ່ມ' hasBullet={true} />
+        <AsideMenuItem to='/apps/chat/drawer-chat' title='ແຊັດແບບດຶງອອກ' hasBullet={true} />
+      </AsideMenuItemWithSub> */}
+      {/* <AsideMenuItem
         to='/apps/user-management/users'
         icon='people'
-        title='User management'
+        title='ຈັດການຜູ້ໃຊ້'
         fontIcon='bi-layers'
-      />
+      /> */}
       <AsideMenuItem
         to='/apps/booking-management/booking-ships'
         icon='people'
-        title='Booking Management'
+        title='ຈອງເຮືອ ແລະ ອາຫານ'
         fontIcon='bi-layers'
       />
       <AsideMenuItem
         to='/apps/create-ships/ships'
         icon='people'
-        title='Ships Management'
+        title='ຈັດການເຮືອໃນຮ້ານ'
         fontIcon='bi-layers'
       />
-      <AsideMenuItem
+      {/* <AsideMenuItem
         to='/apps/event/events'
         icon='calendar-edit'
-        title='Events'
+        title='ກິດຈະກໍາ'
         fontIcon='bi-calendar-event'
-      />
+      /> */}
         <AsideMenuItem
         to='/apps/check-bill/check-bills'
         icon='calendar-edit'
-        title='Bills Management'  
+        title='ກວດສອບ ແລະ ຈັດການໃບບິນ'  
         fontIcon='bi-calendar-event'
       />
-       <AsideMenuItem
+       {/* <AsideMenuItem
         to='/apps/requests'
         icon='check-circle'
-        title='Requests'
+        title='ຄໍາຮ້ອງຂໍ'
         fontIcon='bi-calendar-event'
-      />
+      /> */}
              <AsideMenuItem
         to='/apps/employees-management'
         icon='check-circle'
-        title='Employees Management'
+        title='ພະນັກງານ ( ຈັດການຂໍ້ມູນ)'
         fontIcon='bi-calendar-event'
       />
-       <AsideMenuItem
+       {/* <AsideMenuItem
         to='/apps/user-required'
         icon='abstract-10'
-        title='User Required'
+        title='ຄວາມຕ້ອງການຜູ້ໃຊ້'
         fontIcon='bi-calendar-event'
-      />
-      <AsideMenuItem
+      /> */}
+      {/* <AsideMenuItem
         to='/apps/holiday/holidays'
         icon='tree'
-        title='Holidays'
+        title='ວັນພັກ'
         fontIcon='bi-calendar-event'
-      />
+      /> */}
       <AsideMenuItem
         to='/apps/add-food'
         icon='tree'
-        title='Products Management'
+        title='ຈັດການສິນຄ້າພາຍໃນຮ້ານ'
         fontIcon='bi-calendar-event'
       />
       <AsideMenuItem
         to='/apps/user-history'
         icon='tree'
-        title='User-History'
+        title='ປະຫວັດການຈອງເຮືອ'
         fontIcon='bi-calendar-event'
       />
     </>
