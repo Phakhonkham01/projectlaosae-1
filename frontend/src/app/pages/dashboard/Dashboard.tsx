@@ -86,7 +86,7 @@ interface StatCardProps {
 }
 
 const heroImages = [
-  {url: 'media/logos/sys.jpeg', title: 'ເຮືອທ່ອງທ່ຽວຫຼູຫຼາ', description: 'ປະສົບການທ່ອງທ່ຽວທີ່ສະດວກສະບາຍ'}
+  {url: 'media/logos/s.jpg', title: 'ເຮືອທ່ອງທ່ຽວຫຼູຫຼາ', description: 'ປະສົບການທ່ອງທ່ຽວທີ່ສະດວກສະບາຍ'}
 
 ]
 
@@ -789,7 +789,6 @@ const Dashboard = () => {
           className='dashboard-hero-image'
           style={{backgroundImage: `url('${currentHero.url}')`}}
         />
-        <div className='dashboard-hero-overlay' />
         <div className='card-body p-8 p-lg-12'>
           <div className='d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-8'>
             <div className='me-xl-8'>
@@ -863,16 +862,9 @@ const Dashboard = () => {
           inset: 0;
           background-position: center;
           background-size: cover;
-          opacity: 0.58;
-          transform: scale(1.02);
+          opacity: 1;
+          transform: scale(1.01);
           transition: background-image 0.8s ease, opacity 0.8s ease;
-        }
-
-        .dashboard-hero-overlay {
-          position: absolute;
-          inset: 0;
-          background:
-            linear-gradient(90deg, rgba(15, 23, 42, 0.5) 0%, rgba(30, 41, 59, 0.34) 45%, rgba(14, 165, 233, 0.2) 100%);
         }
 
         .dashboard-hero .card-body {
@@ -884,9 +876,9 @@ const Dashboard = () => {
           display: inline-block;
           max-width: 420px;
           padding: 1rem 1.25rem;
-       
+          border: 1px solid rgba(255, 255, 255, 0.24);
           border-radius: 1rem;
-         
+          background: rgba(15, 23, 42, 0.24);
           backdrop-filter: blur(12px);
         }
       `}</style>
