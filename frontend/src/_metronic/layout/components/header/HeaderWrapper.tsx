@@ -51,7 +51,7 @@ export function HeaderWrapper() {
 
           {/* begin::Logo */}
           <Link to='/dashboard' className='d-flex align-items-center'>
-            <img alt='Logo' src={toAbsoluteUrl('media/logos/sys.png')} className='h-30px' />
+            <img alt='Logo' src={toAbsoluteUrl('media/logos/sys.jpeg')} className='h-30px' />
           </Link>
           {/* end::Logo */}
         </div>

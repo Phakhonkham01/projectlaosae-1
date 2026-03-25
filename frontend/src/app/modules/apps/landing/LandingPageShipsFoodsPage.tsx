@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/core/Auth'
+import Swal from 'sweetalert2'
 import { getShips } from '../create-ships/users-list/core/ship_requests'
 import { getUsers } from '../addFood/users-list/core/_requests'
 
@@ -9,10 +10,10 @@ import { getUsers } from '../addFood/users-list/core/_requests'
    ───────────────────────────────────────────── */
 
 const BLUE = '#1B84FF'
-const BLUE_DARK = '#056EE9'
+const BLUE_DARK = 'rgb(5, 110, 233)'
 const BLUE_LIGHT = '#EEF6FF'
 const BLUE_GRADIENT = 'linear-gradient(135deg, #1B84FF 0%, #056EE9 100%)'
-const NAVY = '#071437'
+const NAVY = 'rgb(7, 16, 39)'
 
 const styles = `
 
@@ -38,7 +39,7 @@ const styles = `
     display: flex; align-items: center; gap: 0.75rem; text-decoration: none;
   }
   .lp-navbar-logo {
-    width: 42px; height: 42px; border-radius: 12px;
+    width: 75px; height: 75px; border-radius: 12px;
     background: ${BLUE_GRADIENT};
     display: flex; align-items: center; justify-content: center;
     font-size: 1.35rem;
@@ -84,9 +85,7 @@ const styles = `
   .lp-hero-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(135deg,
-      rgba(7,20,55,0.75) 0%,
-      rgba(27,132,255,0.45) 50%,
-      rgba(7,20,55,0.65) 100%
+
     );
   }
   .lp-hero-content {
@@ -155,6 +154,13 @@ const styles = `
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 20px; padding: 1.5rem 2rem;
     max-width: 400px; margin: 0 auto 2rem;
+    animation: fadeInUp 0.9s ease-out 0.65s both;
+  }  
+    .lp-hero-glass-1 {
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px; padding: 1.5rem 2rem;
+    max-width: 150px; margin: 0 auto 2rem;
     animation: fadeInUp 0.9s ease-out 0.65s both;
   }
   .lp-hero-glass h3 {
@@ -334,7 +340,7 @@ const styles = `
 
   /* ── Login required prompt ── */
   .lp-login-prompt {
-    background: ${BLUE_LIGHT}; border: 1.5px solid rgba(27,132,255,0.2);
+    background: ; border: 1.5px solid rgba(27,132,255,0.2);
     border-radius: 20px; padding: 2.5rem 2rem; text-align: center;
     max-width: 420px; margin: 0 auto 2rem;
     animation: fadeInUp 0.9s ease-out 0.5s both;
@@ -426,10 +432,10 @@ const LandingPageShipsFoodsPage = () => {
 
   // Image carousel data
   const images = [
-    { url: '/images/view.jpg', title: 'ເຮືອທ່ອງທ່ຽວຫຼູຫຼາ', description: 'ປະສົບການທ່ອງທ່ຽວທີ່ສະດວກສະບາຍ' },
-    { url: '/images/view1.jpg', title: 'ທິວທັດທີ່ສວຍງາມ', description: 'ຊົມວິວທິວທັດອັນງົດງາມ' },
-    { url: '/images/view2.jpg', title: 'ການບໍລິການລະດັບ 5 ດາວ', description: 'ທີມງານມືອາຊີບຄອຍດູແລທ່ານ' },
-    { url: '/images/view3.jpg', title: 'ອາຫານທະເລສົດໃໝ່', description: 'ລິ້ມລອງອາຫານທ້ອງຖິ່ນແສນອຮ່ອຍ' },
+    { url: 'media/logos/1.jpg', title: 'ເຮືອທ່ອງທ່ຽວຫຼູຫຼາ', description: 'ປະສົບການທ່ອງທ່ຽວທີ່ສະດວກສະບາຍ' },
+    { url: 'media/logos/2.jpg', title: 'ທິວທັດທີ່ສວຍງາມ', description: 'ຊົມວິວທິວທັດອັນງົດງາມ' },
+    { url: 'media/logos/3.jpg', title: 'ການບໍລິການລະດັບ 5 ດາວ', description: 'ທີມງານມືອາຊີບຄອຍດູແລທ່ານ' },
+    { url: 'media/logos/4.jpg', title: 'ອາຫານທະເລສົດໃໝ່', description: 'ລິ້ມລອງອາຫານທ້ອງຖິ່ນແສນອຮ່ອຍ' },
   ]
 
   // Auto-slide
@@ -443,11 +449,23 @@ const LandingPageShipsFoodsPage = () => {
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length)
   const prevImage = () => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
 
-  const handleBookingClick = (type: 'ship' | 'food') => {
+  const handleBookingClick = async (type: 'ship' | 'food') => {
     if (!auth || !auth.token || !currentUser) {
-      navigate('/auth/login', { state: { returnTo: `/apps/booking-management/booking-${type}s` } })
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'ເຂົ້າສູ່ລະບົບກ່ອນ',
+        text: 'ກະລຸນາເຂົ້າສູ່ລະບົບເພື່ອດຳເນີນການ',
+        showCancelButton: true,
+        confirmButtonText: 'ເຂົ້າສູ່ລະບົບ',
+        cancelButtonText: 'ຍົກເລີກ',
+      })
+
+      if (result.isConfirmed) {
+        navigate('/auth/login', { state: { returnTo: `/apps/booking-management/booking-${type}s` } })
+      }
       return
     }
+
     if (type === 'ship') {
       navigate('/apps/booking-management/booking-ships/booking-ships')
     } else {
@@ -463,10 +481,12 @@ const LandingPageShipsFoodsPage = () => {
 
       {/* ── Navbar ── */}
       <nav className='lp-navbar'>
-        <a className='lp-navbar-brand' href='/'>
-          <div className='lp-navbar-logo'>🚢</div>
+        <a className='lp-navbar-brand' href='/' style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
+          <div className='lp-navbar-logo' style={{ width: '75px', height: '75px' }}>
+            <img src="media/logos/sys.jpeg" alt="Logo" style={{ width: '75px', height: '75px' }} />
+          </div>
           <div>
-            <div className='lp-navbar-title'>ທີ່ຢູ່ທະເລລາວ</div>
+            <div className='lp-navbar-title'>JoVa ທະເລລາວ</div>
             <div className='lp-navbar-subtitle'>Cruise &amp; Dining Experience</div>
           </div>
         </a>
@@ -501,14 +521,14 @@ const LandingPageShipsFoodsPage = () => {
         ))}
 
         <div className='lp-hero-content'>
-          <div className='lp-hero-badge'>
+          <div className='lp-hero-glass-1'>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#60A5FA', display: 'inline-block' }} />
-            ລາວຄຣູ້ສ &amp; ທ່ອງທ່ຽວ
+            JOVA &amp; ທ່ອງທ່ຽວ
           </div>
 
           <h1 className='lp-hero-h1'>
-            ຄົ້ນພົບ<br />
-            <span>ທີ່ຢູ່ທະເລລາວ</span>
+            ທ່ອງທ່ຽວ<br />
+            <span>ທີ່ທະເລລາວ</span>
           </h1>
           <p className='lp-hero-desc'>
             ຄົ້ນພົບຄວາມງາມຂອງທຳມະຊາດດ້ວຍບໍລິການເຮືອນຳທ່ຽວ ແລະ ອາຫານທ້ອງຖິ່ນຄຸນນະພາບສູງ
@@ -527,7 +547,7 @@ const LandingPageShipsFoodsPage = () => {
               </button>
             </div>
           ) : (
-            <div className='lp-login-prompt'>
+            <div className='lp-hero-glass'>
               <p>🔐 ກະລຸນາ <strong>ເຂົ້າສູ່ລະບົບ</strong> ເພື່ອໃຊ້ບໍລິການຈອງເຮືອ ແລະ ສັ່ງອາຫານ</p>
               <button className='lp-hero-btn-main' style={{ margin: '0 auto' }} onClick={() => navigate('/auth/login')}>
                 ເຂົ້າສູ່ລະບົບ →
@@ -588,7 +608,7 @@ const LandingPageShipsFoodsPage = () => {
       <div className='lp-features'>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center' }}>
-            <span className='lp-section-label'>ທຳໄມຕ້ອງເລືອກເຮົາ</span>
+            <span className='lp-section-label'>ເປັນຕ້ອງເລືອກເຮົາ</span>
             <div className='lp-divider center' />
             <h2 className='lp-section-title'>ການບໍລິການທີ່ທ່ານໄວ້ວາງໃຈ</h2>
             <p className='lp-section-sub' style={{ margin: '0 auto' }}>ເຮົາສະໜອງປະສົບການທ່ອງທ່ຽວທາງນ້ຳດ້ວຍຄຸນນະພາບລະດັບສາກົນ</p>

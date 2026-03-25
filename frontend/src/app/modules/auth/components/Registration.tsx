@@ -150,7 +150,7 @@ export function Registration() {
 
       {/* ── Social Login Options ─────────────────────────────────────────────── */}
       <div className='row g-3 mb-9'>
-        <div className='col-md-6'>
+        {/* <div className='col-md-6'>
           <a
             href='#'
             className='btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100'
@@ -162,8 +162,8 @@ export function Registration() {
             />
             ເຂົ້າສູ່ລະບົບ ໂດຍໃຊ້ Google
           </a>
-        </div>
-        <div className='col-md-6'>
+        </div> */}
+        {/* <div className='col-md-6'>
           <a
             href='#'
             className='btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100'
@@ -180,13 +180,13 @@ export function Registration() {
             />
             ເຂົ້າສູ່ລະບົບ ໂດຍໃຊ້ Apple
           </a>
-        </div>
+        </div> */}
       </div>
 
       {/* ── Divider ─────────────────────────────────────────────────────────── */}
-      <div className='separator separator-content my-14'>
+      {/* <div className='separator separator-content my-14'>
         <span className='w-125px text-gray-500 fw-semibold fs-7'>ຫຼື ໂດຍໃຊ້ອີເມວ</span>
-      </div>
+      </div> */}
 
       {/* ── Error Alert ─────────────────────────────────────────────────────── */}
       {formik.status && (
@@ -368,7 +368,7 @@ export function Registration() {
               rel='noopener noreferrer'
               className='ms-1 link-primary fw-bold'
             >
-              ເງື່ອນໄຂ ແລະ ເຄື່ອງ
+              ເງື່ອນໄຂທັງໝົດ
             </a>
           </span>
         </label>
