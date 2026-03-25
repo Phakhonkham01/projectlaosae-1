@@ -1,20 +1,44 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTable, ColumnInstance, Row } from 'react-table'
 import { useQueryResponseData, useQueryResponseLoading } from '../core/QueryResponseProvider'
 import { User } from '../core/_models'
-import { UsersList } from './columns/_columns'   // ← แก้ตรงนี้
+import { UsersList } from './columns/_columns'
 import { KTCardBody } from '../../../../../../_metronic/helpers'
 import { CustomHeaderColumn } from './columns/CustomHeaderColumn'
 import { CustomRow } from './columns/CustomRow'
 import { EmployeesListLoading } from '../components/loading/EmployeesListLoading'
 import { EmployeesListPagination } from '../components/pagination/EmployeesListPagination'
 
+type RoleTab = 'all' | 'ownner' | 'employee' | 'cuttomer'
+
+const tabs: { label: string; value: RoleTab }[] = [
+  { label: 'All',      value: 'all'      },
+  { label: 'Owner',    value: 'ownner'   },
+  { label: 'Employee', value: 'employee' },
+  { label: 'Customer', value: 'cuttomer' },
+]
+
 const EmployeesTable = () => {
   const users = useQueryResponseData()
   const isLoading = useQueryResponseLoading()
+  const [activeTab, setActiveTab] = useState<RoleTab>('all')
 
-  const data = useMemo(() => users, [users])
-  const columns = useMemo(() => UsersList, [])  // ← แก้ตรงนี้
+  const data = useMemo(() =>
+    activeTab === 'all' ? users : users.filter(u => u.role === activeTab),
+    [users, activeTab]
+  )
+
+  const counts = useMemo(() =>
+    tabs.reduce((acc, tab) => {
+      acc[tab.value] = tab.value === 'all'
+        ? users.length
+        : users.filter(u => u.role === tab.value).length
+      return acc
+    }, {} as Record<RoleTab, number>),
+    [users]
+  )
+
+  const columns = useMemo(() => UsersList, [])
 
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } = useTable({
     columns,
@@ -23,6 +47,30 @@ const EmployeesTable = () => {
 
   return (
     <KTCardBody className='py-4'>
+      {/* Tabs */}
+      <div className='d-flex justify-content-end mb-4'>
+        <ul className='nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0'>
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.value
+            return (
+              <li key={tab.value} className='nav-item'>
+                <a
+                  className={`nav-link fw-bold ${isActive ? 'active' : 'text-muted'}`}
+                  onClick={() => setActiveTab(tab.value)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {tab.label}
+                  <span className={`ms-2 badge ${isActive ? 'badge-primary' : 'badge-light'}`}>
+                    {counts[tab.value] ?? 0}
+                  </span>
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
+      {/* Table */}
       <div className='table-responsive'>
         <table
           id='kt_table_users'

@@ -57,7 +57,7 @@ const EmployeesListFilter = () => {
         <div className='px-7 py-5' data-kt-user-table-filter='form'>
 
           {/* Role */}
-          <div className='mb-10'>
+          {/* <div className='mb-10'>
             <label className='form-label fs-6 fw-bold'>Role:</label>
             <select
               className='form-select form-select-solid fw-bolder'
@@ -68,7 +68,7 @@ const EmployeesListFilter = () => {
               <option value='ownner'>OWNNER</option>
               <option value='employee'>EMPLOYEE</option>
             </select>
-          </div>
+          </div> */}
 
           {/* Status */}
           <div className='mb-10'>
