@@ -31,7 +31,7 @@ const UsersList: ReadonlyArray<Column<User>> = [
     Cell: ({ value }) => <UserStatusCell status={value} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Status' className='min-w-100px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Roles' className='min-w-100px' />,
     accessor: 'role',
     Cell: ({ value }) => <UserRoleCell role={value} />,
   },

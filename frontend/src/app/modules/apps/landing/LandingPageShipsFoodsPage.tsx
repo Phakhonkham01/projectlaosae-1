@@ -29,7 +29,7 @@ const styles = `
     background: rgba(255,255,255,0.92);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid rgba(27,132,255,0.12);
-    padding: 0 2rem;
+    padding: 0 0.5rem;
     height: 68px;
     display: flex; align-items: center; justify-content: space-between;
     box-shadow: 0 2px 24px rgba(27,132,255,0.08);
@@ -482,8 +482,8 @@ const LandingPageShipsFoodsPage = () => {
       {/* ── Navbar ── */}
       <nav className='lp-navbar'>
         <a className='lp-navbar-brand' href='/' style={{ display: 'flex', alignItems: 'center', gap: '50px' }}>
-          <div className='lp-navbar-logo' style={{ width: '75px', height: '75px' }}>
-            <img src="media/logos/sys.jpeg" alt="Logo" style={{ width: '75px', height: '75px' }} />
+          <div className='lp-navbar-logo' style={{ width: '65px', height: '65px' }}>
+            <img src="media/logos/sys.jpeg" alt="Logo" style={{ width: '65px', height: '65px' }} />
           </div>
           <div>
             <div className='lp-navbar-title'>JoVa ທະເລລາວ</div>

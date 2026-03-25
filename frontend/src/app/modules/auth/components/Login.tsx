@@ -61,7 +61,7 @@ export function Login() {
         const firebaseUser = userCredential.user
 
         // Step 2: Get Firestore doc
-        type UserRole = 'owner' | 'admin' | 'employee' | 'CEO'
+        type UserRole = 'owner' | 'admin' | 'employee' | 'user' | 'customer'
         let name = ''
         let lastname = ''
         let role: UserRole = 'employee'
@@ -76,7 +76,8 @@ export function Login() {
           role         = (d.role as UserRole) ?? 'employee'
           phone_number = d.phone_number ?? ''
         } else {
-          name = firebaseUser.email?.split('@')[0] ?? 'Users    '
+          name = firebaseUser.email?.split('@')[0] ?? 'user' 
+
         }
 
         // Step 3: Build UserModel
@@ -90,8 +91,7 @@ export function Login() {
         }
 
         // Step 4: Build authData
-        type AuthRole = 'CEO' | 'admin' | 'employee'
-        const authRole = (role === 'owner' ? 'admin' : role) as AuthRole
+        const authRole = role
         const authData = {
           token:         await firebaseUser.getIdToken(),
           _id:           firebaseUser.uid,

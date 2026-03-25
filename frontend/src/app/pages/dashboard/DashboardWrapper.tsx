@@ -1,7 +1,7 @@
 import {useEffect} from 'react'
 import {useIntl} from 'react-intl'
 import {PageLink, PageTitle} from '../../../_metronic/layout/core'
-import Calendar from './Calendar'
+import Dashboard from './Dashboard'
 
 const dashboardBreadCrumbs: Array<PageLink> = [
   {
@@ -23,7 +23,7 @@ const DashboardPage = () => {
 
   return (
     <>
-      <Calendar />
+      <Dashboard />
     </>
   )
 }

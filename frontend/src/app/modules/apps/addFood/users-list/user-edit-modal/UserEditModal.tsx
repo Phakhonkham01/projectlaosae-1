@@ -20,10 +20,10 @@ const UserEditModal = () => {
         aria-modal='true'
       >
         {/* begin::Modal dialog */}
-        <div className='modal-dialog modal-dialog-centered mw-900px'>
+        <div className='modal-dialog modal-dialog-centered mw-750px'>
           {/* begin::Modal content */}
           <div className='modal-content'>
-            <UserEditModalHeader />
+            <UserEditModalHeader /> 
             {/* begin::Modal body */}
             <div className='modal-body scroll-y mx-5 mx-xl-15 my-7'>
               <UserEditModalFormWrapper />

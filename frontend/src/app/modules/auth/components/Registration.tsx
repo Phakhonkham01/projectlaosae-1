@@ -78,7 +78,8 @@ export function Registration() {
           name: values.firstname,
           lastname: values.lastname,
           phone_number: values.phone_number,
-          status: 'active',
+          status: 'Active',
+          role: 'customer',
           createdAt: serverTimestamp(),
         })
 

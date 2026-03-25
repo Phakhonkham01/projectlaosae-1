@@ -30,7 +30,7 @@ type Props = {
 // ─── Validation ───────────────────────────────────────────────────────────────
 const productSchema = Yup.object().shape({
   name: Yup.string().required('Product name is required'),
-  price: Yup.number().min(0, 'Price must be >= 0').required('Price is required'),
+  price: Yup.number().moreThan(0, 'Price must be greater than 0').required('Price is required'),
   category_id: Yup.string().required('Category is required'),
   image: Yup.string().required('Product image is required'),
   availability: Yup.boolean().required(),
@@ -375,7 +375,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           {/* Preview box */}
           <div
             className='border rounded d-flex align-items-center justify-content-center bg-light mb-3'
-            style={{ width: '100%', height: 200, overflow: 'hidden', position: 'relative' }}
+            style={{ width: 200, height: 200, overflow: 'hidden', position: 'relative', margin: '0 auto' }}
           >
             {imagePreview ? (
               <>
