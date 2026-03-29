@@ -1,8 +1,12 @@
 
 import {AsideMenuItemWithSub} from './AsideMenuItemWithSub'
 import {AsideMenuItem} from './AsideMenuItem'
+import { useAuth } from '../../../../app/modules/auth'
 
 export function AsideMenuMain() {
+  const { currentUser } = useAuth()
+  const isCustomer = currentUser?.role === 'customer'
+
   return (
     <>
       <AsideMenuItem
@@ -57,7 +61,7 @@ export function AsideMenuMain() {
         <AsideMenuItem to='/error/404' title='ຂໍ້ຜິດພາດ 404' hasBullet={true} />
         <AsideMenuItem to='/error/500' title='ຂໍ້ຜິດພາດ 500' hasBullet={true} />
       </AsideMenuItemWithSub> */}
-      <AsideMenuItemWithSub
+      {/* <AsideMenuItemWithSub
         to='/crafted/widgets'
         title='ວິດເຈັດ'
         icon='element-11'
@@ -74,7 +78,7 @@ export function AsideMenuMain() {
         <div className='menu-content pt-8 pb-2'>
           <span className='menu-section text-muted text-uppercase fs-8 ls-1'>ແອັບພລິເຄຊັນ</span>
         </div>
-      </div>
+      </div> */}
       {/* <AsideMenuItemWithSub
         to='/apps/chat'
         title='ແຊັດ'
@@ -97,54 +101,36 @@ export function AsideMenuMain() {
         title='ຈອງເຮືອ ແລະ ອາຫານ'
         fontIcon='bi-layers'
       />
-      <AsideMenuItem
-        to='/apps/create-ships/ships'
-        icon='people'
-        title='ຈັດການເຮືອໃນຮ້ານ'
-        fontIcon='bi-layers'
-      />
-      {/* <AsideMenuItem
-        to='/apps/event/events'
-        icon='calendar-edit'
-        title='ກິດຈະກໍາ'
-        fontIcon='bi-calendar-event'
-      /> */}
-        <AsideMenuItem
-        to='/apps/check-bill/check-bills'
-        icon='calendar-edit'
-        title='ກວດສອບ ແລະ ຈັດການໃບບິນ'  
-        fontIcon='bi-calendar-event'
-      />
-       {/* <AsideMenuItem
-        to='/apps/requests'
-        icon='check-circle'
-        title='ຄໍາຮ້ອງຂໍ'
-        fontIcon='bi-calendar-event'
-      /> */}
-             <AsideMenuItem
-        to='/apps/employees-management'
-        icon='check-circle'
-        title='ພະນັກງານ ( ຈັດການຂໍ້ມູນ)'
-        fontIcon='bi-calendar-event'
-      />
-       {/* <AsideMenuItem
-        to='/apps/user-required'
-        icon='abstract-10'
-        title='ຄວາມຕ້ອງການຜູ້ໃຊ້'
-        fontIcon='bi-calendar-event'
-      /> */}
-      {/* <AsideMenuItem
-        to='/apps/holiday/holidays'
-        icon='tree'
-        title='ວັນພັກ'
-        fontIcon='bi-calendar-event'
-      /> */}
-      <AsideMenuItem
-        to='/apps/add-food'
-        icon='tree'
-        title='ຈັດການສິນຄ້າພາຍໃນຮ້ານ'
-        fontIcon='bi-calendar-event'
-      />
+
+      {!isCustomer && (
+        <>
+          <AsideMenuItem
+            to='/apps/create-ships/ships'
+            icon='people'
+            title='ຈັດການເຮືອໃນຮ້ານ'
+            fontIcon='bi-layers'
+          />
+          <AsideMenuItem
+            to='/apps/check-bill/check-bills'
+            icon='calendar-edit'
+            title='ກວດສອບ ແລະ ຈັດການໃບບິນ'
+            fontIcon='bi-calendar-event'
+          />
+          <AsideMenuItem
+            to='/apps/employees-management'
+            icon='check-circle'
+            title='ພະນັກງານ ( ຈັດການຂໍ້ມູນ)'
+            fontIcon='bi-calendar-event'
+          />
+          <AsideMenuItem
+            to='/apps/add-food'
+            icon='tree'
+            title='ຈັດການສິນຄ້າພາຍໃນຮ້ານ'
+            fontIcon='bi-calendar-event'
+          />
+        </>
+      )}
+
       <AsideMenuItem
         to='/apps/user-history'
         icon='tree'
