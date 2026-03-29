@@ -41,7 +41,7 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
   const {state} = useQueryRequest()
   const [query, setQuery] = useState<string>(stringifyRequestQuery(state))
   const updatedQuery = useMemo(() => stringifyRequestQuery(state), [state])
-  const filter = (state.filter as BillFilter | undefined) ?? {}
+  
 
   useEffect(() => {
     if (query !== updatedQuery) {
@@ -53,6 +53,7 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
     `${QUERIES.USERS_LIST}-bills-${query}`,
     async () => {
       const bills = await getBills()
+      const filter = (state.filter as BillFilter | undefined) ?? {}
 
       let filteredBills = [...bills]
 
@@ -96,6 +97,21 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
         filteredBills = filteredBills.filter(
           (bill) => bill.booking_date <= filter.bookingDateTo!
         )
+      }
+
+      if (filter.dateRange) {
+        const now = new Date()
+        filteredBills = filteredBills.filter((bill) => {
+          const d = new Date(bill.booking_date)
+          if (filter.dateRange === 'today') {
+            return d.toDateString() === now.toDateString()
+          } else if (filter.dateRange === 'this_month') {
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+          } else if (filter.dateRange === 'this_year') {
+            return d.getFullYear() === now.getFullYear()
+          }
+          return true
+        })
       }
 
       const page = state.page || 1

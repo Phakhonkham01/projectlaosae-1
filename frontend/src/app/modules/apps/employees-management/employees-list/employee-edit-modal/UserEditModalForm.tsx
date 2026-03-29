@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useRef } from "react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import clsx from "clsx";
@@ -10,10 +10,12 @@ import { isNotEmpty, QUERIES } from "../../../../../../_metronic/helpers";
 import { useMutation, useQueryClient } from "react-query";
 import { EmployeesListLoading } from "../components/loading/EmployeesListLoading";
 import Swal from "sweetalert2";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../../../../../../firebase/useFirebase"; // ✅ ปรับ path ให้ตรง
 
 type Props = {
   isUserLoading: boolean;
-  user?: Partial<User>;  // ✅ แก้ตรงนี้
+  user?: Partial<User>;
 };
 
 const userSchema = Yup.object().shape({
@@ -39,6 +41,7 @@ const initialValues: Partial<User> = {
   password: "",
   status: "Active",
   role: "employee",
+  image_url: "",
 };
 
 const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
@@ -46,34 +49,61 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   const { query } = useQueryResponse();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>(user?.image_url || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = isNotEmpty(user?._id);
 
   const invalidateUsers = () =>
     queryClient.invalidateQueries([`${QUERIES.USERS_LIST}-${query}`]);
 
- const createMutation = useMutation(createUser, {
-  onSuccess: () => {
-    Swal.fire({
-      icon: 'success',
-      title: '<span style="color: #10b981;">User Created</span>',
-      timer: 2000,
-      showConfirmButton: false,
-    }).then(() => {
-      invalidateUsers()
-      setItemIdForUpdate(undefined)
-      window.location.reload()  // ← เพิ่มตรงนี้
-    })
-  },
-  onError: (error: any) => {
-    Swal.fire({
-      icon: 'error',
-      title: 'Failed to Create User',
-      text: error?.message || 'Something went wrong!',
-      confirmButtonText: 'OK',
-    })
-  },
-})
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (userId: string): Promise<string | null> => {
+    if (!imageFile) return user?.image_url || null;
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `users/${userId}/profile_${Date.now()}`)
+      const snapshot = await uploadBytes(storageRef, imageFile)
+      const url = await getDownloadURL(snapshot.ref)
+      return url
+    } catch (err) {
+      console.error("Upload failed:", err);
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const createMutation = useMutation(createUser, {
+    onSuccess: () => {
+      Swal.fire({
+        icon: "success",
+        title: '<span style="color: #10b981;">User Created</span>',
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => {
+        invalidateUsers();
+        setItemIdForUpdate(undefined);
+        window.location.reload();
+      });
+    },
+    onError: (error: any) => {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Create User",
+        text: error?.message || "Something went wrong!",
+        confirmButtonText: "OK",
+      });
+    },
+  });
 
   const updateMutation = useMutation(
     (data: User) => updateUser(data._id, data),
@@ -85,10 +115,10 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           timer: 2000,
           showConfirmButton: false,
         }).then(() => {
-      invalidateUsers()
-      setItemIdForUpdate(undefined)
-      window.location.reload()  // ← เพิ่มตรงนี้
-    })
+          invalidateUsers();
+          setItemIdForUpdate(undefined);
+          window.location.reload();
+        });
       },
       onError: () => {
         Swal.fire({
@@ -97,7 +127,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           text: "Failed to update user",
         });
       },
-    },
+    }
   );
 
   const formik = useFormik<Partial<User>>({
@@ -109,13 +139,19 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
     enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
+        // ใช้ _id สำหรับ path หรือ timestamp ถ้า create ใหม่
+        const tempId = user?._id || `temp_${Date.now()}`
+        const imageUrl = await uploadImage(tempId)
+
+        const payload = {
+          ...values,
+          image_url: imageUrl || values.image_url || "",
+        }
+
         if (isEditMode && user?._id) {
-          await updateMutation.mutateAsync({
-            ...values,
-            _id: user._id,
-          } as User);
+          await updateMutation.mutateAsync({ ...payload, _id: user._id } as User);
         } else {
-          await createMutation.mutateAsync(values as User);
+          await createMutation.mutateAsync(payload as User);
         }
         setItemIdForUpdate(undefined);
       } catch (err) {
@@ -127,7 +163,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   });
 
   const isSubmitting =
-    formik.isSubmitting || createMutation.isLoading || updateMutation.isLoading;
+    formik.isSubmitting || createMutation.isLoading || updateMutation.isLoading || isUploading;
 
   const fieldClass = (name: keyof User) =>
     clsx("form-control form-control-solid", {
@@ -137,6 +173,63 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   return (
     <>
       <form className="form" onSubmit={formik.handleSubmit} noValidate>
+
+        {/* Profile Image */}
+        <div className="fv-row mb-7 text-center">
+          <label className="fw-bold fs-6 mb-3 d-block">Profile Image</label>
+          <div
+            className="position-relative d-inline-block"
+            style={{ cursor: "pointer" }}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="preview"
+                className="rounded-circle"
+                style={{ width: 90, height: 90, objectFit: "cover", border: "3px solid #e2e8f0" }}
+              />
+            ) : (
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center bg-light"
+                style={{ width: 90, height: 90, border: "3px dashed #cbd5e1" }}
+              >
+                <i className="ki-duotone ki-camera fs-2x text-gray-400">
+                  <span className="path1" /><span className="path2" />
+                </i>
+              </div>
+            )}
+            <div
+              className="position-absolute bottom-0 end-0 rounded-circle d-flex align-items-center justify-content-center bg-primary"
+              style={{ width: 26, height: 26 }}
+            >
+              <i className="ki-duotone ki-pencil fs-7 text-white">
+                <span className="path1" /><span className="path2" />
+              </i>
+            </div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="d-none"
+            onChange={handleImageChange}
+            disabled={isSubmitting || isUserLoading}
+          />
+          {imagePreview && (
+            <div className="mt-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-light-danger"
+                onClick={() => { setImagePreview(""); setImageFile(null); formik.setFieldValue("image_url", ""); }}
+                disabled={isSubmitting || isUserLoading}
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Name */}
         <div className="fv-row mb-7">
           <label className="required fw-bold fs-6 mb-2">Name</label>
@@ -148,9 +241,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           />
           {formik.touched.name && formik.errors.name && (
             <div className="fv-plugins-message-container">
-              <span role="alert" className="fv-help-block">
-                {formik.errors.name}
-              </span>
+              <span role="alert" className="fv-help-block">{formik.errors.name}</span>
             </div>
           )}
         </div>
@@ -166,9 +257,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           />
           {formik.touched.lastname && formik.errors.lastname && (
             <div className="fv-plugins-message-container">
-              <span role="alert" className="fv-help-block">
-                {formik.errors.lastname}
-              </span>
+              <span role="alert" className="fv-help-block">{formik.errors.lastname}</span>
             </div>
           )}
         </div>
@@ -184,12 +273,12 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           />
           {formik.touched.email && formik.errors.email && (
             <div className="fv-plugins-message-container">
-              <span role="alert" className="fv-help-block">
-                {formik.errors.email}
-              </span>
+              <span role="alert" className="fv-help-block">{formik.errors.email}</span>
             </div>
           )}
         </div>
+
+        {/* Password */}
         {!isEditMode && (
           <div className="fv-row mb-7">
             <label className="required fw-bold fs-6 mb-2">Password</label>
@@ -198,8 +287,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 type={showPassword ? "text" : "password"}
                 {...formik.getFieldProps("password")}
                 className={clsx("form-control form-control-solid", {
-                  "is-invalid":
-                    formik.touched.password && formik.errors.password,
+                  "is-invalid": formik.touched.password && formik.errors.password,
                 })}
                 disabled={isSubmitting || isUserLoading}
               />
@@ -207,41 +295,16 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="btn btn-sm position-absolute"
-                style={{
-                  right: 10,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  color: "#666",
-                }}
+                style={{ right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#666" }}
                 disabled={isSubmitting || isUserLoading}
               >
                 {showPassword ? (
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 ) : (
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
                   </svg>
@@ -250,13 +313,12 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
             </div>
             {formik.touched.password && formik.errors.password && (
               <div className="fv-plugins-message-container">
-                <span role="alert" className="fv-help-block">
-                  {formik.errors.password}
-                </span>
+                <span role="alert" className="fv-help-block">{formik.errors.password}</span>
               </div>
             )}
           </div>
         )}
+
         {/* Phone Number */}
         <div className="fv-row mb-7">
           <label className="fw-bold fs-6 mb-2">Phone Number</label>
@@ -272,10 +334,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
         <div className="mb-7">
           <label className="required fw-bold fs-6 mb-5">Role</label>
           {(["ownner", "employee", "cuttomer"] as User["role"][]).map((r) => (
-            <div
-              key={r}
-              className="form-check form-check-custom form-check-solid mb-3"
-            >
+            <div key={r} className="form-check form-check-custom form-check-solid mb-3">
               <input
                 id={`role-${r}`}
                 className="form-check-input"
@@ -285,10 +344,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 onChange={() => formik.setFieldValue("role", r)}
                 disabled={isSubmitting || isUserLoading}
               />
-              <label
-                htmlFor={`role-${r}`}
-                className="form-check-label fw-bold text-gray-800"
-              >
+              <label htmlFor={`role-${r}`} className="form-check-label fw-bold text-gray-800">
                 {r.toUpperCase()}
               </label>
             </div>
@@ -299,10 +355,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
         <div className="mb-7">
           <label className="required fw-bold fs-6 mb-5">Status</label>
           {(["Active", "Inactive", "On Leave"] as User["status"][]).map((s) => (
-            <div
-              key={s}
-              className="form-check form-check-custom form-check-solid mb-3"
-            >
+            <div key={s} className="form-check form-check-custom form-check-solid mb-3">
               <input
                 id={`status-${s}`}
                 className="form-check-input"
@@ -312,10 +365,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 onChange={() => formik.setFieldValue("status", s)}
                 disabled={isSubmitting || isUserLoading}
               />
-              <label
-                htmlFor={`status-${s}`}
-                className="form-check-label fw-bold text-gray-800"
-              >
+              <label htmlFor={`status-${s}`} className="form-check-label fw-bold text-gray-800">
                 {s}
               </label>
             </div>
@@ -339,14 +389,10 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           >
             {isSubmitting ? (
               <>
-                Please wait...
+                {isUploading ? "Uploading..." : "Please wait..."}
                 <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
               </>
-            ) : isEditMode ? (
-              "Update"
-            ) : (
-              "Create"
-            )}
+            ) : isEditMode ? "Update" : "Create"}
           </button>
         </div>
       </form>

@@ -9,13 +9,13 @@ import { CustomRow } from './columns/CustomRow'
 import { EmployeesListLoading } from '../components/loading/EmployeesListLoading'
 import { EmployeesListPagination } from '../components/pagination/EmployeesListPagination'
 
-type RoleTab = 'all' | 'ownner' | 'employee' | 'cuttomer'
+type RoleTab = 'all' | 'ownner' | 'employee' | 'customer'
 
 const tabs: { label: string; value: RoleTab }[] = [
   { label: 'All',      value: 'all'      },
   { label: 'Owner',    value: 'ownner'   },
   { label: 'Employee', value: 'employee' },
-  { label: 'Customer', value: 'cuttomer' },
+  { label: 'Customer', value: 'customer' },
 ]
 
 const EmployeesTable = () => {

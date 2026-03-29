@@ -1,11 +1,5 @@
 import { Timestamp } from 'firebase/firestore'
 
-// ─── Department ───────────────────────────────────────────────
-
-
-// ─── User (Firestore collection: USER) ────────────────────────
-// Firestore fields: name, lastname, email, phone_number, status, createdAt
-// Extended with: username, first_name, last_name, leave_days, image_url
 export interface User {
   _id: string                              // Firestore document ID (= Firebase Auth UID)
   name: string                             // ชื่อ (Firestore field)
@@ -15,7 +9,7 @@ export interface User {
   phone_number?: string                    // เบอร์โทร (Firestore field)
   status: 'Active' | 'Inactive' | 'On Leave' // สถานะ (Firestore field)
   image_url?: string                       // รูปโปรไฟล์ (Firebase Storage URL)                    // วันลาคงเหลือ
-  role:   'ownner' | 'employee' | 'cuttomer'     // บทบาท
+  role:   'ownner' | 'employee' | 'customer'     // บทบาท
   createdAt?: Timestamp | string
   updatedAt?: Timestamp | string
 }

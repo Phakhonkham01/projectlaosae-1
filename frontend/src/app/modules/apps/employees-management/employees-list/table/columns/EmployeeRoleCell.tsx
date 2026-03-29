@@ -9,7 +9,7 @@ const UserRoleCell: FC<Props> = ({ role }) => {
   switch (r?.toLowerCase()) {
     case 'ownner':   return 'badge-light-danger'
     case 'employee': return 'badge-light-primary'
-    case 'cuttomer': return 'badge-light-success'
+    case 'customer': return 'badge-light-success'
     default:         return 'badge-light-secondary'
   }
 }
