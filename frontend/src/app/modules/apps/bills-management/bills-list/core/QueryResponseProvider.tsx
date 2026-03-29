@@ -101,14 +101,18 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
 
       if (filter.dateRange) {
         const now = new Date()
+        const offset = typeof filter.dateOffset === 'number' ? filter.dateOffset : 0
         filteredBills = filteredBills.filter((bill) => {
           const d = new Date(bill.booking_date)
           if (filter.dateRange === 'today') {
             return d.toDateString() === now.toDateString()
           } else if (filter.dateRange === 'this_month') {
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+            const target = new Date(now)
+            target.setMonth(now.getMonth() + offset)
+            return d.getMonth() === target.getMonth() && d.getFullYear() === target.getFullYear()
           } else if (filter.dateRange === 'this_year') {
-            return d.getFullYear() === now.getFullYear()
+            const targetYear = now.getFullYear() + offset
+            return d.getFullYear() === targetYear
           }
           return true
         })

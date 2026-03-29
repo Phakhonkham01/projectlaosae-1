@@ -51,6 +51,7 @@ export type BillFilter = {
   paymentMethod?: PaymentMethod
   paymentStatus?: PaymentStatus
   dateRange?: 'today' | 'this_month' | 'this_year'
+  dateOffset?: number
 }
 
 export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'transfer']
