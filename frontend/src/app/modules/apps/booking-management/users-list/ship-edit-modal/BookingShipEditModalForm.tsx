@@ -65,6 +65,41 @@ type BookingPaymentStatus = SavedBill['payment_status']
 const STEPS = ['ລາຍລະອຽດການຈອງ', 'ເລືອກອາຫານ', 'ສະຫຼຸບລາຍການ', 'ການຊຳລະ']
 
 const formatLak = (amount: number) => `${amount.toLocaleString()} LAK`
+const SHOP_OPEN_MINUTES = 8 * 60 + 30
+const SHOP_CLOSE_MINUTES = 20 * 60
+const TIME_PICKER_CLOSE_MINUTES = 19 * 60 + 30
+const SAME_DAY_LAST_BOOKING_MINUTES = 15 * 60
+const SAME_DAY_PREP_BUFFER_MINUTES = 30
+const TIME_STEP_MINUTES = 30
+const MIN_BOOKING_HOURS = 1
+const DURATION_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
+
+const pad2 = (value: number) => value.toString().padStart(2, '0')
+
+const getLocalDateString = (date: Date) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+
+const timeStringToMinutes = (value: string) => {
+  const [hours, minutes] = value.split(':').map(Number)
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return NaN
+  return hours * 60 + minutes
+}
+
+const getTimeParts = (value: string) => {
+  if (!value) return { hour: '', minute: '' }
+  const [hour = '', minute = ''] = value.split(':')
+  return { hour, minute }
+}
+
+const minutesToTimeString = (minutes: number) => {
+  const safeMinutes = Math.max(0, minutes)
+  const hours = Math.floor(safeMinutes / 60)
+  const mins = safeMinutes % 60
+  return `${pad2(hours)}:${pad2(mins)}`
+}
+
+const roundUpToStep = (minutes: number, stepMinutes: number) =>
+  Math.ceil(minutes / stepMinutes) * stepMinutes
 
 const downloadReceiptPng = (bill: SavedBill) => {
   const canvas = document.createElement('canvas')
@@ -188,6 +223,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [currentTime, setCurrentTime] = useState(() => new Date())
   const customerName = currentUser?.user_name ?? user?.user_name
   const customerEmail = currentUser?.user_email ?? user?.user_email
   const customerRole = currentUser?.role ?? user?.role
@@ -201,6 +237,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     } catch {
       console.warn('Could not parse user from localStorage')
     }
+  }, [])
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setCurrentTime(new Date()), 60 * 1000)
+    return () => window.clearInterval(intervalId)
   }, [])
 
   // Step 1 state
@@ -247,6 +288,48 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const totalShipPrice = numHours * shipPricePerHour
   const totalFoodPrice = selectedFoods.reduce((sum, f) => sum + f.price * f.quantity, 0)
   const grandTotal = totalShipPrice + totalFoodPrice
+  const todayDateString = getLocalDateString(currentTime)
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()
+  const isTodaySelected = bookingDate === todayDateString
+  const earliestTodayBookingMinutes = roundUpToStep(
+    Math.max(SHOP_OPEN_MINUTES, currentMinutes + SAME_DAY_PREP_BUFFER_MINUTES),
+    TIME_STEP_MINUTES
+  )
+  const minimumBookingMinutes = isTodaySelected
+    ? earliestTodayBookingMinutes
+    : SHOP_OPEN_MINUTES
+  const latestBookingMinutes = isTodaySelected
+    ? Math.min(SAME_DAY_LAST_BOOKING_MINUTES, TIME_PICKER_CLOSE_MINUTES)
+    : TIME_PICKER_CLOSE_MINUTES
+  const bookingTimeMinutes = bookingTime ? timeStringToMinutes(bookingTime) : NaN
+  const availableTimeOptions =
+    minimumBookingMinutes <= latestBookingMinutes
+      ? Array.from(
+          {
+            length:
+              Math.floor((latestBookingMinutes - minimumBookingMinutes) / TIME_STEP_MINUTES) + 1,
+          },
+          (_, index) => minutesToTimeString(minimumBookingMinutes + index * TIME_STEP_MINUTES)
+        )
+      : []
+  const { hour: selectedHour, minute: selectedMinute } = getTimeParts(bookingTime)
+  const availableHourOptions = Array.from(
+    new Set(availableTimeOptions.map((timeOption) => timeOption.split(':')[0]))
+  )
+  const availableMinuteOptions = selectedHour
+    ? availableTimeOptions
+        .filter((timeOption) => timeOption.startsWith(`${selectedHour}:`))
+        .map((timeOption) => timeOption.split(':')[1])
+    : []
+  const maxBookableHours =
+    !Number.isNaN(bookingTimeMinutes) && bookingTimeMinutes < SHOP_CLOSE_MINUTES
+      ? Math.floor((SHOP_CLOSE_MINUTES - bookingTimeMinutes) / 60)
+      : 0
+  const availableDurationOptions = DURATION_OPTIONS.filter((hours) => hours <= maxBookableHours)
+  const isSameDayBookingClosed =
+    isTodaySelected &&
+    (currentMinutes > SAME_DAY_LAST_BOOKING_MINUTES ||
+      earliestTodayBookingMinutes > SAME_DAY_LAST_BOOKING_MINUTES)
 
   const handleDownloadSavedBill = () => {
     if (!savedBill) return
@@ -261,6 +344,46 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       })
     }
   }
+
+  const updateBookingTime = (nextHour: string, nextMinute: string) => {
+    setBookingTime(nextHour && nextMinute ? `${nextHour}:${nextMinute}` : '')
+    setErrors((p) => {
+      const n = { ...p }
+      delete n.time
+      delete n.hours
+      return n
+    })
+  }
+
+  useEffect(() => {
+    if (!bookingDate || !bookingTime) return
+
+    if (isSameDayBookingClosed) {
+      setBookingTime('')
+      return
+    }
+
+    if (
+      bookingTimeMinutes < minimumBookingMinutes ||
+      bookingTimeMinutes > latestBookingMinutes
+    ) {
+      setBookingTime('')
+    }
+  }, [
+    bookingDate,
+    bookingTime,
+    bookingTimeMinutes,
+    isSameDayBookingClosed,
+    latestBookingMinutes,
+    minimumBookingMinutes,
+  ])
+
+  useEffect(() => {
+    if (!bookingTime || maxBookableHours < 1) return
+    if (numHours > maxBookableHours) {
+      setNumHours(maxBookableHours)
+    }
+  }, [bookingTime, maxBookableHours, numHours])
 
   // ─── Upload transfer slip ──────────────────────────────────────────────────
   const handleSlipUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,12 +412,33 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   // ─── Validation ────────────────────────────────────────────────────────────
   const validateStep1 = (): boolean => {
     const errs: Record<string, string> = {}
+    if (bookingDate && isSameDayBookingClosed) {
+      errs.date = 'Today is no longer available. Please choose a later date.'
+    }
     if (!bookingDate) errs.date = 'ກະລຸນາເລືອກວັນທີ'
     if (!bookingTime) errs.time = 'ກະລຸນາເລືອກເວລາ'
+    if (bookingTime) {
+      if (bookingTimeMinutes < SHOP_OPEN_MINUTES) {
+        errs.time = `Shop opens at ${minutesToTimeString(SHOP_OPEN_MINUTES)}`
+      } else if (bookingTimeMinutes > latestBookingMinutes) {
+        errs.time = `Please choose a time no later than ${minutesToTimeString(latestBookingMinutes)}`
+      } else if (isTodaySelected && bookingTimeMinutes < minimumBookingMinutes) {
+        errs.time = `For today, please choose ${minutesToTimeString(minimumBookingMinutes)} or later`
+      } else if (isTodaySelected && bookingTimeMinutes > SAME_DAY_LAST_BOOKING_MINUTES) {
+        errs.time = `For today, booking time must be ${minutesToTimeString(
+          SAME_DAY_LAST_BOOKING_MINUTES
+        )} or earlier`
+      }
+    }
     if (numPeople < 1) errs.people = 'ຕ້ອງມີຢ່າງໜ້ອຍ 1 ຄົນ'
     if (shipData && numPeople > shipData.capacity)
       errs.people = `ເກີນຄວາມຈຸຂອງເຮືອ (ສູງສຸດ ${shipData.capacity})`
     if (numHours < 1) errs.hours = 'ຕ້ອງຈອງຢ່າງໜ້ອຍ 1 ຊົ່ວໂມງ'
+    if (bookingTime && maxBookableHours < 1) {
+      errs.hours = 'This start time does not leave enough time for a 1 hour booking'
+    } else if (bookingTime && numHours > maxBookableHours) {
+      errs.hours = `From ${bookingTime}, you can book up to ${maxBookableHours} hour(s)`
+    }
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -669,12 +813,15 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   type='date'
                   className={`form-control form-control-solid ${errors.date ? 'is-invalid' : ''}`}
                   value={bookingDate}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={todayDateString}
                   onChange={(e) => {
                     setBookingDate(e.target.value)
+                    setBookingTime('')
                     setErrors((p) => {
                       const n = { ...p }
                       delete n.date
+                      delete n.time
+                      delete n.hours
                       return n
                     })
                   }}
@@ -685,24 +832,80 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
               <div className='col-6'>
                 <label className='required fw-bold fs-6 mb-2'>ເວລາ</label>
-                <input
-                  type='time'
-                  className={`form-control form-control-solid ${errors.time ? 'is-invalid' : ''}`}
-                  value={bookingTime}
-                  onChange={(e) => {
-                    setBookingTime(e.target.value)
-                    setErrors((p) => {
-                      const n = { ...p }
-                      delete n.time
-                      return n
-                    })
-                  }}
-                />
+                <div className='row g-2'>
+                  <div className='col-6'>
+                    <select
+                      className={`form-select form-select-solid ${errors.time ? 'is-invalid' : ''}`}
+                      value={selectedHour}
+                      disabled={isSameDayBookingClosed}
+                      onChange={(e) => {
+                        const nextHour = e.target.value
+                        if (!nextHour) {
+                          updateBookingTime('', '')
+                          return
+                        }
+
+                        const nextMinuteOptions = availableTimeOptions
+                          .filter((timeOption) => timeOption.startsWith(`${nextHour}:`))
+                          .map((timeOption) => timeOption.split(':')[1])
+                        const nextMinute = nextMinuteOptions.includes(selectedMinute)
+                          ? selectedMinute
+                          : nextMinuteOptions[0] ?? ''
+
+                        updateBookingTime(nextHour, nextMinute)
+                      }}
+                    >
+                      <option value=''>Hour</option>
+                      {availableHourOptions.map((hourOption) => (
+                        <option key={hourOption} value={hourOption}>
+                          {hourOption}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className='col-6'>
+                    <select
+                      className={`form-select form-select-solid ${errors.time ? 'is-invalid' : ''}`}
+                      value={selectedMinute}
+                      disabled={isSameDayBookingClosed || !selectedHour}
+                      onChange={(e) => updateBookingTime(selectedHour, e.target.value)}
+                    >
+                      <option value=''>Minute</option>
+                      {availableMinuteOptions.map((minuteOption) => (
+                        <option key={minuteOption} value={minuteOption}>
+                          {minuteOption}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 {errors.time && (
                   <div className='invalid-feedback d-block'>{errors.time}</div>
                 )}
               </div>
             </div>
+
+            {bookingDate && (
+              <div
+                className={`mb-5 p-3 rounded ${
+                  isSameDayBookingClosed ? 'bg-light-danger text-danger' : 'bg-light-info text-info'
+                }`}
+              >
+                {isTodaySelected
+                  ? isSameDayBookingClosed
+                    ? 'Today can no longer be booked because same-day booking closes after 15:00.'
+                    : `For today, booking starts from ${minutesToTimeString(
+                        minimumBookingMinutes
+                      )} and must be made by ${minutesToTimeString(
+                        SAME_DAY_LAST_BOOKING_MINUTES
+                      )}.`
+                  : `Bookings start from ${minutesToTimeString(
+                      SHOP_OPEN_MINUTES
+                    )}. You can choose any later time, but the booking must still end by ${minutesToTimeString(
+                      SHOP_CLOSE_MINUTES
+                    )}.`}
+              </div>
+            )}
 
             {/* Number of People */}
             <div className='mb-5'>
@@ -734,17 +937,32 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             <div className='mb-6'>
               <label className='required fw-bold fs-6 mb-3'>ໄລຍະເວລາ (ຊົ່ວໂມງ)</label>
               <div className='d-flex flex-wrap gap-2'>
-                {[1, 2, 3, 4, 5, 6, 8, 10, 12].map((h) => (
+                {(bookingTime ? availableDurationOptions : DURATION_OPTIONS).map((h) => (
                   <button
                     key={h}
                     type='button'
                     className={`btn btn-sm ${numHours === h ? 'btn-primary' : 'btn-light'}`}
                     onClick={() => setNumHours(h)}
+                    disabled={Boolean(bookingTime) && h > maxBookableHours}
                   >
                     {h} ຊົ່ວໂມງ
                   </button>
                 ))}
               </div>
+              {bookingTime && maxBookableHours > 0 && (
+                <div className='text-muted fs-8 mt-2'>
+                  {`From ${bookingTime}, you can book up to ${maxBookableHours} hour(s) before ${minutesToTimeString(
+                    SHOP_CLOSE_MINUTES
+                  )}.`}
+                </div>
+              )}
+              {bookingTime && maxBookableHours < 1 && (
+                <div className='text-danger fs-8 mt-2'>
+                  {`This time is too close to closing time at ${minutesToTimeString(
+                    SHOP_CLOSE_MINUTES
+                  )}.`}
+                </div>
+              )}
               {errors.hours && (
                 <div className='text-danger fs-7 mt-2'>{errors.hours}</div>
               )}
