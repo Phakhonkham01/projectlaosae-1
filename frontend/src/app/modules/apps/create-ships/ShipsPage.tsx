@@ -4,7 +4,7 @@ import {UsersListWrapper} from './users-list/Ships'
 
 const usersBreadcrumbs: Array<PageLink> = [
   {
-    title: 'Create Ships',
+    title: 'ສ້າງເຮືອ',
     path: '/apps/create-ships/ships',
     isSeparator: false,
     isActive: false,
@@ -25,7 +25,7 @@ const ShipsPage = () => {
           path='ships'
           element={
             <>
-              <PageTitle breadcrumbs={usersBreadcrumbs}>Ships list</PageTitle>
+              <PageTitle breadcrumbs={usersBreadcrumbs}>ລາຍການເຮືອ</PageTitle>
               <UsersListWrapper />
             </>
           }

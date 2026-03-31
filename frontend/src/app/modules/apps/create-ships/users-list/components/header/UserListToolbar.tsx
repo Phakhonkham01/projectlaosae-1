@@ -22,7 +22,7 @@ const UsersListToolbar = () => {
       {/* begin::Add user */}
       <button type='button' className='btn btn-primary' onClick={openAddUserModal}>
         <KTIcon iconName='plus' className='fs-2' />
-        Add Ships
+        ເພີ່ມເຮືອ
       </button>
       {/* end::Add user */}
     </div>

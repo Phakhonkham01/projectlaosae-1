@@ -13,7 +13,7 @@ import { UserCustomHeader } from './UserCustomHeader'
 const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // No (index)
   {
-    Header: () => <th className="min-w-50px text-center">No</th>,
+    Header: () => <th className="min-w-50px text-center">ລ/ດ</th>,
     id: 'no',
     Cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
   },
@@ -21,7 +21,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Ship Image - Updated to show 200x200
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Image" className="min-w-220px text-center" />
+      <UserCustomHeader tableProps={props} title="ຮູບພາບ" className="min-w-220px text-center" />
     ),
     id: 'image',
     accessor: 'image_url',
@@ -31,7 +31,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Ship Name
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Ship Name" className="min-w-200px" />
+      <UserCustomHeader tableProps={props} title="ຊື່ເຮືອ" className="min-w-200px" />
     ),
     id: 'ship_name',
     accessor: 'ship_name',
@@ -41,7 +41,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Capacity
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Capacity" className="min-w-120px text-end" />
+      <UserCustomHeader tableProps={props} title="ຄວາມຈຸ" className="min-w-120px text-end" />
     ),
     accessor: 'capacity',
     Cell: ({ value }) => <ShipCapacityCell capacity={value} />,
@@ -50,7 +50,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Price
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Price" className="min-w-120px text-end" />
+      <UserCustomHeader tableProps={props} title="ລາຄາ" className="min-w-120px text-end" />
     ),
     accessor: 'price',
     Cell: ({ value }) => <ShipPriceCell price={value} />,
@@ -59,7 +59,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Quantity
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Quantity" className="min-w-100px text-center" />
+      <UserCustomHeader tableProps={props} title="ຈຳນວນ" className="min-w-100px text-center" />
     ),
     accessor: 'quantity',
     Cell: ({ value }) => <ShipQuantityCell quantity={value} />,
@@ -68,7 +68,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Status
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Status" className="min-w-100px text-center" />
+      <UserCustomHeader tableProps={props} title="ສະຖານະ" className="min-w-100px text-center" />
     ),
     accessor: 'status',
     Cell: ({ value }) => <ShipStatusCell status={value} />,
@@ -77,7 +77,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
   // Actions
   {
     Header: (props) => (
-      <UserCustomHeader tableProps={props} title="Actions" className="text-end min-w-100px" />
+      <UserCustomHeader tableProps={props} title="ຈັດການ" className="text-end min-w-100px" />
     ),
     id: 'actions',
     Cell: ({ row }) => <ShipActionsCell id={row.original.id} />,

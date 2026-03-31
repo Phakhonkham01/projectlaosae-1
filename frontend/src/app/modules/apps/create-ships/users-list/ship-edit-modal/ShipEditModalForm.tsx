@@ -50,8 +50,8 @@ const ShipEditModalForm: FC = () => {
           } else {
             Swal.fire({
               icon: 'error',
-              title: 'Error!',
-              text: 'Ship not found',
+              title: 'ຜິດພາດ!',
+              text: 'ບໍ່ພົບຂໍ້ມູນເຮືອ',
             })
             setItemIdForUpdate(undefined)
           }
@@ -59,8 +59,8 @@ const ShipEditModalForm: FC = () => {
           console.error('Error fetching ship:', error)
           Swal.fire({
             icon: 'error',
-            title: 'Error!',
-            text: 'Failed to load ship data',
+            title: 'ຜິດພາດ!',
+            text: 'ໂຫຼດຂໍ້ມູນເຮືອບໍ່ສຳເລັດ',
           })
         } finally {
           setLoading(false)
@@ -91,8 +91,8 @@ const ShipEditModalForm: FC = () => {
     if (!file.type.startsWith('image/')) {
       Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: 'Please upload an image file',
+        title: 'ຜິດພາດ!',
+        text: 'ກະລຸນາອັບໂຫຼດໄຟລ໌ຮູບພາບ',
       })
       return
     }
@@ -101,8 +101,8 @@ const ShipEditModalForm: FC = () => {
     if (file.size > 5 * 1024 * 1024) {
       Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: 'Image size should be less than 5MB',
+        title: 'ຜິດພາດ!',
+        text: 'ຂະໜາດຮູບພາບຕ້ອງນ້ອຍກວ່າ 5MB',
       })
       return
     }
@@ -139,8 +139,8 @@ const ShipEditModalForm: FC = () => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: 'Image uploaded successfully',
+        title: 'ສຳເລັດ!',
+        text: 'ອັບໂຫຼດຮູບພາບສຳເລັດ',
         timer: 1500,
         showConfirmButton: false,
       })
@@ -148,8 +148,8 @@ const ShipEditModalForm: FC = () => {
       console.error('Error uploading image:', error)
       Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: 'Failed to upload image',
+        title: 'ຜິດພາດ!',
+        text: 'ອັບໂຫຼດຮູບພາບບໍ່ສຳເລັດ',
       })
     } finally {
       setUploadingImage(false)
@@ -177,8 +177,8 @@ const ShipEditModalForm: FC = () => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: 'Image removed successfully',
+        title: 'ສຳເລັດ!',
+        text: 'ລຶບຮູບພາບສຳເລັດ',
         timer: 1500,
         showConfirmButton: false,
       })
@@ -186,8 +186,8 @@ const ShipEditModalForm: FC = () => {
       console.error('Error removing image:', error)
       Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: 'Failed to remove image',
+        title: 'ຜິດພາດ!',
+        text: 'ລຶບຮູບພາບບໍ່ສຳເລັດ',
       })
     }
   }
@@ -197,19 +197,19 @@ const ShipEditModalForm: FC = () => {
     const newErrors: { [key: string]: string } = {}
 
     if (!formData.ship_name.trim()) {
-      newErrors.ship_name = 'Ship name is required'
+      newErrors.ship_name = 'ກະລຸນາໃສ່ຊື່ເຮືອ'
     }
 
     if (formData.capacity <= 0) {
-      newErrors.capacity = 'Capacity must be greater than 0'
+      newErrors.capacity = 'ຄວາມຈຸຕ້ອງຫຼາຍກວ່າ 0'
     }
 
     if (formData.price <= 0) {
-      newErrors.price = 'Price must be greater than 0'
+      newErrors.price = 'ລາຄາຕ້ອງຫຼາຍກວ່າ 0'
     }
 
     if (formData.quantity < 0) {
-      newErrors.quantity = 'Quantity cannot be negative'
+      newErrors.quantity = 'ຈຳນວນຕ້ອງບໍ່ຕິດລົບ'
     }
 
     setErrors(newErrors)
@@ -235,8 +235,8 @@ const ShipEditModalForm: FC = () => {
       onSuccess: () => {
         Swal.fire({
           icon: 'success',
-          title: 'Success!',
-          text: 'Ship created successfully',
+          title: 'ສຳເລັດ!',
+          text: 'ສ້າງເຮືອສຳເລັດ',
           timer: 2000,
           showConfirmButton: false,
         })
@@ -248,8 +248,8 @@ const ShipEditModalForm: FC = () => {
         console.error('Create error:', error)
         Swal.fire({
           icon: 'error',
-          title: 'Error!',
-          text: error.message || 'Failed to create ship',
+          title: 'ຜິດພາດ!',
+          text: error.message || 'ສ້າງເຮືອບໍ່ສຳເລັດ',
         })
       },
     }
@@ -258,7 +258,7 @@ const ShipEditModalForm: FC = () => {
   // Update mutation
   const updateMutation = useMutation(
     async () => {
-      if (!itemIdForUpdate) throw new Error('No ship ID provided')
+      if (!itemIdForUpdate) throw new Error('ບໍ່ພົບ ID ຂອງເຮືອ')
       
       const shipRef = doc(db, 'ships', itemIdForUpdate)
       await updateDoc(shipRef, {
@@ -277,8 +277,8 @@ const ShipEditModalForm: FC = () => {
       onSuccess: () => {
         Swal.fire({
           icon: 'success',
-          title: 'Success!',
-          text: 'Ship updated successfully',
+          title: 'ສຳເລັດ!',
+          text: 'ອັບເດດເຮືອສຳເລັດ',
           timer: 2000,
           showConfirmButton: false,
         })
@@ -290,8 +290,8 @@ const ShipEditModalForm: FC = () => {
         console.error('Update error:', error)
         Swal.fire({
           icon: 'error',
-          title: 'Error!',
-          text: error.message || 'Failed to update ship',
+          title: 'ຜິດພາດ!',
+          text: error.message || 'ອັບເດດເຮືອບໍ່ສຳເລັດ',
         })
       },
     }
@@ -346,7 +346,7 @@ const ShipEditModalForm: FC = () => {
       {/* Modal Header */}
       <div className="modal-header">
         <h2 className="fw-bold">
-          {itemIdForUpdate ? 'Edit Ship' : 'Add New Ship'}
+          {itemIdForUpdate ? 'ແກ້ໄຂເຮືອ' : 'ເພີ່ມເຮືອໃໝ່'}
         </h2>
         <div
           className="btn btn-icon btn-sm btn-active-icon-primary"
@@ -362,12 +362,12 @@ const ShipEditModalForm: FC = () => {
         <form id="ship_form" onSubmit={handleSubmit}>
           {/* Ship Name (replaces both Name and Ship Name) */}
           <div className="mb-7">
-            <label className="required fw-bold fs-6 mb-2">Ship Name</label>
+            <label className="required fw-bold fs-6 mb-2">ຊື່ເຮືອ</label>
             <input
               type="text"
               name="ship_name"
               className={`form-control form-control-solid mb-3 mb-lg-0 ${errors.ship_name ? 'is-invalid' : ''}`}
-              placeholder="Enter ship name"
+              placeholder="ປ້ອນຊື່ເຮືອ"
               value={formData.ship_name}
               onChange={handleChange}
               disabled={loading || uploadingImage}
@@ -379,12 +379,12 @@ const ShipEditModalForm: FC = () => {
 
           {/* Capacity */}
           <div className="mb-7">
-            <label className="required fw-bold fs-6 mb-2">Capacity</label>
+            <label className="required fw-bold fs-6 mb-2">ຄວາມຈຸ</label>
             <input
               type="number"
               name="capacity"
               className={`form-control form-control-solid mb-3 mb-lg-0 ${errors.capacity ? 'is-invalid' : ''}`}
-              placeholder="Enter capacity"
+              placeholder="ປ້ອນຄວາມຈຸ"
               value={formData.capacity}
               onChange={handleChange}
               min="0"
@@ -398,12 +398,12 @@ const ShipEditModalForm: FC = () => {
 
           {/* Price */}
           <div className="mb-7">
-            <label className="required fw-bold fs-6 mb-2">Price</label>
+            <label className="required fw-bold fs-6 mb-2">ລາຄາ</label>
             <input
               type="number"
               name="price"
               className={`form-control form-control-solid mb-3 mb-lg-0 ${errors.price ? 'is-invalid' : ''}`}
-              placeholder="Enter price"
+              placeholder="ປ້ອນລາຄາ"
               value={formData.price}
               onChange={handleChange}
               min="0"
@@ -417,12 +417,12 @@ const ShipEditModalForm: FC = () => {
 
           {/* Quantity */}
           <div className="mb-7">
-            <label className="required fw-bold fs-6 mb-2">Quantity</label>
+            <label className="required fw-bold fs-6 mb-2">ຈຳນວນ</label>
             <input
               type="number"
               name="quantity"
               className={`form-control form-control-solid mb-3 mb-lg-0 ${errors.quantity ? 'is-invalid' : ''}`}
-              placeholder="Enter quantity"
+              placeholder="ປ້ອນຈຳນວນ"
               value={formData.quantity}
               onChange={handleChange}
               min="0"
@@ -436,7 +436,7 @@ const ShipEditModalForm: FC = () => {
 
           {/* Image Upload */}
           <div className="mb-7">
-            <label className="fw-bold fs-6 mb-2">Ship Image</label>
+            <label className="fw-bold fs-6 mb-2">ຮູບເຮືອ</label>
             
             {/* Image Preview */}
             {formData.image_url && (
@@ -444,7 +444,7 @@ const ShipEditModalForm: FC = () => {
                 <div className="position-relative d-inline-block">
                   <img
                     src={formData.image_url}
-                    alt="Ship preview"
+                    alt="ຕົວຢ່າງຮູບເຮືອ"
                     className="img-thumbnail"
                     style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover' }}
                   />
@@ -480,12 +480,12 @@ const ShipEditModalForm: FC = () => {
                 {uploadingImage ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2"></span>
-                    Uploading...
+                    ກຳລັງອັບໂຫຼດ...
                   </>
                 ) : (
                   <>
                     <KTIcon iconName="folder-up" className="fs-2 me-2" />
-                    {formData.image_url ? 'Change Image' : 'Upload Image'}
+                    {formData.image_url ? 'ປ່ຽນຮູບພາບ' : 'ອັບໂຫຼດຮູບພາບ'}
                   </>
                 )}
               </button>
@@ -493,19 +493,19 @@ const ShipEditModalForm: FC = () => {
               {formData.image_url && (
                 <span className="text-success">
                   <KTIcon iconName="check-circle" className="fs-2 me-1" />
-                  Image uploaded
+                  ອັບໂຫຼດຮູບພາບແລ້ວ
                 </span>
               )}
             </div>
 
             <div className="form-text text-muted mt-2">
-              Supported formats: JPG, PNG, GIF. Max size: 5MB
+              ຮອງຮັບ: JPG, PNG, GIF. ຂະໜາດສູງສຸດ: 5MB
             </div>
           </div>
 
           {/* Status */}
           <div className="mb-7">
-            <label className="required fw-bold fs-6 mb-2">Status</label>
+            <label className="required fw-bold fs-6 mb-2">ສະຖານະ</label>
             <select
               name="status"
               className="form-select form-select-solid"
@@ -513,9 +513,9 @@ const ShipEditModalForm: FC = () => {
               onChange={handleChange}
               disabled={loading || uploadingImage}
             >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Maintenance">Maintenance</option>
+              <option value="Active">ພ້ອມໃຊ້ງານ</option>
+              <option value="Inactive">ບໍ່ພ້ອມໃຊ້ງານ</option>
+              <option value="Maintenance">ກຳລັງບຳລຸງຮັກສາ</option>
             </select>
           </div>
         </form>
@@ -529,7 +529,7 @@ const ShipEditModalForm: FC = () => {
           onClick={() => setItemIdForUpdate(undefined)}
           disabled={loading || uploadingImage}
         >
-          Cancel
+          ຍົກເລີກ
         </button>
         <button
           type="submit"
@@ -540,10 +540,10 @@ const ShipEditModalForm: FC = () => {
           {loading ? (
             <>
               <span className="spinner-border spinner-border-sm me-2"></span>
-              {itemIdForUpdate ? 'Updating...' : 'Creating...'}
+              {itemIdForUpdate ? 'ກຳລັງອັບເດດ...' : 'ກຳລັງສ້າງ...'}
             </>
           ) : (
-            <>{itemIdForUpdate ? 'Update Ship' : 'Create Ship'}</>
+            <>{itemIdForUpdate ? 'ອັບເດດເຮືອ' : 'ສ້າງເຮືອ'}</>
           )}
         </button>
       </div>

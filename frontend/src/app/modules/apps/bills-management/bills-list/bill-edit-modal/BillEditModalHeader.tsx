@@ -7,7 +7,7 @@ const BookingShipEditModalHeader = () => {
   return (
     <div className='modal-header'>
       {/* begin::Modal title */}
-      <h2 className='fw-bolder'>{itemIdForUpdate == null ? " " : "Booking Ship"}</h2>
+      <h2 className='fw-bolder'>{itemIdForUpdate == null ? ' ' : 'ກວດສອບບິນ'}</h2>
       {/* end::Modal title */}
 
       {/* begin::Close */}

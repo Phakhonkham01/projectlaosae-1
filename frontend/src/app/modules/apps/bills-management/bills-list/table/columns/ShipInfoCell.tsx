@@ -14,7 +14,7 @@ const ShipInfoCell: FC<Props> = ({ ship_name, status }) => {
         </span>
         {status && (
           <span className="text-gray-600 fw-semibold d-block fs-7">
-            Status: {status}
+            ສະຖານະ: {status}
           </span>
         )}
       </div>

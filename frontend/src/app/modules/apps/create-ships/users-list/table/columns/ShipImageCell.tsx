@@ -20,7 +20,7 @@ const ShipImageCell: FC<Props> = ({ image_url }) => {
         {image_url ? (
           <img 
             src={image_url} 
-            alt="ship" 
+            alt="ເຮືອ" 
             className="symbol-label"
             style={{ 
               width: '200px', 

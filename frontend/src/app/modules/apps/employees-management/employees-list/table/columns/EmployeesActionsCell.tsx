@@ -10,10 +10,22 @@ type Props = {
   id: string
 }
 
+const getCurrentUser = (): { _id?: string; role?: string } | null => {
+  try {
+    const raw = localStorage.getItem('user')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 const EmployeesActionsCell: FC<Props> = ({ id }) => {
   const { setItemIdForUpdate } = useListView()
   const { query } = useQueryResponse()
   const queryClient = useQueryClient()
+  const currentUser = getCurrentUser()
+  const isOwnAccount = currentUser?._id === id
+  const shouldBlockSelfDelete = currentUser?.role === 'employee' && isOwnAccount
 
   const deleteMutation = useMutation(() => deleteUser(id), {
     onSuccess: () => {
@@ -23,6 +35,15 @@ const EmployeesActionsCell: FC<Props> = ({ id }) => {
   })
 
   const handleDelete = () => {
+    if (shouldBlockSelfDelete) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ບໍ່ສາມາດລຶບບັນຊີຂອງຕົນເອງໄດ້',
+        text: 'ພະນັກງານທີ່ກຳລັງ login ບໍ່ສາມາດລຶບບັນຊີຂອງຕົນເອງໄດ້',
+      })
+      return
+    }
+
     Swal.fire({
       icon: 'warning',
       title: 'Are you sure?',
@@ -40,7 +61,12 @@ const EmployeesActionsCell: FC<Props> = ({ id }) => {
       <button className="btn btn-icon btn-light-primary btn-sm" onClick={() => setItemIdForUpdate(id)}>
         <KTIcon iconName="pencil" className="fs-3" />
       </button>
-      <button className="btn btn-icon btn-light-danger btn-sm" onClick={handleDelete}>
+      <button
+        className="btn btn-icon btn-light-danger btn-sm"
+        onClick={handleDelete}
+        disabled={shouldBlockSelfDelete}
+        title={shouldBlockSelfDelete ? 'You cannot delete your own account' : undefined}
+      >
         <KTIcon iconName="trash" className="fs-3" />
       </button>
     </div>

@@ -2,7 +2,7 @@ import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, 
 import { db } from '../../../../../../../../firebase/useFirebase'
 import { HistoryBooking } from './_models'
 
-const COLLECTION = 'history_booking'
+const COLLECTION = 'bill'
 
 // Get all history
 export const getHistoryBookings = async (): Promise<HistoryBooking[]> => {

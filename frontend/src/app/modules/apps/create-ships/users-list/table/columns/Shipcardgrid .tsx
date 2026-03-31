@@ -62,7 +62,7 @@ const ShipCardGrid: React.FC<ShipCardGridProps> = ({ data }) => {
         {data.length === 0 ? (
           <div className='col-12'>
             <div className='d-flex text-center w-100 align-content-center justify-content-center py-10'>
-              <span className='text-muted fs-5'>No ships found</span>
+              <span className='text-muted fs-5'>ບໍ່ພົບຂໍ້ມູນເຮືອ</span>
             </div>
           </div>
         ) : (

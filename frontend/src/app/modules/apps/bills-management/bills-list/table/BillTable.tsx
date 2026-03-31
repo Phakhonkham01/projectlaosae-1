@@ -31,17 +31,21 @@ const SUMMARY_ITEM_BASE_STYLE = {
 type PaymentMethodTab = 'cash' | 'transfer'
 type StatusTab = 'all' | PaymentStatus
 
-const statusTabs: { label: string; value: StatusTab }[] = [
-  { label: 'All',          value: 'all'           },
-  { label: 'Pending',      value: 'pending'        },
-  { label: 'Slip Submit',  value: 'slip_submitted' },
-  { label: 'Approved',     value: 'approved'       },
-  { label: 'Rejected',     value: 'rejected'       },
-  { label: 'Re-Submitted', value: 're_submitted'   },
+const statusTabs: {label: string; value: StatusTab}[] = [
+  {label: 'ທັງໝົດ', value: 'all'},
+  {label: 'ລໍຖ້າ', value: 'pending'},
+  {label: 'ອະນຸມັດແລ້ວ', value: 'approved'},
+  {label: 'ປະຕິເສດແລ້ວ', value: 'rejected'},
+  {label: 'ການຊຳລະລົ້ມເຫຼວ', value: 'payment failed'},
 ]
 
 const BillSummaryCard = ({
-  title, count, total, pendingCount, isActive, onClick,
+  title,
+  count,
+  total,
+  pendingCount,
+  isActive,
+  onClick,
 }: {
   title: string
   count: number
@@ -50,9 +54,7 @@ const BillSummaryCard = ({
   isActive: boolean
   onClick: () => void
 }) => {
-  const accentStyle = isActive
-    ? { border: '1px solid #6c7c', boxShadow: '0 0 0 2px #6c7c inset' }
-    : {}
+  const accentStyle = isActive ? {border: '1px solid #6c7c', boxShadow: '0 0 0 2px #6c7c inset'} : {}
 
   return (
     <div className='col-md-6'>
@@ -64,22 +66,25 @@ const BillSummaryCard = ({
       >
         <div className='d-flex align-items-start justify-content-between mb-3'>
           <div>
-            <div className='fw-semibold text-uppercase' style={{fontSize: '11px', letterSpacing: '0.12em', color: '#9fb0c9'}}>
+            <div
+              className='fw-semibold text-uppercase'
+              style={{fontSize: '11px', letterSpacing: '0.12em', color: '#9fb0c9'}}
+            >
               {title}
             </div>
             <div className='fw-bold mt-1' style={{fontSize: '24px', color: '#ffffff'}}>
               {count}
             </div>
           </div>
-          {pendingCount > 0 && (
-            <span className='badge badge-danger' style={{minWidth: '28px'}}>{pendingCount}</span>
-          )}
+          {pendingCount > 0 && <span className='badge badge-danger' style={{minWidth: '28px'}}>{pendingCount}</span>}
         </div>
         <div className='d-flex justify-content-between align-items-end'>
-          <div style={{color: '#c3d0e5', fontSize: '12px'}}>bill(s)</div>
+          <div style={{color: '#c3d0e5', fontSize: '12px'}}>ບິນ</div>
           <div className='text-end'>
-            <div className='fw-bold' style={{fontSize: '14px', color: '#f8fbff'}}>{formatCurrency(total)}</div>
-            <div style={{color: '#93a4bf', fontSize: '11px'}}>total amount</div>
+            <div className='fw-bold' style={{fontSize: '14px', color: '#f8fbff'}}>
+              {formatCurrency(total)}
+            </div>
+            <div style={{color: '#93a4bf', fontSize: '11px'}}>ຍອດລວມ</div>
           </div>
         </div>
       </button>
@@ -88,7 +93,14 @@ const BillSummaryCard = ({
 }
 
 const BillSection = ({
-  title, emptyText, bills, onEdit, pendingCount, activeStatus, onStatusChange, counts,
+  title,
+  emptyText,
+  bills,
+  onEdit,
+  pendingCount,
+  activeStatus,
+  onStatusChange,
+  counts,
 }: {
   title: string
   emptyText: string
@@ -106,9 +118,8 @@ const BillSection = ({
         {pendingCount > 0 && <span className='badge badge-danger'>{pendingCount}</span>}
       </div>
 
-      {/* Status Tabs */}
       <ul className='nav nav-tabs nav-line-tabs nav-stretch fs-7 border-0'>
-        {statusTabs.map(tab => (
+        {statusTabs.map((tab) => (
           <li key={tab.value} className='nav-item'>
             <a
               className={`nav-link fw-bold ${activeStatus === tab.value ? 'active' : 'text-muted'}`}
@@ -133,13 +144,13 @@ const BillSection = ({
           <table className='table align-middle table-row-dashed fs-6 gy-4'>
             <thead>
               <tr className='text-start text-muted fw-bolder fs-7 text-uppercase gs-0'>
-                <th>Bill</th>
-                <th>Customer</th>
-                <th>Booking Date</th>
-                <th>Ship</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th className='text-end'>Action</th>
+                <th>ບິນ</th>
+                <th>ລູກຄ້າ</th>
+                <th>ວັນທີຈອງ</th>
+                <th>ເຮືອ</th>
+                <th>ລວມ</th>
+                <th>ສະຖານະ</th>
+                <th className='text-end'>ຈັດການ</th>
               </tr>
             </thead>
             <tbody className='fw-semibold text-gray-700'>
@@ -165,12 +176,8 @@ const BillSection = ({
                       <span className={`badge ${statusMeta.badgeClass}`}>{statusMeta.label}</span>
                     </td>
                     <td className='text-end'>
-                      <button
-                        type='button'
-                        className='btn btn-sm btn-light-primary'
-                        onClick={() => onEdit(bill.id)}
-                      >
-                        Edit Status
+                      <button type='button' className='btn btn-sm btn-light-primary' onClick={() => onEdit(bill.id)}>
+                        ແກ້ໄຂສະຖານະ
                       </button>
                     </td>
                   </tr>
@@ -191,38 +198,38 @@ const ShipTable = () => {
   const [activeTab, setActiveTab] = useState<PaymentMethodTab>('cash')
   const [activeStatus, setActiveStatus] = useState<StatusTab>('all')
 
-  const cashBills = useMemo(() => bills.filter(b => b.payment_method === 'cash'), [bills])
-  const transferBills = useMemo(() => bills.filter(b => b.payment_method === 'transfer'), [bills])
+  const cashBills = useMemo(() => bills.filter((b) => b.payment_method === 'cash'), [bills])
+  const transferBills = useMemo(() => bills.filter((b) => b.payment_method === 'transfer'), [bills])
 
   const cashTotal = useMemo(() => cashBills.reduce((s, b) => s + (b.grand_total || 0), 0), [cashBills])
-  const cashPendingCount = useMemo(() => cashBills.filter(b => b.payment_status === 'pending').length, [cashBills])
+  const cashPendingCount = useMemo(() => cashBills.filter((b) => b.payment_status === 'pending').length, [cashBills])
   const transferTotal = useMemo(() => transferBills.reduce((s, b) => s + (b.grand_total || 0), 0), [transferBills])
-  const transferPendingCount = useMemo(() => transferBills.filter(b => b.payment_status === 'pending').length, [transferBills])
+  const transferPendingCount = useMemo(
+    () => transferBills.filter((b) => b.payment_status === 'pending').length,
+    [transferBills]
+  )
 
   const methodBills = activeTab === 'cash' ? cashBills : transferBills
 
-  // filter by status
-  const filteredBills = useMemo(() =>
-    activeStatus === 'all' ? methodBills : methodBills.filter(b => b.payment_status === activeStatus),
+  const filteredBills = useMemo(
+    () => (activeStatus === 'all' ? methodBills : methodBills.filter((b) => b.payment_status === activeStatus)),
     [methodBills, activeStatus]
   )
 
-  // count per status tab
-  const statusCounts = useMemo(() =>
-    statusTabs.reduce((acc, tab) => {
-      acc[tab.value] = tab.value === 'all'
-        ? methodBills.length
-        : methodBills.filter(b => b.payment_status === tab.value).length
-      return acc
-    }, {} as Record<StatusTab, number>),
+  const statusCounts = useMemo(
+    () =>
+      statusTabs.reduce((acc, tab) => {
+        acc[tab.value] =
+          tab.value === 'all' ? methodBills.length : methodBills.filter((b) => b.payment_status === tab.value).length
+        return acc
+      }, {} as Record<StatusTab, number>),
     [methodBills]
   )
 
   const activePendingCount = activeTab === 'cash' ? cashPendingCount : transferPendingCount
-  const activeTitle = activeTab === 'cash' ? 'Cash Bills' : 'Transfer Bills'
-  const activeEmptyText = activeTab === 'cash'
-    ? 'No cash bills found for this filter.'
-    : 'No transfer bills found for this filter.'
+  const activeTitle = activeTab === 'cash' ? 'ບິນເງິນສົດ' : 'ບິນໂອນເງິນ'
+  const activeEmptyText =
+    activeTab === 'cash' ? 'ບໍ່ພົບບິນເງິນສົດຕາມຕົວກອງນີ້' : 'ບໍ່ພົບບິນໂອນເງິນຕາມຕົວກອງນີ້'
 
   return (
     <KTCardBody className='py-4'>
@@ -230,20 +237,26 @@ const ShipTable = () => {
         <div className='card-body py-5 px-5 px-md-7'>
           <div className='row g-4'>
             <BillSummaryCard
-              title='Cash Bills'
+              title='ບິນເງິນສົດ'
               count={cashBills.length}
               total={cashTotal}
               pendingCount={cashPendingCount}
               isActive={activeTab === 'cash'}
-              onClick={() => { setActiveTab('cash'); setActiveStatus('all') }}
+              onClick={() => {
+                setActiveTab('cash')
+                setActiveStatus('all')
+              }}
             />
             <BillSummaryCard
-              title='Transfer Bills'
+              title='ບິນໂອນເງິນ'
               count={transferBills.length}
               total={transferTotal}
               pendingCount={transferPendingCount}
               isActive={activeTab === 'transfer'}
-              onClick={() => { setActiveTab('transfer'); setActiveStatus('all') }}
+              onClick={() => {
+                setActiveTab('transfer')
+                setActiveStatus('all')
+              }}
             />
           </div>
         </div>

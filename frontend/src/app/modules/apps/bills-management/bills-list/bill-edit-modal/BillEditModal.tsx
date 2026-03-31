@@ -6,6 +6,9 @@ import {PAYMENT_STATUS_META, PAYMENT_STATUS_OPTIONS} from '../core/bill_models'
 import {updateBillStatus} from '../core/bill_requests'
 import {useQueryResponse, useQueryResponseData} from '../core/QueryResponseProvider'
 
+const defaultPaymentStatus = PAYMENT_STATUS_OPTIONS[0]
+const defaultPaymentStatusMeta = PAYMENT_STATUS_META[defaultPaymentStatus]
+
 const BookingShipEditModal = () => {
   const {itemIdForUpdate, setItemIdForUpdate} = useListView()
   const {refetch} = useQueryResponse()
@@ -26,7 +29,10 @@ const BookingShipEditModal = () => {
   }, [])
 
   useEffect(() => {
-    setPaymentStatus(bill?.payment_status || '')
+    const currentStatus = bill?.payment_status
+    const safeStatus =
+      currentStatus && currentStatus in PAYMENT_STATUS_META ? currentStatus : defaultPaymentStatus
+    setPaymentStatus(safeStatus)
     setRejectReason(bill?.reject_reason || '')
   }, [bill])
 
@@ -40,8 +46,8 @@ const BookingShipEditModal = () => {
     if (paymentStatus === 'rejected' && !rejectReason.trim()) {
       Swal.fire({
         icon: 'warning',
-        title: 'Reject reason required',
-        text: 'Please enter a reason when rejecting a bill.',
+        title: 'ຈຳເປັນຕ້ອງໃສ່ເຫດຜົນ',
+        text: 'ກະລຸນາໃສ່ເຫດຜົນເມື່ອປະຕິເສດບິນ',
       })
       return
     }
@@ -56,7 +62,7 @@ const BookingShipEditModal = () => {
       await refetch()
       Swal.fire({
         icon: 'success',
-        title: 'Bill updated',
+        title: 'ອັບເດດບິນແລ້ວ',
         timer: 1400,
         showConfirmButton: false,
       })
@@ -65,8 +71,8 @@ const BookingShipEditModal = () => {
       console.error(error)
       Swal.fire({
         icon: 'error',
-        title: 'Update failed',
-        text: 'Could not update this bill status.',
+        title: 'ອັບເດດບໍ່ສຳເລັດ',
+        text: 'ບໍ່ສາມາດອັບເດດສະຖານະບິນນີ້ໄດ້',
       })
     } finally {
       setIsSaving(false)
@@ -77,7 +83,7 @@ const BookingShipEditModal = () => {
     return null
   }
 
-  const paymentStatusMeta = PAYMENT_STATUS_META[bill.payment_status]
+  const paymentStatusMeta = PAYMENT_STATUS_META[bill.payment_status] ?? defaultPaymentStatusMeta
 
   return (
     <>
@@ -92,7 +98,7 @@ const BookingShipEditModal = () => {
           <div className='modal-content'>
             <div className='modal-header'>
               <div>
-                <h2 className='fw-bold mb-1'>Edit Bill Status</h2>
+                <h2 className='fw-bold mb-1'>ແກ້ໄຂສະຖານະບິນ</h2>
                 <div className='text-muted fs-7'>#{bill.id.slice(0, 8).toUpperCase()}</div>
               </div>
               <button
@@ -109,7 +115,7 @@ const BookingShipEditModal = () => {
                 <div className='col-xl-4 col-md-6'>
                   <div className='card bg-light-primary border-0 h-100'>
                     <div className='card-body'>
-                      <div className='text-muted fs-7 mb-2'>Customer</div>
+                      <div className='text-muted fs-7 mb-2'>ລູກຄ້າ</div>
                       <div className='fw-bold fs-4'>{bill.user_name || '-'}</div>
                       <div className='text-muted'>{bill.user_email || '-'}</div>
                     </div>
@@ -118,12 +124,12 @@ const BookingShipEditModal = () => {
                 <div className='col-xl-4 col-md-6'>
                   <div className='card bg-light-success border-0 h-100'>
                     <div className='card-body'>
-                      <div className='text-muted fs-7 mb-2'>Bill Total</div>
+                      <div className='text-muted fs-7 mb-2'>ຍອດບິນລວມ</div>
                       <div className='fw-bold fs-2 text-success'>
                         {bill.grand_total.toLocaleString()} LAK
                       </div>
                       <div className='text-muted text-capitalize'>
-                        {bill.payment_method} payment
+                        {bill.payment_method === 'cash' ? 'ຊຳລະເງິນສົດ' : 'ຊຳລະໂດຍໂອນເງິນ'}
                       </div>
                     </div>
                   </div>
@@ -131,12 +137,12 @@ const BookingShipEditModal = () => {
                 <div className='col-xl-4 col-md-12'>
                   <div className='card bg-light-warning border-0 h-100'>
                     <div className='card-body'>
-                      <div className='text-muted fs-7 mb-2'>Current Status</div>
+                      <div className='text-muted fs-7 mb-2'>ສະຖານະປັດຈຸບັນ</div>
                       <div className={`badge ${paymentStatusMeta.badgeClass} fw-bold fs-7 mb-3`}>
                         {paymentStatusMeta.label}
                       </div>
-                      <div className='text-muted fs-7'>Foods</div>
-                      <div className='fw-bold fs-3'>{bill.foods?.length || 0} items</div>
+                      <div className='text-muted fs-7'>ອາຫານ</div>
+                      <div className='fw-bold fs-3'>{bill.foods?.length || 0} ລາຍການ</div>
                     </div>
                   </div>
                 </div>
@@ -146,18 +152,20 @@ const BookingShipEditModal = () => {
                 <div className='card-body py-6'>
                   <div className='row g-6'>
                     <div className='col-md-4'>
-                      <div className='text-muted fs-7 mb-2'>Booking Date</div>
+                      <div className='text-muted fs-7 mb-2'>ວັນທີຈອງ</div>
                       <div className='fw-bold fs-6'>
                         {bill.booking_date || '-'} {bill.booking_time || ''}
                       </div>
                     </div>
                     <div className='col-md-4'>
-                      <div className='text-muted fs-7 mb-2'>Ship</div>
+                      <div className='text-muted fs-7 mb-2'>ເຮືອ</div>
                       <div className='fw-bold fs-6'>{bill.ship_name || '-'}</div>
                     </div>
                     <div className='col-md-4'>
-                      <div className='text-muted fs-7 mb-2'>Payment Method</div>
-                      <div className='fw-bold fs-6 text-capitalize'>{bill.payment_method || '-'}</div>
+                      <div className='text-muted fs-7 mb-2'>ວິທີຊຳລະ</div>
+                      <div className='fw-bold fs-6 text-capitalize'>
+                        {bill.payment_method === 'cash' ? 'ເງິນສົດ' : bill.payment_method === 'transfer' ? 'ໂອນເງິນ' : '-'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -168,7 +176,7 @@ const BookingShipEditModal = () => {
                   <div className='card border border-gray-200 h-100'>
                     <div className='card-header border-0 pt-6'>
                       <div className='card-title'>
-                        <h3 className='fw-bold m-0'>Foods in Bill</h3>
+                        <h3 className='fw-bold m-0'>ລາຍການອາຫານໃນບິນ</h3>
                       </div>
                     </div>
                     <div className='card-body pt-0'>
@@ -177,10 +185,10 @@ const BookingShipEditModal = () => {
                           <table className='table align-middle table-row-dashed gy-4'>
                             <thead>
                               <tr className='text-muted fw-bold fs-7 text-uppercase gs-0'>
-                                <th>Food</th>
-                                <th className='text-center'>Qty</th>
-                                <th className='text-end'>Price</th>
-                                <th className='text-end'>Total</th>
+                                <th>ອາຫານ</th>
+                                <th className='text-center'>ຈຳນວນ</th>
+                                <th className='text-end'>ລາຄາ</th>
+                                <th className='text-end'>ລວມ</th>
                               </tr>
                             </thead>
                             <tbody className='fw-semibold text-gray-700'>
@@ -190,7 +198,7 @@ const BookingShipEditModal = () => {
                                     <div className='d-flex flex-column'>
                                       <span className='fw-bold text-gray-900'>{food.name}</span>
                                       <span className='text-muted fs-7'>
-                                        ID: {food.product_id || '-'}
+                                        ລະຫັດ: {food.product_id || '-'}
                                       </span>
                                     </div>
                                   </td>
@@ -207,14 +215,14 @@ const BookingShipEditModal = () => {
                       ) : (
                         <div className='d-flex flex-column align-items-center justify-content-center py-10 text-center'>
                           <i className='bi bi-basket2 text-muted fs-1 mb-3'></i>
-                          <div className='fw-bold fs-5 text-gray-800 mb-1'>No foods in this bill</div>
-                          <div className='text-muted fs-7'>This booking only contains ship charges.</div>
+                          <div className='fw-bold fs-5 text-gray-800 mb-1'>ບິນນີ້ບໍ່ມີລາຍການອາຫານ</div>
+                          <div className='text-muted fs-7'>ການຈອງນີ້ມີສະເພາະຄ່າເຮືອເທົ່ານັ້ນ</div>
                         </div>
                       )}
 
                       <div className='separator separator-dashed my-5'></div>
                       <div className='d-flex justify-content-between align-items-center'>
-                        <span className='text-muted fw-semibold'>Food Total</span>
+                        <span className='text-muted fw-semibold'>ລວມຄ່າອາຫານ</span>
                         <span className='fw-bold fs-4 text-primary'>
                           {bill.total_food_price.toLocaleString()} LAK
                         </span>
@@ -227,12 +235,12 @@ const BookingShipEditModal = () => {
                   <div className='card border border-gray-200 mb-8'>
                     <div className='card-header border-0 pt-6'>
                       <div className='card-title'>
-                        <h3 className='fw-bold m-0'>Update Status</h3>
+                        <h3 className='fw-bold m-0'>ອັບເດດສະຖານະ</h3>
                       </div>
                     </div>
                     <div className='card-body pt-0'>
                       <div className='mb-7'>
-                        <label className='form-label fw-bold'>Payment Status</label>
+                        <label className='form-label fw-bold'>ສະຖານະການຊຳລະ</label>
                         <select
                           className='form-select form-select-solid'
                           value={paymentStatus}
@@ -248,13 +256,13 @@ const BookingShipEditModal = () => {
 
                       {paymentStatus === 'rejected' && (
                         <div className='mb-0'>
-                          <label className='form-label fw-bold'>Reject Reason</label>
+                          <label className='form-label fw-bold'>ເຫດຜົນການປະຕິເສດ</label>
                           <textarea
                             className='form-control form-control-solid'
                             rows={4}
                             value={rejectReason}
                             onChange={(event) => setRejectReason(event.target.value)}
-                            placeholder='Explain why this bill is rejected'
+                            placeholder='ອະທິບາຍເຫດຜົນທີ່ປະຕິເສດບິນນີ້'
                           />
                         </div>
                       )}
@@ -265,14 +273,14 @@ const BookingShipEditModal = () => {
                     <div className='card border border-gray-200'>
                       <div className='card-header border-0 pt-6'>
                         <div className='card-title'>
-                          <h3 className='fw-bold m-0'>Transfer Slip</h3>
+                          <h3 className='fw-bold m-0'>ສະລິບການໂອນ</h3>
                         </div>
                       </div>
                       <div className='card-body pt-0'>
                         <a href={bill.slip_url} target='_blank' rel='noreferrer'>
                           <img
                             src={bill.slip_url}
-                            alt='Transfer slip'
+                            alt='ສະລິບການໂອນ'
                             className='rounded border w-100'
                             style={{maxHeight: 360, objectFit: 'contain'}}
                           />
@@ -286,7 +294,7 @@ const BookingShipEditModal = () => {
 
             <div className='modal-footer'>
               <button type='button' className='btn btn-light' onClick={closeModal}>
-                Cancel
+                ຍົກເລີກ
               </button>
               <button
                 type='button'
@@ -294,7 +302,7 @@ const BookingShipEditModal = () => {
                 onClick={handleSave}
                 disabled={isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save Status'}
+                {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກສະຖານະ'}
               </button>
             </div>
           </div>

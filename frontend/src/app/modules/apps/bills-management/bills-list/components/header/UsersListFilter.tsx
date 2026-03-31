@@ -8,8 +8,8 @@ import {useQueryResponse} from '../../core/QueryResponseProvider'
 type DateTab = 'all' | 'today' | 'this_month' | 'this_year'
 
 const dateTabs: { label: string; value: DateTab }[] = [
-  { label: 'All',   value: 'all' },
-  { label: 'Today', value: 'today' },
+  { label: 'ທັງໝົດ', value: 'all' },
+  { label: 'ມື້ນີ້', value: 'today' },
 ]
 
 const UsersListFilter = () => {
@@ -106,21 +106,21 @@ const UsersListFilter = () => {
 
       {/* Month/Year controls (no separate tabs for this_month/this_year) */}
       <div className='d-flex align-items-center mb-3'>
-        <label className='form-label me-2 fw-bold'>Range</label>
+        <label className='form-label me-2 fw-bold'>ຊ່ວງເວລາ</label>
 
         <button
           type='button'
           className={`btn btn-sm me-2 ${rangeType === 'this_month' ? 'btn-primary text-white' : 'btn-light'}`}
           onClick={() => applyRange('this_month', new Date().getMonth() + 1)}
         >
-          Month
+          ເດືອນ
         </button>
         <button
           type='button'
           className={`btn btn-sm me-3 ${rangeType === 'this_year' ? 'btn-primary text-white' : 'btn-light'}`}
           onClick={() => applyRange('this_year', new Date().getFullYear())}
         >
-          Year
+          ປີ
         </button>
 
         <button
@@ -172,14 +172,14 @@ const UsersListFilter = () => {
 
       <div className='menu menu-sub menu-sub-dropdown w-325px' data-kt-menu='true'>
         <div className='px-7 py-5'>
-          <div className='fs-5 text-gray-900 fw-bolder'>Bill Filters</div>
+          <div className='fs-5 text-gray-900 fw-bolder'>ຕົວກອງບິນ</div>
         </div>
 
         <div className='separator border-gray-200' />
 
         <div className='px-7 py-5' data-kt-user-table-filter='form'>
           <div className='mb-10'>
-            <label className='form-label fs-6 fw-bold'>Payment Method</label>
+            <label className='form-label fs-6 fw-bold'>ວິທີຊຳລະ</label>
             <select
               className='form-select form-select-solid'
               value={paymentMethod}
@@ -188,10 +188,10 @@ const UsersListFilter = () => {
                 applyFilter(activeTab, e.target.value)
               }}
             >
-              <option value=''>All Methods</option>
+              <option value=''>ທຸກວິທີ</option>
               {PAYMENT_METHOD_OPTIONS.map((method) => (
                 <option key={method} value={method}>
-                  {method === 'cash' ? 'Cash' : 'Transfer'}
+                  {method === 'cash' ? 'ເງິນສົດ' : 'ໂອນເງິນ'}
                 </option>
               ))}
             </select>
@@ -205,7 +205,7 @@ const UsersListFilter = () => {
               className='btn btn-light btn-active-light-primary fw-bold me-2 px-6'
               data-kt-menu-dismiss='true'
             >
-              Reset
+              ຣີເຊັດ
             </button>
           </div>
         </div>

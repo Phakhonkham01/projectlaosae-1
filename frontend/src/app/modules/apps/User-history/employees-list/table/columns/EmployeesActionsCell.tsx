@@ -19,7 +19,7 @@ const EmployeesActionsCell: FC<Props> = ({ id }) => {
     onSuccess: () => {
       Swal.fire({
         icon: "success",
-        title: "Deleted!",
+        title: "ລຶບແລ້ວ!",
         timer: 2000,
         showConfirmButton: false,
       });
@@ -32,9 +32,9 @@ const EmployeesActionsCell: FC<Props> = ({ id }) => {
   const handleDelete = () => {
     Swal.fire({
       icon: "warning",
-      title: "Are you sure?",
+      title: "ທ່ານແນ່ໃຈບໍ?",
       showCancelButton: true,
-      confirmButtonText: "Yes, delete!",
+      confirmButtonText: "ແມ່ນ, ລຶບເລີຍ!",
     }).then((result) => {
       if (result.isConfirmed) {
         deleteMutation.mutate();
@@ -48,7 +48,7 @@ const EmployeesActionsCell: FC<Props> = ({ id }) => {
         className="btn btn-light-primary btn-sm"
         onClick={() => setItemIdForUpdate(id)}
       >
-        Detail
+        ລາຍລະອຽດ
       </button>
       {/* <button className="btn btn-icon btn-light-danger btn-sm" onClick={handleDelete}>
         <KTIcon iconName="trash" className="fs-3" />

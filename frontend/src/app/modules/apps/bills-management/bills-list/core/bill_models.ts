@@ -2,10 +2,9 @@ export type PaymentMethod = 'cash' | 'transfer'
 
 export type PaymentStatus =
   | 'pending'
-  | 'slip_submitted'
   | 'approved'
   | 'rejected'
-  | 're_submitted'
+  | 'payment failed'
 
 export interface FoodItem {
   product_id: string
@@ -58,19 +57,17 @@ export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'transfer']
 
 export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
   'pending',
-  'slip_submitted',
   'approved',
   'rejected',
-  're_submitted',
+  'payment failed',
 ]
 
 export const PAYMENT_STATUS_META: Record<
   PaymentStatus,
   {label: string; badgeClass: string}
 > = {
-  pending: {label: 'Pending', badgeClass: 'badge-light-warning'},
-  slip_submitted: {label: 'Slip Submitted', badgeClass: 'badge-light-info'},
-  approved: {label: 'Approved', badgeClass: 'badge-light-success'},
-  rejected: {label: 'Rejected', badgeClass: 'badge-light-danger'},
-  re_submitted: {label: 'Re-Submitted', badgeClass: 'badge-light-primary'},
+  pending: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
+  approved: {label: 'ອະນຸມັດແລ້ວ', badgeClass: 'badge-light-success'},
+  rejected: {label: 'ປະຕິເສດແລ້ວ', badgeClass: 'badge-light-danger'},
+  'payment failed': {label: 'ການຊຳລະລົ້ມເຫຼວ', badgeClass: 'badge-light-info'},
 }

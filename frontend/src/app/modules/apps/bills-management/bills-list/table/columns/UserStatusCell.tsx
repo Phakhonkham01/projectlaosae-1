@@ -4,44 +4,34 @@ type Props = {
   status?: string | number
 }
 
-const UserStatusCell: React.FC<Props> = ({ status }) => {
-  // แปลง status จาก backend format เป็น UI format
+const UserStatusCell: React.FC<Props> = ({status}) => {
   const getDisplayStatus = () => {
-    if (status === 'work day') return 'Active'
-    if (status === 'leave day') return 'Inactive'
-    if (status === 'on leave' || status === 'On Leave') return 'On Leave'
-    if (status === 1) return 'Active'
-    if (status === 0) return 'Inactive'
-    return status?.toString() || 'Inactive'
+    if (status === 'work day') return 'ໃຊ້ງານ'
+    if (status === 'leave day') return 'ບໍ່ໃຊ້ງານ'
+    if (status === 'on leave' || status === 'On Leave') return 'ພັກວຽກ'
+    if (status === 1) return 'ໃຊ້ງານ'
+    if (status === 0) return 'ບໍ່ໃຊ້ງານ'
+    return status?.toString() || 'ບໍ່ໃຊ້ງານ'
   }
 
   const getStatusClass = () => {
     const displayStatus = getDisplayStatus()
-    
+
     switch (displayStatus) {
-      case 'Active':
-        return 'badge-light-success' // สีเขียว
-      case 'Inactive':
-        return 'badge-light-danger'  // สีแดง
-      case 'On Leave':
-        return 'badge-light-warning' // สีเหลือง/ส้ม
+      case 'ໃຊ້ງານ':
+        return 'badge-light-success'
+      case 'ບໍ່ໃຊ້ງານ':
+        return 'badge-light-danger'
+      case 'ພັກວຽກ':
+        return 'badge-light-warning'
       default:
-        return 'badge-light-secondary' // สีเทาสำหรับสถานะอื่นๆ
+        return 'badge-light-secondary'
     }
   }
 
   const displayStatus = getDisplayStatus()
 
-  return (
-    <span
-      className={clsx(
-        'badge fw-bolder',
-        getStatusClass()
-      )}
-    >
-      {displayStatus}
-    </span>
-  )
+  return <span className={clsx('badge fw-bolder', getStatusClass())}>{displayStatus}</span>
 }
 
-export { UserStatusCell }
+export {UserStatusCell}

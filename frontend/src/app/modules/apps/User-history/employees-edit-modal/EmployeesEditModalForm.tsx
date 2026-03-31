@@ -31,7 +31,7 @@ const EmployeesEditModalForm: FC = () => {
       {/* Form fields */}
       <div className="text-center pt-15">
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Saving...' : 'Save'}
+          {loading ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກ'}
         </button>
       </div>
     </form>

@@ -29,8 +29,8 @@ const ShipActionsCell: FC<Props> = ({ id }) => {
       // Show success message
       Swal.fire({
         icon: 'success',
-        title: 'Deleted!',
-        text: 'Ship has been deleted.',
+        title: 'ລຶບແລ້ວ!',
+        text: 'ລຶບເຮືອສຳເລັດແລ້ວ',
         timer: 2000,
         showConfirmButton: false,
       })
@@ -40,8 +40,8 @@ const ShipActionsCell: FC<Props> = ({ id }) => {
     onError: (error: any) => {
       Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: error.message || 'Failed to delete ship',
+        title: 'ຜິດພາດ!',
+        text: error.message || 'ລຶບເຮືອບໍ່ສຳເລັດ',
       })
     },
   })
@@ -49,11 +49,11 @@ const ShipActionsCell: FC<Props> = ({ id }) => {
   const handleDelete = () => {
     Swal.fire({
       icon: 'warning',
-      title: 'Are you sure?',
-      text: 'You will not be able to recover this ship!',
+      title: 'ທ່ານແນ່ໃຈບໍ?',
+      text: 'ທ່ານຈະບໍ່ສາມາດກູ້ຄືນເຮືອນີ້ໄດ້!',
       showCancelButton: true,
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: 'ແມ່ນ, ລຶບເລີຍ!',
+      cancelButtonText: 'ຍົກເລີກ',
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
     }).then((result) => {
@@ -71,7 +71,7 @@ const ShipActionsCell: FC<Props> = ({ id }) => {
         data-kt-menu-trigger='click'
         data-kt-menu-placement='bottom-end'
       >
-        Actions
+        ຈັດການ
         <KTIcon iconName='down' className='fs-5 m-0' />
       </a>
       {/* begin::Menu */}
@@ -86,7 +86,7 @@ const ShipActionsCell: FC<Props> = ({ id }) => {
             onClick={openEditModal}
             style={{ cursor: 'pointer' }}
           >
-            Edit
+            ແກ້ໄຂ
           </a>
         </div>
         {/* end::Menu item */}
@@ -98,7 +98,7 @@ const ShipActionsCell: FC<Props> = ({ id }) => {
             onClick={handleDelete}
             style={{ cursor: 'pointer' }}
           >
-            Delete
+            ລຶບ
           </a>
         </div>
         {/* end::Menu item */}

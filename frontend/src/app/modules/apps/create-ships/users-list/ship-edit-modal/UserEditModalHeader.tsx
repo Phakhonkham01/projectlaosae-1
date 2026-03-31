@@ -7,7 +7,7 @@ const UserEditModalHeader = () => {
   return (
     <div className='modal-header'>
       {/* begin::Modal title */}
-      <h2 className='fw-bolder'>{itemIdForUpdate == null ? "Add User" : "Edit User"}</h2>
+      <h2 className='fw-bolder'>{itemIdForUpdate == null ? 'ເພີ່ມເຮືອ' : 'ແກ້ໄຂເຮືອ'}</h2>
       {/* end::Modal title */}
 
       {/* begin::Close */}

@@ -269,7 +269,7 @@ const Dashboard = () => {
       ? 'ແດຊບອດລູກຄ້າ'
       : currentRole === 'owner' || currentRole === 'admin'
       ? 'ແດຊບອດເຈົ້າຂອງ'
-      : 'ແດຊບອດພະນັກງານ'
+      : 'ແດຊບອດພະນັກງານ  '
 
   const roleDescription =
     currentRole === 'customer'

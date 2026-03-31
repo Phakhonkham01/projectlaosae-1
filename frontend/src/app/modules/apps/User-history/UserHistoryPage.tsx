@@ -4,7 +4,7 @@ import {HistoryListWrapper} from './employees-list/HistoryList'
 
 const usersBreadcrumbs: Array<PageLink> = [
   {
-    title: 'User History',
+    title: 'ປະຫວັດການໃຊ້ງານ',
     path: '',
     isSeparator: false,
     isActive: false,
@@ -25,7 +25,7 @@ const UsersPage = () => {
           index  // ← ใช้ index แทน path=''
           element={
             <>
-              <PageTitle breadcrumbs={usersBreadcrumbs}>Users list</PageTitle>
+              <PageTitle breadcrumbs={usersBreadcrumbs}>ປະຫວັດການໃຊ້ງານ</PageTitle>
               <HistoryListWrapper />
             </>
           }
