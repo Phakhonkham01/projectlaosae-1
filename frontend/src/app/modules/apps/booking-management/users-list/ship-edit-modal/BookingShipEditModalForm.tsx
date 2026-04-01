@@ -52,8 +52,8 @@ interface SavedBill {
   foods: SelectedFood[]
   total_food_price: number
   grand_total: number
-  payment_method: 'cash' | 'transfer'
-  payment_status: 'pending' | 'slip_submitted'
+  payment_method: 'cash' | 'transfer' | 'cash+transfer'
+  payment_status: 'pending' | 'slip_submitted' | 'approved'
   user_name: string
   user_email: string
 }
@@ -68,7 +68,7 @@ const formatLak = (amount: number) => `${amount.toLocaleString()} LAK`
 const SHOP_OPEN_MINUTES = 8 * 60 + 30
 const SHOP_CLOSE_MINUTES = 20 * 60
 const TIME_PICKER_CLOSE_MINUTES = 19 * 60 + 30
-const SAME_DAY_LAST_BOOKING_MINUTES = 15 * 60
+const SAME_DAY_LAST_BOOKING_MINUTES = 17 * 60
 const SAME_DAY_PREP_BUFFER_MINUTES = 30
 const TIME_STEP_MINUTES = 30
 const MIN_BOOKING_HOURS = 1
@@ -255,7 +255,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([])
 
   // Step 4 state
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash')
+  const isStaff = customerRole === 'employee' || customerRole === 'owner'
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'cash+transfer'>('cash')
+  const [cashAmount, setCashAmount] = useState<number>(0)
+  const [transferAmount, setTransferAmount] = useState<number>(0)
   const [slipUrl, setSlipUrl] = useState('')
   const [slipUploading, setSlipUploading] = useState(false)
   const slipInputRef = useRef<HTMLInputElement>(null)
@@ -305,12 +308,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const availableTimeOptions =
     minimumBookingMinutes <= latestBookingMinutes
       ? Array.from(
-          {
-            length:
-              Math.floor((latestBookingMinutes - minimumBookingMinutes) / TIME_STEP_MINUTES) + 1,
-          },
-          (_, index) => minutesToTimeString(minimumBookingMinutes + index * TIME_STEP_MINUTES)
-        )
+        {
+          length:
+            Math.floor((latestBookingMinutes - minimumBookingMinutes) / TIME_STEP_MINUTES) + 1,
+        },
+        (_, index) => minutesToTimeString(minimumBookingMinutes + index * TIME_STEP_MINUTES)
+      )
       : []
   const { hour: selectedHour, minute: selectedMinute } = getTimeParts(bookingTime)
   const availableHourOptions = Array.from(
@@ -318,8 +321,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   )
   const availableMinuteOptions = selectedHour
     ? availableTimeOptions
-        .filter((timeOption) => timeOption.startsWith(`${selectedHour}:`))
-        .map((timeOption) => timeOption.split(':')[1])
+      .filter((timeOption) => timeOption.startsWith(`${selectedHour}:`))
+      .map((timeOption) => timeOption.split(':')[1])
     : []
   const maxBookableHours =
     !Number.isNaN(bookingTimeMinutes) && bookingTimeMinutes < SHOP_CLOSE_MINUTES
@@ -474,9 +477,20 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   // ─── Navigation ───────────────────────────────────────────────────────────
   const nextStep = () => {
     if (currentStep === 1 && !validateStep1()) return
-    if (currentStep === 4 && paymentMethod === 'transfer' && !slipUrl) {
+    if (currentStep === 4 && paymentMethod === 'transfer' && !slipUrl && !isStaff) {
       Swal.fire({ icon: 'warning', title: 'ຍັງບໍ່ໄດ້ອັບໂຫຼດສະລິບ', text: 'ກະລຸນາອັບໂຫຼດສະລິບໂອນເງິນກ່ອນຢືນຢັນ' })
       return
+    }
+    if (currentStep === 4 && isStaff && paymentMethod === 'cash+transfer') {
+      if (cashAmount < 0 || transferAmount < 0) {
+        Swal.fire({ icon: 'warning', title: 'ຜິດພາດ', text: 'ຈຳນວນເງິນຕ້ອງບໍ່ຕ່ຳກວ່າ 0' })
+        return
+      }
+      const total = cashAmount + transferAmount
+      if (total !== grandTotal) {
+        Swal.fire({ icon: 'warning', title: 'ຈຳນວນເງິນບໍ່ຖືກ', text: `ລວມ ${total.toLocaleString()} LAK ຕ້ອງເທົ່າກັບ ${grandTotal.toLocaleString()} LAK` })
+        return
+      }
     }
     setCurrentStep((s) => s + 1)
   }
@@ -487,8 +501,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const handleSave = async () => {
     setLoading(true)
     try {
-      const paymentStatus: BookingPaymentStatus =
-        paymentMethod === 'cash' ? 'pending' : 'slip_submitted'
+      const paymentStatus: BookingPaymentStatus = isStaff
+        ? 'approved'
+        : paymentMethod === 'cash'
+          ? 'pending'
+          : 'slip_submitted'
 
       const bookingPayload = {
         ship_id: itemIdForUpdate,
@@ -505,11 +522,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         payment_method: paymentMethod,
         slip_url: paymentMethod === 'transfer' ? slipUrl : '',
         payment_status: paymentStatus,
+        cash_amount: paymentMethod === 'cash+transfer' ? cashAmount : paymentMethod === 'cash' ? grandTotal : 0,
+        transfer_amount: paymentMethod === 'cash+transfer' ? transferAmount : paymentMethod === 'transfer' ? grandTotal : 0,
         // ─── Customer info ───
         user_id: currentUser?._id ?? '',
         user_name: currentUser?.user_name ?? '',
         user_email: currentUser?.user_email ?? '',
-        status: 'pending',
+        status: isStaff ? 'approved' : 'pending',
         createdAt: new Date().toISOString(),
       }
 
@@ -564,14 +583,14 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     return (
       <div
         className='modal-content h-100 border-0'
-        style={{height: '100%', display: 'flex', flexDirection: 'column'}}
+        style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
       >
         <div className='modal-header'>
           <h2 className='fw-bold text-success mb-0'>ບິນການຈອງ</h2>
           <div
             className='btn btn-icon btn-sm btn-active-icon-primary'
             onClick={() => setItemIdForUpdate(undefined)}
-            style={{cursor: 'pointer'}}
+            style={{ cursor: 'pointer' }}
           >
             <KTIcon iconName='cross' className='fs-1' />
           </div>
@@ -588,17 +607,17 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
           >
             <div
               className='card-body p-8'
-              style={{boxShadow: 'inset 0 0 0 1px rgba(209, 191, 161, 0.35)'}}
+              style={{ boxShadow: 'inset 0 0 0 1px rgba(209, 191, 161, 0.35)' }}
             >
               <div className='d-flex justify-content-between align-items-start flex-wrap gap-4 mb-8'>
                 <div>
                   <div
                     className='text-uppercase fw-bold fs-8 mb-2'
-                    style={{color: '#8b6d48', letterSpacing: '0.18em'}}
+                    style={{ color: '#8b6d48', letterSpacing: '0.18em' }}
                   >
                     Official Receipt
                   </div>
-                  <h3 className='fw-bolder mb-1' style={{color: '#44311f'}}>
+                  <h3 className='fw-bolder mb-1' style={{ color: '#44311f' }}>
                     Booking Bill
                   </h3>
                   <div className='text-muted fs-7'>#{savedBill.id.slice(0, 8).toUpperCase()}</div>
@@ -631,7 +650,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </div>
               </div>
 
-              <div className='separator separator-dashed my-6' style={{borderColor: '#d1bfa1'}}></div>
+              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }}></div>
 
               <div className='d-flex justify-content-between align-items-center mb-3'>
                 <span className='text-muted'>Ship Charge</span>
@@ -660,7 +679,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </>
               )}
 
-              <div className='separator separator-dashed my-6' style={{borderColor: '#d1bfa1'}}></div>
+              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }}></div>
 
               <div className='d-flex justify-content-between align-items-center'>
                 <div>
@@ -719,20 +738,18 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 style={{ flex: 1 }}
               >
                 <div
-                  className={`w-35px h-35px rounded-circle d-flex align-items-center justify-content-center fw-bold fs-6 ${
-                    done
-                      ? 'bg-success text-white'
-                      : active
+                  className={`w-35px h-35px rounded-circle d-flex align-items-center justify-content-center fw-bold fs-6 ${done
+                    ? 'bg-success text-white'
+                    : active
                       ? 'bg-primary text-white'
                       : 'bg-light text-muted'
-                  }`}
+                    }`}
                 >
                   {done ? '✓' : stepNum}
                 </div>
                 <span
-                  className={`fs-8 mt-1 text-center ${
-                    active ? 'text-primary fw-bold' : done ? 'text-success' : 'text-muted'
-                  }`}
+                  className={`fs-8 mt-1 text-center ${active ? 'text-primary fw-bold' : done ? 'text-success' : 'text-muted'
+                    }`}
                 >
                   {label}
                 </span>
@@ -887,23 +904,22 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
             {bookingDate && (
               <div
-                className={`mb-5 p-3 rounded ${
-                  isSameDayBookingClosed ? 'bg-light-danger text-danger' : 'bg-light-info text-info'
-                }`}
+                className={`mb-5 p-3 rounded ${isSameDayBookingClosed ? 'bg-light-danger text-danger' : 'bg-light-info text-info'
+                  }`}
               >
                 {isTodaySelected
                   ? isSameDayBookingClosed
-                    ? 'Today can no longer be booked because same-day booking closes after 15:00.'
+                    ? 'Today can no longer be booked because same-day booking closes after 17:00.'
                     : `For today, booking starts from ${minutesToTimeString(
-                        minimumBookingMinutes
-                      )} and must be made by ${minutesToTimeString(
-                        SAME_DAY_LAST_BOOKING_MINUTES
-                      )}.`
+                      minimumBookingMinutes
+                    )} and must be made by ${minutesToTimeString(
+                      SAME_DAY_LAST_BOOKING_MINUTES
+                    )}.`
                   : `Bookings start from ${minutesToTimeString(
-                      SHOP_OPEN_MINUTES
-                    )}. You can choose any later time, but the booking must still end by ${minutesToTimeString(
-                      SHOP_CLOSE_MINUTES
-                    )}.`}
+                    SHOP_OPEN_MINUTES
+                  )}. You can choose any later time, but the booking must still end by ${minutesToTimeString(
+                    SHOP_CLOSE_MINUTES
+                  )}.`}
               </div>
             )}
 
@@ -1000,9 +1016,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   return (
                     <div key={product.product_id} className='col-6 col-xl-4'>
                       <div
-                        className={`card h-100 ${
-                          qty > 0 ? 'border border-primary' : ''
-                        }`}
+                        className={`card h-100 ${qty > 0 ? 'border border-primary' : ''
+                          }`}
                       >
                         <div className='card-body p-3 d-flex flex-column'>
                           {product.image ? (
@@ -1144,7 +1159,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     </div>
                   ))}
                   <div className='d-flex justify-content-between border-top pt-2 mt-2'>
-                  <span className='text-muted'>ລວມຄ່າອາຫານ</span>
+                    <span className='text-muted'>ລວມຄ່າອາຫານ</span>
                     <span className='text-info fw-bolder'>
                       {totalFoodPrice.toLocaleString()} LAK
                     </span>
@@ -1173,27 +1188,47 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             <div className='fw-bold fs-5 mb-5'>ວິທີການຊຳລະ</div>
 
             {/* Method selector */}
-            <div className='d-flex gap-3 mb-6'>
-              {(['cash', 'transfer'] as const).map((method) => (
+            <div className='d-flex gap-3 mb-6' style={{ flexWrap: 'wrap' }}>
+              {(isStaff
+                ? (['cash', 'transfer', 'cash+transfer'] as const)
+                : (['cash', 'transfer'] as const)
+              ).map((method) => (
                 <div
                   key={method}
-                  className={`card flex-fill text-center p-5 border-2 ${
-                    paymentMethod === method
-                      ? 'border-primary bg-light-primary'
-                      : 'border-light'
-                  }`}
-                  onClick={() => setPaymentMethod(method)}
-                  style={{ cursor: 'pointer' }}
+                  className={`card flex-fill text-center p-4 border-2 ${paymentMethod === method
+                    ? 'border-primary bg-light-primary'
+                    : 'border-light'
+                    }`}
+                  onClick={() => {
+                    setPaymentMethod(method)
+                    setCashAmount(0)
+                    setTransferAmount(0)
+                  }}
+                  style={{ cursor: 'pointer', minWidth: 110 }}
                 >
                   <div className='fs-1 mb-2'>
-                    {method === 'cash' ? '💵' : '📱'}
+                    {method === 'cash' ? '💵' : method === 'transfer' ? '📱' : '💵📱'}
                   </div>
-                  <div className='fw-bold'>
-                    {method === 'cash' ? 'ເງິນສົດ' : 'ໂອນເງິນ'}
+                  <div className='fw-bold fs-7'>
+                    {method === 'cash'
+                      ? 'ເງິນສົດ'
+                      : method === 'transfer'
+                        ? 'ໂອນເງິນ'
+                        : 'ເງິນສົດ + ໂອນ'}
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Staff badge */}
+            {isStaff && (
+              <div className='alert alert-info d-flex align-items-center gap-2 py-3 mb-5'>
+                <KTIcon iconName='shield-tick' className='fs-3 text-info' />
+                <span className='fw-semibold fs-7'>
+                  ຈ່າຍໜ້າເຄົາເຕີ — ບິນຈະຖືກອະນຸມັດທັນທີ (status: <strong>approved</strong>)
+                </span>
+              </div>
+            )}
 
             {/* Cash */}
             {paymentMethod === 'cash' && (
@@ -1217,7 +1252,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   <div className='fw-bold fs-6 mb-3'>
                     ຂັ້ນຕອນ 1: ສະແກນ QR Code ເພື່ອຊຳລະ
                   </div>
-                  {/* ── Replace src with your actual QR image path ── */}
                   <div
                     className='d-inline-flex align-items-center justify-content-center
                       border border-2 border-dashed border-primary rounded p-4'
@@ -1243,11 +1277,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   </div>
                 </div>
 
-                {/* Slip Upload */}
+                {/* Slip Upload — required only for customer */}
                 <div className='separator separator-dashed mb-5' />
-                <div className='fw-bold fs-6 mb-3 text-center'>
-                  ຂັ້ນຕອນ 2: ອັບໂຫຼດສະລິບໂອນເງິນ
-                </div>
+                {!isStaff && (
+                  <div className='fw-bold fs-6 mb-3 text-center'>
+                    ຂັ້ນຕອນ 2: ອັບໂຫຼດສະລິບໂອນເງິນ
+                  </div>
+                )}
 
                 <input
                   type='file'
@@ -1260,7 +1296,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
                 {slipUrl ? (
                   <div className='text-center'>
-                    {/* Preview */}
                     <div className='position-relative d-inline-block mb-3'>
                       <img
                         src={slipUrl}
@@ -1298,15 +1333,118 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       ) : (
                         <>
                           <KTIcon iconName='folder-up' className='fs-3 me-2' />
-                          ອັບໂຫຼດສະລິບ
+                          {isStaff ? 'ອັບໂຫຼດສະລິບ (ທາງເລືອກ)' : 'ອັບໂຫຼດສະລິບ'}
                         </>
                       )}
                     </button>
-                    <div className='text-muted fs-8 mt-2'>
-                      JPG / PNG · max 5 MB
-                    </div>
+                    <div className='text-muted fs-8 mt-2'>JPG / PNG · max 5 MB</div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Mixed: Cash + Transfer (staff only) */}
+            {paymentMethod === 'cash+transfer' && isStaff && (
+              <div>
+                <div className='p-5 rounded border border-primary mb-4'>
+                  <div className='fw-bold fs-6 mb-4 text-primary text-center'>
+                    💵📱 ຊຳລະແບບຜຸ້ມ (ເງິນສົດ + ໂອນ)
+                  </div>
+                  <div className='text-center mb-4'>
+                    <span className='badge badge-light-primary fs-6 px-4 py-2'>
+                      ຍອດລວມ: {grandTotal.toLocaleString()} LAK
+                    </span>
+                  </div>
+
+                  <div className='row g-4 mb-3'>
+                    <div className='col-6'>
+                      <label className='fw-bold fs-7 mb-2 d-block'>💵 ເງິນສົດ (LAK)</label>
+                      <input
+                        type='number'
+                        className='form-control form-control-solid'
+                        min={0}
+                        max={grandTotal}
+                        value={cashAmount || ''}
+                        placeholder='0'
+                        onChange={(e) => {
+                          const val = Math.max(0, parseInt(e.target.value) || 0)
+                          setCashAmount(val)
+                          setTransferAmount(Math.max(0, grandTotal - val))
+                        }}
+                      />
+                    </div>
+                    <div className='col-6'>
+                      <label className='fw-bold fs-7 mb-2 d-block'>📱 ໂອນ (LAK)</label>
+                      <input
+                        type='number'
+                        className='form-control form-control-solid'
+                        min={0}
+                        max={grandTotal}
+                        value={transferAmount || ''}
+                        placeholder='0'
+                        onChange={(e) => {
+                          const val = Math.max(0, parseInt(e.target.value) || 0)
+                          setTransferAmount(val)
+                          setCashAmount(Math.max(0, grandTotal - val))
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Running balance check */}
+                  <div
+                    className={`p-3 rounded text-center fs-7 fw-bold ${cashAmount + transferAmount === grandTotal
+                      ? 'bg-light-success text-success'
+                      : 'bg-light-danger text-danger'
+                      }`}
+                  >
+                    {cashAmount + transferAmount === grandTotal ? (
+                      <><KTIcon iconName='check-circle' className='fs-4 me-1' />ຈຳນວນຖືກຕ້ອງ ✓</>
+                    ) : (
+                      <>ລວມ {(cashAmount + transferAmount).toLocaleString()} LAK — ຍັງຂາດ / ເກີນ {Math.abs(grandTotal - cashAmount - transferAmount).toLocaleString()} LAK</>
+                    )}
+                  </div>
+                </div>
+
+                {/* Optional transfer slip */}
+                <input
+                  type='file'
+                  ref={slipInputRef}
+                  accept='image/*'
+                  className='d-none'
+                  onChange={handleSlipUpload}
+                  disabled={slipUploading}
+                />
+                <div className='text-center'>
+                  {slipUrl ? (
+                    <div className='position-relative d-inline-block mb-2'>
+                      <img
+                        src={slipUrl}
+                        alt='ສະລິບ'
+                        className='rounded border border-success'
+                        style={{ maxWidth: 180, maxHeight: 240, objectFit: 'contain' }}
+                      />
+                      <button
+                        type='button'
+                        className='btn btn-sm btn-icon btn-light-danger position-absolute top-0 end-0'
+                        onClick={() => setSlipUrl('')}
+                      >
+                        <KTIcon iconName='cross' className='fs-4' />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type='button'
+                      className='btn btn-light-info btn-sm'
+                      onClick={() => slipInputRef.current?.click()}
+                      disabled={slipUploading}
+                    >
+                      <KTIcon iconName='folder-up' className='fs-4 me-1' />
+                      ອັບໂຫຼດສະລິບ (ທາງເລືອກ)
+                    </button>
+                  )}
+                  <div className='text-muted fs-8 mt-1'>JPG / PNG</div>
+                </div>
               </div>
             )}
           </div>
@@ -1341,7 +1479,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             type='button'
             className='btn btn-success'
             onClick={handleSave}
-            disabled={loading || (paymentMethod === 'transfer' && !slipUrl)}
+            disabled={
+              loading ||
+              (!isStaff && paymentMethod === 'transfer' && !slipUrl) ||
+              (isStaff && paymentMethod === 'cash+transfer' && cashAmount + transferAmount !== grandTotal)
+            }
           >
             {loading ? (
               <>

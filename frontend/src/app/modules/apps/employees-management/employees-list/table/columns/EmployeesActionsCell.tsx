@@ -25,7 +25,7 @@ const EmployeesActionsCell: FC<Props> = ({ id }) => {
   const queryClient = useQueryClient()
   const currentUser = getCurrentUser()
   const isOwnAccount = currentUser?._id === id
-  const shouldBlockSelfDelete = currentUser?.role === 'employee' && isOwnAccount
+  const shouldBlockSelfDelete = currentUser?.role === 'employee' || currentUser?.role === 'owner' && isOwnAccount
 
   const deleteMutation = useMutation(() => deleteUser(id), {
     onSuccess: () => {

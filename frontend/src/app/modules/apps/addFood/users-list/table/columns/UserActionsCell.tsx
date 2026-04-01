@@ -1,19 +1,19 @@
-import {FC, useEffect} from 'react'
-import {useMutation, useQueryClient} from 'react-query'
-import {MenuComponent} from '../../../../../../../_metronic/assets/ts/components'
-import {ID, KTIcon, QUERIES} from '../../../../../../../_metronic/helpers'
-import {useListView} from '../../core/ListViewProvider'
-import {useQueryResponse} from '../../core/QueryResponseProvider'
-import {deleteUser} from '../../core/_requests'
+import { FC, useEffect } from 'react'
+import { useMutation, useQueryClient } from 'react-query'
+import { MenuComponent } from '../../../../../../../_metronic/assets/ts/components'
+import { ID, KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
+import { useListView } from '../../core/ListViewProvider'
+import { useQueryResponse } from '../../core/QueryResponseProvider'
+import { deleteUser } from '../../core/_requests'
 import Swal from 'sweetalert2'
 
 type Props = {
   id: ID
 }
 
-const UserActionsCell: FC<Props> = ({id}) => {
-  const {setItemIdForUpdate} = useListView()
-  const {query} = useQueryResponse()
+const UserActionsCell: FC<Props> = ({ id }) => {
+  const { setItemIdForUpdate } = useListView()
+  const { query } = useQueryResponse()
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -29,12 +29,12 @@ const UserActionsCell: FC<Props> = ({id}) => {
       // Show success message
       Swal.fire({
         icon: 'success',
-        title: 'Deleted!',
-        text: 'User has been deleted successfully.',
+        title: 'ລຶບສິນຄ້າສຳເລັດ!',
+        text: 'ລຶບສິນຄ້າສຳເລັດແລ້ວ.',
         showConfirmButton: false,
         timer: 1500
       })
-      
+
       // ✅ update detail view directly
       queryClient.invalidateQueries([`${QUERIES.USERS_LIST}-${query}`])
     },
@@ -42,9 +42,9 @@ const UserActionsCell: FC<Props> = ({id}) => {
       // Show error message
       Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: 'Failed to delete user. Please try again.',
-        confirmButtonText: 'OK',
+        title: 'ຜິດພາດ!',
+        text: 'ລຶບສິນຄ້າບໍ່ສຳເລັດ. ກະລຸນາລອງໃໝ່.',
+        confirmButtonText: 'ຕົກລົງ',
         confirmButtonColor: '#F1416C'
       })
     }
@@ -52,14 +52,14 @@ const UserActionsCell: FC<Props> = ({id}) => {
 
   const handleDelete = () => {
     Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      title: 'ທ່ານແນ່ໃຈບໍ?',
+      text: "ໝວດຮາຍການນີ້ຈະຖືກລຶບແລ້ວຈະບໍ່ສາມາດກູ້ຄືນໄດ້!",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#F1416C',
       cancelButtonColor: '#A1A5B7',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: 'ແມ່ນແລ້ວ, ລຶບ!',
+      cancelButtonText: 'ຍົກເລີກ',
       reverseButtons: true
     }).then(async (result) => {
       if (result.isConfirmed) {
@@ -76,7 +76,7 @@ const UserActionsCell: FC<Props> = ({id}) => {
         data-kt-menu-trigger='click'
         data-kt-menu-placement='bottom-end'
       >
-        Actions
+        ຈັດການ
         <KTIcon iconName='down' className='fs-5 m-0' />
       </a>
       {/* begin::Menu */}
@@ -87,7 +87,7 @@ const UserActionsCell: FC<Props> = ({id}) => {
         {/* begin::Menu item */}
         <div className='menu-item px-3'>
           <a className='menu-link px-3' onClick={openEditModal}>
-            Edit
+            ການແກ້ໄຂ
           </a>
         </div>
         {/* end::Menu item */}
@@ -99,7 +99,7 @@ const UserActionsCell: FC<Props> = ({id}) => {
             data-kt-users-table-filter='delete_row'
             onClick={handleDelete}
           >
-            Delete
+            ລຶບ
           </a>
         </div>
         {/* end::Menu item */}
@@ -109,4 +109,4 @@ const UserActionsCell: FC<Props> = ({id}) => {
   )
 }
 
-export {UserActionsCell}
+export { UserActionsCell }

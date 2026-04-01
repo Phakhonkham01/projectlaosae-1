@@ -333,7 +333,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
         {/* Role */}
         <div className="mb-7">
           <label className="required fw-bold fs-6 mb-5">Role</label>
-          {(["ownner", "employee", "cuttomer"] as User["role"][]).map((r) => (
+          {(["owner", "employee", "customer"] as User["role"][]).map((r) => (
             <div key={r} className="form-check form-check-custom form-check-solid mb-3">
               <input
                 id={`role-${r}`}
