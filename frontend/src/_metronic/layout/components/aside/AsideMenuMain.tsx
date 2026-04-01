@@ -1,6 +1,6 @@
 
-import {AsideMenuItemWithSub} from './AsideMenuItemWithSub'
-import {AsideMenuItem} from './AsideMenuItem'
+import { AsideMenuItemWithSub } from './AsideMenuItemWithSub'
+import { AsideMenuItem } from './AsideMenuItem'
 import { useAuth } from '../../../../app/modules/auth'
 
 export function AsideMenuMain() {
@@ -11,7 +11,7 @@ export function AsideMenuMain() {
     <>
       <AsideMenuItem
         to='/dashboard'
-        icon='color-swatch'
+        icon='home'
         title='ໜ້າຫຼັກ'
         fontIcon='bi-app-indicator'
       />
@@ -27,7 +27,7 @@ export function AsideMenuMain() {
         fontIcon='bi-archive'
         icon='element-plus'
       > */}
-        {/* <AsideMenuItemWithSub to='/crafted/pages/profile' title='ໂປຣໄຟລ໌' hasBullet={true}>
+      {/* <AsideMenuItemWithSub to='/crafted/pages/profile' title='ໂປຣໄຟລ໌' hasBullet={true}>
           <AsideMenuItem to='/crafted/pages/profile/overview' title='ພາບລວມ' hasBullet={true} />
           <AsideMenuItem to='/crafted/pages/profile/projects' title='ໂຄງການ' hasBullet={true} />
           <AsideMenuItem to='/crafted/pages/profile/campaigns' title='ແຄມເປນ' hasBullet={true} />
@@ -39,7 +39,7 @@ export function AsideMenuMain() {
           />
         </AsideMenuItemWithSub> */}
 
-        {/* <AsideMenuItemWithSub to='/crafted/pages/wizards' title='ຕົວຊ່ວຍ' hasBullet={true}>
+      {/* <AsideMenuItemWithSub to='/crafted/pages/wizards' title='ຕົວຊ່ວຍ' hasBullet={true}>
           <AsideMenuItem
             to='/crafted/pages/wizards/horizontal'
             title='ແນວນອນ'
@@ -97,7 +97,7 @@ export function AsideMenuMain() {
       /> */}
       <AsideMenuItem
         to='/apps/booking-management/booking-ships'
-        icon='people'
+        icon='lots-shopping'
         title='ຈອງເຮືອ ແລະ ອາຫານ'
         fontIcon='bi-layers'
       />
@@ -106,25 +106,32 @@ export function AsideMenuMain() {
         <>
           <AsideMenuItem
             to='/apps/create-ships/ships'
-            icon='people'
+            icon='ship'
             title='ຈັດການເຮືອໃນຮ້ານ'
             fontIcon='bi-layers'
           />
           <AsideMenuItem
+            to='/apps/my-profile'
+            icon='profile-circle'
+            title='ໂປຣໄຟລ໌'
+            fontIcon='bi-layers'
+          />
+
+          <AsideMenuItem
             to='/apps/check-bill/check-bills'
-            icon='calendar-edit'
+            icon='notepad-bookmark'
             title='ກວດສອບ ແລະ ຈັດການໃບບິນ'
             fontIcon='bi-calendar-event'
           />
           <AsideMenuItem
             to='/apps/employees-management'
-            icon='check-circle'
+            icon='people'
             title='ພະນັກງານ ( ຈັດການຂໍ້ມູນ)'
             fontIcon='bi-calendar-event'
           />
           <AsideMenuItem
             to='/apps/add-food'
-            icon='tree'
+            icon='delivery-3'
             title='ຈັດການສິນຄ້າພາຍໃນຮ້ານ'
             fontIcon='bi-calendar-event'
           />
@@ -133,7 +140,7 @@ export function AsideMenuMain() {
 
       <AsideMenuItem
         to='/apps/user-history'
-        icon='tree'
+        icon='directbox-default'
         title='ປະຫວັດການຈອງເຮືອ'
         fontIcon='bi-calendar-event'
       />
