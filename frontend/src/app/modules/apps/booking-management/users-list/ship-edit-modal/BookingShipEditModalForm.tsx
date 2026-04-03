@@ -1348,7 +1348,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               <div>
                 <div className='p-5 rounded border border-primary mb-4'>
                   <div className='fw-bold fs-6 mb-4 text-primary text-center'>
-                    💵📱 ຊຳລະແບບຜຸ້ມ (ເງິນສົດ + ໂອນ)
+                    💵📱 ຊຳລະແບບ (ເງິນສົດ + ໂອນ)
                   </div>
                   <div className='text-center mb-4'>
                     <span className='badge badge-light-primary fs-6 px-4 py-2'>

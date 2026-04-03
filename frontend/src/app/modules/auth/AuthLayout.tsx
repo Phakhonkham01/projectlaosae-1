@@ -1,9 +1,12 @@
 
 import {useEffect} from 'react'
-import {Outlet, Link} from 'react-router-dom'
+import {Outlet, Link, useLocation} from 'react-router-dom'
 import {toAbsoluteUrl} from '../../../_metronic/helpers'
 
 const AuthLayout = () => {
+  const location = useLocation()
+  const isRegistrationPage = location.pathname.includes('/registration')
+
   useEffect(() => {
     const root = document.getElementById('root')
     if (root) {
@@ -17,13 +20,22 @@ const AuthLayout = () => {
   }, [])
 
   return (
-    <div className='d-flex flex-column flex-lg-row flex-column-fluid h-100'>
+    <div
+      className='d-flex flex-column flex-lg-row flex-column-fluid h-100'
+      style={{background: 'transparent'}}
+    >
       {/* begin::Body */}
-      <div className='d-flex flex-column flex-lg-row-fluid w-lg-50 p-10 order-2 order-lg-1'>
+      <div
+        className='d-flex flex-column flex-lg-row-fluid w-lg-50 p-10 order-2 order-lg-1'
+        style={{background: 'transparent'}}
+      >
         {/* begin::Form */}
         <div className='d-flex flex-center flex-column flex-lg-row-fluid'>
           {/* begin::Wrapper */}
-          <div className='w-lg-500px p-10'>
+          <div
+            className={isRegistrationPage ? 'w-lg-800px p-10' : 'w-lg-500px p-10'}
+            style={{background: 'transparent'}}
+          >
             <Outlet />
           </div>
           {/* end::Wrapper */}

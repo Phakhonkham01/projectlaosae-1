@@ -85,6 +85,11 @@ interface StatCardProps {
   hint: string
 }
 
+interface HeroMetric {
+  label: string
+  value: string | number
+}
+
 const heroImages = [
   {url: 'media/logos/s.jpg', title: 'ເຮືອທ່ອງທ່ຽວຫຼູຫຼາ', description: 'ປະສົບການທ່ອງທ່ຽວທີ່ສະດວກສະບາຍ'}
 
@@ -128,6 +133,14 @@ const normalizeRole = (role?: string): DashboardRole => {
   if (safeRole === 'employee') return 'employee'
   if (safeRole === 'customer') return 'customer'
   return 'user'
+}
+
+const getPaymentBadgeClass = (status?: string) => {
+  const normalizedStatus = (status || 'pending').toLowerCase()
+
+  if (normalizedStatus === 'approved') return 'badge-light-success'
+  if (normalizedStatus === 'rejected') return 'badge-light-danger'
+  return 'badge-light-warning'
 }
 
 const Dashboard = () => {
@@ -279,20 +292,34 @@ const Dashboard = () => {
       : 'ຕິດຕາມວຽກຈອງປະຈໍາວັນ, ການຕິດຕາມການຊໍາລະ, ແລະຄວາມພ້ອມໃຫ້ບໍລິການ'
 
   const currentHero = heroImages[currentHeroIndex]
+  const heroMetrics: HeroMetric[] =
+    currentRole === 'customer'
+      ? [
+          {label: 'Bookings', value: myHistory.length},
+          {label: 'Pending Bills', value: customerPendingBills.length},
+          {label: 'Total Spend', value: formatCurrency(customerTotalSpent)},
+        ]
+      : [
+          {label: 'Customers', value: totalCustomers},
+          {label: 'Pending Review', value: pendingPayments.length},
+          {label: 'Approved Revenue', value: formatCurrency(approvedRevenue)},
+        ]
 
   const StatCard = ({title, value, icon, badgeClass, hint}: StatCardProps) => (
     <div className='col-12 col-md-6 col-xl-3'>
-      <div className='card h-100 border-0 '>
-        <div className='card-body d-flex align-items-center gap-4'>
-          <div className={`symbol symbol-55px ${badgeClass}`}>
+      <div className='card h-100 border-0 dashboard-stat-card'>
+        <div className='card-body d-flex align-items-start gap-4'>
+          <div className={`symbol symbol-55px dashboard-stat-icon ${badgeClass}`}>
             <span className='symbol-label'>
               <KTIcon iconName={icon} className='fs-1' />
             </span>
           </div>
           <div className='flex-grow-1'>
-            <div className='text-gray-600 fw-semibold fs-7 text-uppercase mb-1'>{title}</div>
-            <div className='fs-2hx fw-bold text-gray-900 lh-1'>{value}</div>
-            <div className='text-muted fs-7 mt-1'>{hint}</div>
+            <div className='text-gray-600 fw-semibold fs-8 text-uppercase mb-2 dashboard-eyebrow'>
+              {title}
+            </div>
+            <div className='fs-2hx fw-bold text-gray-900 lh-1 mb-2'>{value}</div>
+            <div className='text-muted fs-7 dashboard-stat-hint'>{hint}</div>
           </div>
         </div>
       </div>
@@ -334,7 +361,7 @@ const Dashboard = () => {
 
       <div className='row g-5 g-xl-8'>
         <div className='col-12 col-xl-8'>
-          <div className='card border-0 shadow-sm mb-8'>
+          <div className='card border-0 shadow-sm mb-8 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ການຈອງຫຼ້າສຸດຂອງຂ້ອຍ</h3>
@@ -349,7 +376,7 @@ const Dashboard = () => {
               ) : (
                 <div className='d-flex flex-column gap-4'>
                   {myHistory.slice(0, 6).map((item) => (
-                    <div key={item.id} className='rounded-3 bg-light p-5'>
+                    <div key={item.id} className='dashboard-list-item'>
                       <div className='d-flex flex-column flex-md-row justify-content-between gap-3'>
                         <div>
                           <div className='fw-bold text-gray-900 fs-4'>{item.ship_name || 'ການຈອງເຮືອ'}</div>
@@ -367,7 +394,7 @@ const Dashboard = () => {
                           <div className='fw-bolder text-primary fs-3'>
                             {formatCurrency(item.grand_total || 0)}
                           </div>
-                          <div className='badge badge-light-info mt-2'>
+                          <div className={`badge mt-2 ${getPaymentBadgeClass(item.payment_status)}`}>
                             {(item.payment_status || 'pending').toString()}
                           </div>
                         </div>
@@ -379,7 +406,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className='card border-0 shadow-sm h-100'>
+          <div className='card border-0 shadow-sm h-100 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ບິນທີ່ຍັງຄ້າງ</h3>
@@ -390,13 +417,13 @@ const Dashboard = () => {
             </div>
             <div className='card-body pt-2'>
               {customerPendingBills.length === 0 ? (
-                <div className='rounded-3 bg-light-success p-6'>
+                <div className='rounded-4 bg-light-success p-6 border border-success border-opacity-25'>
                   <div className='fw-bold text-gray-900 mb-1'>ບໍ່ມີບິນຄ້າງ</div>
                   <div className='text-muted fs-7'>ລາຍການຊໍາລະຂອງທ່ານຕອນນີ້ປົກກະຕິດີ</div>
                 </div>
               ) : (
                 <div className='table-responsive'>
-                  <table className='table align-middle gs-0 gy-4'>
+                  <table className='table align-middle gs-0 gy-4 dashboard-table'>
                     <thead>
                       <tr className='fw-bold text-muted bg-light'>
                         <th className='ps-4 min-w-175px rounded-start'>ເຮືອ</th>
@@ -414,7 +441,7 @@ const Dashboard = () => {
                           <td className='text-gray-700'>{item.payment_method || '-'}</td>
                           <td className='fw-bold text-primary'>{formatCurrency(item.grand_total || 0)}</td>
                           <td>
-                            <span className='badge badge-light-warning'>
+                            <span className={`badge ${getPaymentBadgeClass(item.payment_status)}`}>
                               {(item.payment_status || 'pending').toString()}
                             </span>
                           </td>
@@ -429,7 +456,7 @@ const Dashboard = () => {
         </div>
 
         <div className='col-12 col-xl-4'>
-          <div className='card border-0 shadow-sm mb-8'>
+          <div className='card border-0 shadow-sm mb-8 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ຂໍ້ມູນບັນຊີ</h3>
@@ -471,7 +498,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className='card border-0 shadow-sm h-100'>
+          <div className='card border-0 shadow-sm h-100 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ສະຫຼຸບອາຫານທີ່ຈອງ</h3>
@@ -541,7 +568,7 @@ const Dashboard = () => {
 
       <div className='row g-5 g-xl-8'>
         <div className='col-12 col-xl-8'>
-          <div className='card border-0 shadow-sm mb-8'>
+          <div className='card border-0 shadow-sm mb-8 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ການຈອງຫຼ້າສຸດ</h3>
@@ -556,7 +583,7 @@ const Dashboard = () => {
               ) : (
                 <div className='d-flex flex-column gap-4'>
                   {sortedHistory.slice(0, 6).map((item) => (
-                    <div key={item.id} className='rounded-3 bg-light p-5'>
+                    <div key={item.id} className='dashboard-list-item'>
                       <div className='d-flex flex-column flex-md-row justify-content-between gap-4'>
                         <div>
                           <div className='fw-bold text-gray-900 fs-4'>
@@ -575,7 +602,11 @@ const Dashboard = () => {
                           <div className='fw-bolder text-primary fs-3'>
                             {formatCurrency(item.grand_total || 0)}
                           </div>
-                          <span className='badge badge-light-info mt-2'>
+                          <span
+                            className={`badge mt-2 ${getPaymentBadgeClass(
+                              item.payment_status || item.status
+                            )}`}
+                          >
                             {(item.payment_status || item.status || 'pending').toString()}
                           </span>
                         </div>
@@ -587,7 +618,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className='card border-0 shadow-sm h-100'>
+          <div className='card border-0 shadow-sm h-100 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ຄິວການຊໍາລະ</h3>
@@ -601,7 +632,7 @@ const Dashboard = () => {
                 <div className='text-muted fw-semibold py-10'>ບໍ່ພົບຂໍ້ມູນບິນໃນ Firebase</div>
               ) : (
                 <div className='table-responsive'>
-                  <table className='table align-middle gs-0 gy-4'>
+                  <table className='table align-middle gs-0 gy-4 dashboard-table'>
                     <thead>
                       <tr className='fw-bold text-muted bg-light'>
                         <th className='ps-4 min-w-175px rounded-start'>ລູກຄ້າ</th>
@@ -622,15 +653,7 @@ const Dashboard = () => {
                           <td>{formatDate(item.booking_date)}</td>
                           <td className='fw-bold text-primary'>{formatCurrency(item.grand_total || 0)}</td>
                           <td>
-                            <span
-                              className={`badge ${
-                                ['approved'].includes((item.payment_status || '').toLowerCase())
-                                  ? 'badge-light-success'
-                                  : ['rejected'].includes((item.payment_status || '').toLowerCase())
-                                  ? 'badge-light-danger'
-                                  : 'badge-light-warning'
-                              }`}
-                            >
+                            <span className={`badge ${getPaymentBadgeClass(item.payment_status)}`}>
                               {(item.payment_status || 'pending').toString()}
                             </span>
                           </td>
@@ -645,7 +668,7 @@ const Dashboard = () => {
         </div>
 
         <div className='col-12 col-xl-4'>
-          <div className='card border-0 shadow-sm mb-8'>
+          <div className='card border-0 shadow-sm mb-8 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ພາບລວມຄັງຂໍ້ມູນ</h3>
@@ -680,7 +703,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className='card border-0 shadow-sm mb-8'>
+          <div className='card border-0 shadow-sm mb-8 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ລູກຄ້າອັນດັບຕົ້ນ</h3>
@@ -710,7 +733,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className='card border-0 shadow-sm h-100'>
+          <div className='card border-0 shadow-sm h-100 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
                 <h3 className='card-label fw-bold text-gray-900'>ລາຍການສິນຄ້າແບບໄວ</h3>
@@ -754,7 +777,7 @@ const Dashboard = () => {
       {(currentRole === 'owner' || currentRole === 'admin') && (
         <div className='row g-5 g-xl-8 mt-1'>
           <div className='col-12'>
-            <div className='card border-0 shadow-sm'>
+            <div className='card border-0 shadow-sm dashboard-panel'>
               <div className='card-header border-0 pt-6'>
                 <div className='card-title flex-column'>
                   <h3 className='card-label fw-bold text-gray-900'>ການແຈກຢາຍສະຖານະການຊໍາລະ</h3>
@@ -783,41 +806,74 @@ const Dashboard = () => {
   )
 
   return (
-    <div className='container-fluid'>
+    <div className='container-fluid dashboard-shell'>
       <div className='card mb-7 border-0 overflow-hidden dashboard-hero'>
         <div
           className='dashboard-hero-image'
           style={{backgroundImage: `url('${currentHero.url}')`}}
         />
+        <div className='dashboard-hero-overlay' />
         <div className='card-body p-8 p-lg-12'>
           <div className='d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-8'>
             <div className='me-xl-8'>
-           
+              <div className='dashboard-hero-kicker'>
+                <span className='badge badge-light-primary'>Firebase Overview</span>
+                <span className='dashboard-hero-dot' />
+                <span className='text-white opacity-75 fs-8 text-uppercase fw-semibold'>
+                  {currentRole}
+                </span>
+              </div>
               <h1 className='text-white fw-bolder mb-3'>{roleTitle}</h1>
               <div className='text-white opacity-75 fs-5 mw-lg-700px'>{roleDescription}</div>
               <div className='dashboard-hero-caption mt-6'>
                 <div className='text-white fw-bold fs-3 mb-1'>{currentHero.title}</div>
                 <div className='text-white opacity-75 fs-7'>{currentHero.description}</div>
               </div>
+              <div className='row g-4 mt-2'>
+                {heroMetrics.map((metric) => (
+                  <div key={metric.label} className='col-12 col-md-4'>
+                    <div className='dashboard-hero-metric'>
+                      <div className='dashboard-eyebrow text-white opacity-75 mb-2'>
+                        {metric.label}
+                      </div>
+                      <div className='text-white fw-bolder fs-2'>{metric.value}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className='min-w-xl-325px'>
-              <div className='rounded-3 bg-white bg-opacity-10 px-5 py-4 mb-4'>
+              <div className='dashboard-profile-card mb-4'>
+                <div className='d-flex align-items-center gap-4 mb-4'>
+                  <div
+                    className='dashboard-avatar'
+                    style={
+                      currentUserAvatar ? {backgroundImage: `url('${currentUserAvatar}')`} : undefined
+                    }
+                  >
+                    {!currentUserAvatar ? (
+                      <span>{(currentUser?.user_name || currentRole || 'U').toString().charAt(0)}</span>
+                    ) : null}
+                  </div>
+                  <div>
                 <div className='text-white opacity-75 fs-8 mb-1'>ເຂົ້າລະບົບເປັນ</div>
                 <div className='text-white fw-bold fs-2'>{currentUser?.user_name || 'ບໍ່ຮູ້ຈັກຜູ້ໃຊ້'}</div>
                 <div className='text-white opacity-75 fs-7'>{currentUser?.user_email || '-'}</div>
-                <div className='badge badge-light-primary mt-3'>{currentRole}</div>
+                  </div>
+                </div>
+                <div className='badge badge-light-primary'>{currentRole}</div>
               </div>
 
               <div className='row g-3'>
                 <div className='col-6'>
-                  <div className='rounded-3 bg-white bg-opacity-10 px-4 py-3 h-100'>
+                  <div className='dashboard-summary-tile h-100'>
                     <div className='text-white opacity-75 fs-8 mb-1'>Collections</div>
                     <div className='text-white fw-bold fs-2'>6</div>
                   </div>
                 </div>
                 <div className='col-6'>
-                  <div className='rounded-3 bg-white bg-opacity-10 px-4 py-3 h-100'>
+                  <div className='dashboard-summary-tile h-100'>
                     <div className='text-white opacity-75 fs-8 mb-1'>ລາຍການຂໍ້ມູນ</div>
                     <div className='text-white fw-bold fs-2'>
                       {users.length + bills.length + historyBookings.length + products.length + ships.length}
@@ -838,7 +894,7 @@ const Dashboard = () => {
       ) : null}
 
       {isLoading ? (
-        <div className='card border-0 shadow-sm'>
+        <div className='card border-0 shadow-sm dashboard-panel'>
           <div className='card-body py-20 text-center'>
             <div className='text-muted fw-semibold fs-4'>ກໍາລັງໂຫລດແດຊບອດ Firebase emulator...</div>
           </div>
@@ -850,11 +906,33 @@ const Dashboard = () => {
       )}
 
       <style>{`
+        .dashboard-shell {
+          padding-bottom: 2rem;
+        }
+
+        .dashboard-shell .card:not(.dashboard-hero) {
+          border: 1px solid rgba(15, 23, 42, 0.06) !important;
+          box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07) !important;
+        }
+
+        .dashboard-shell .card-header {
+          padding-bottom: 1.25rem;
+        }
+
+        .dashboard-shell .card-title .card-label {
+          font-size: 1.15rem;
+          letter-spacing: -0.01em;
+        }
+
+        .dashboard-eyebrow {
+          letter-spacing: 0.12em;
+        }
+
         .dashboard-hero {
           position: relative;
-          background:
-         
-        
+          border-radius: 28px;
+          background: linear-gradient(135deg, #07111f 0%, #12365d 50%, #1d6fa3 100%);
+          box-shadow: 0 30px 80px rgba(5, 18, 35, 0.28);
         }
 
         .dashboard-hero-image {
@@ -862,9 +940,18 @@ const Dashboard = () => {
           inset: 0;
           background-position: center;
           background-size: cover;
-          opacity: 1;
-          transform: scale(1.01);
-          transition: background-image 0.8s ease, opacity 0.8s ease;
+          opacity: 0.32;
+          transform: scale(1.04);
+          transition: background-image 0.8s ease, opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .dashboard-hero-overlay {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          background:
+            radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 30%),
+            linear-gradient(135deg, rgba(4, 11, 24, 0.88), rgba(8, 30, 54, 0.5));
         }
 
         .dashboard-hero .card-body {
@@ -872,14 +959,125 @@ const Dashboard = () => {
           z-index: 2;
         }
 
+        .dashboard-hero-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+        }
+
+        .dashboard-hero-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.7);
+        }
+
         .dashboard-hero-caption {
           display: inline-block;
           max-width: 420px;
           padding: 1rem 1.25rem;
           border: 1px solid rgba(255, 255, 255, 0.24);
-          border-radius: 1rem;
-          background: rgba(15, 23, 42, 0.24);
-          backdrop-filter: blur(12px);
+          border-radius: 1.25rem;
+          background: rgba(15, 23, 42, 0.28);
+          backdrop-filter: blur(14px);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .dashboard-hero-metric,
+        .dashboard-profile-card,
+        .dashboard-summary-tile {
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(14px);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .dashboard-hero-metric {
+          height: 100%;
+          padding: 1.1rem 1.15rem;
+          border-radius: 20px;
+        }
+
+        .dashboard-profile-card {
+          border-radius: 24px;
+          padding: 1.25rem;
+        }
+
+        .dashboard-summary-tile {
+          padding: 1rem 1.1rem;
+          border-radius: 20px;
+        }
+
+        .dashboard-panel {
+          border-radius: 24px;
+        }
+
+        .dashboard-stat-card {
+          border-radius: 22px;
+          transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .dashboard-stat-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 22px 56px rgba(15, 23, 42, 0.12) !important;
+        }
+
+        .dashboard-stat-icon {
+          border-radius: 18px;
+        }
+
+        .dashboard-stat-hint {
+          line-height: 1.55;
+        }
+
+        .dashboard-list-item {
+          padding: 1.35rem 1.5rem;
+          border-radius: 20px;
+          background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+          border: 1px solid rgba(44, 93, 147, 0.12);
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        .dashboard-table thead tr {
+          background: #f5f8fc !important;
+        }
+
+        .dashboard-table th {
+          padding-top: 1rem;
+          padding-bottom: 1rem;
+          font-size: 0.78rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #7e8299;
+        }
+
+        .dashboard-table td {
+          padding-top: 1rem;
+          padding-bottom: 1rem;
+          border-bottom-color: #eef2f7;
+        }
+
+        @media (max-width: 991.98px) {
+          .dashboard-hero {
+            border-radius: 22px;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .dashboard-shell {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+          }
+
+          .dashboard-hero-metric,
+          .dashboard-profile-card,
+          .dashboard-summary-tile,
+          .dashboard-list-item,
+          .dashboard-panel,
+          .dashboard-stat-card {
+            border-radius: 18px;
+          }
         }
       `}</style>
     </div>

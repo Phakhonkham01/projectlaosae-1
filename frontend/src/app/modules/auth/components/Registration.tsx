@@ -53,9 +53,23 @@ const registrationSchema = Yup.object().shape({
   acceptTerms: Yup.bool().oneOf([true], 'ທ່ານຕ້ອງຍອມຮັບ ເງື່ອນໄຂ ແລະ ເຄື່ອງ'),
 })
 
+const images = [
+  {
+    url: 'media/logos/1.jpg',
+    title: 'ວິວທິວທັດສວຍງາມ',
+    description: 'ດື່ມດ່ຳກັບບັນຍາກາດລິມນ້ຳ ແລະ ການເດີນທາງທີ່ນຸ່ມນວນ',
+  },
+  {
+    url: 'media/logos/5.jpg',
+    title: 'ບໍລິການລະດັບພຣີເມຍມ',
+    description: 'ທີມງານດູແລໃສ່ໃຈທຸກລາຍລະອຽດ ຕັ້ງແຕ່ການຈອງຈົນຈົບທຣິບ',
+  },
+]
+
 // ─── Registration Component ───────────────────────────────────────────────────
 export function Registration() {
   const [loading, setLoading] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const navigate = useNavigate()
 
   const formik = useFormik({
@@ -136,13 +150,88 @@ export function Registration() {
     PasswordMeterComponent.bootstrap()
   }, [])
 
+  useEffect(() => {
+    const root = document.getElementById('root')
+    const previousRootBackground = root?.style.background
+    const previousBodyBackground = document.body.style.background
+    const previousHtmlBackground = document.documentElement.style.background
+
+    if (root) {
+      root.style.background = 'transparent'
+    }
+    document.body.style.background = 'transparent'
+    document.documentElement.style.background = 'transparent'
+
+    return () => {
+      if (root) {
+        root.style.background = previousRootBackground || ''
+      }
+      document.body.style.background = previousBodyBackground || ''
+      document.documentElement.style.background = previousHtmlBackground || ''
+    }
+  }, [])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length)
+    }, 4500)
+
+    return () => window.clearInterval(interval)
+  }, [])
+
   return (
-    <form
-      className='form w-100 fv-plugins-bootstrap5 fv-plugins-framework'
-      noValidate
-      id='kt_login_signup_form'
-      onSubmit={formik.handleSubmit}
-    >
+    <>
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        {images.map((image, index) => (
+          <div
+            key={image.url}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url('${toAbsoluteUrl(image.url)}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: currentImageIndex === index ? 1 : 0,
+              transform: 'scale(1.02)',
+              filter: 'saturate(1.02) contrast(1.02)',
+              transition: 'opacity 1.2s ease-in-out',
+            }}
+          />
+        ))}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(135deg, rgba(8,26,53,0.28) 0%, rgba(15,79,200,0.12) 50%, rgba(8,26,53,0.18) 100%)',
+          }}
+        />
+      </div>
+
+      <form
+        className='form w-100 fv-plugins-bootstrap5 fv-plugins-framework'
+        noValidate
+        id='kt_login_signup_form'
+        onSubmit={formik.handleSubmit}
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          background: 'rgba(255,255,255,0.36)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.28)',
+          borderRadius: '28px',
+          padding: '2.5rem',
+          boxShadow: '0 24px 60px rgba(8,26,53,0.18)',
+        }}
+      >
       {/* ── Heading ─────────────────────────────────────────────────────────── */}
       <div className='text-center mb-11'>
         <h1 className='text-gray-900 fw-bolder mb-3'>ລົງທະບຽນ</h1>
@@ -420,6 +509,7 @@ export function Registration() {
           </button>
         </Link>
       </div>
-    </form>
+      </form>
+    </>
   )
 }

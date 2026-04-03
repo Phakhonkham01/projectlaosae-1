@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import * as Yup from 'yup'
 import clsx from 'clsx'
 import {useFormik} from 'formik'
@@ -21,7 +21,19 @@ const loginSchema = Yup.object().shape({
     .min(3, 'ຕໍ່າສຸດ 3 ສັນຍາລັກ')
     .required('ລະຫັດຜ່ານ ແມ່ນບໍ່ສາມາດປະຫຍາດໄດ້'),
 })
+  const images = [
 
+    {
+      url: 'media/logos/1.jpg',
+      title: 'ວິວທິວທັດສວຍງາມ',
+      description: 'ດື່ມດ່ຳກັບບັນຍາກາດລິມນ້ຳ ແລະ ການເດີນທາງທີ່ນຸ່ມນວນ',
+    },
+    {
+      url: 'media/logos/5.jpg',
+      title: 'ບໍລິການລະດັບພຣີເມຍມ',
+      description: 'ທີມງານດູແລໃສ່ໃຈທຸກລາຍລະອຽດ ຕັ້ງແຕ່ການຈອງຈົນຈົບທຣິບ',
+    }
+  ]
 const initialValues = {
   user_email: '',
   password: '',
@@ -44,7 +56,37 @@ const getFirebaseError = (code: string): string => {
 // ─── Login Component ──────────────────────────────────────────────────────────
 export function Login() {
   const [loading, setLoading] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const {saveAuth, setCurrentUser} = useAuth()
+
+  useEffect(() => {
+    const root = document.getElementById('root')
+    const previousRootBackground = root?.style.background
+    const previousBodyBackground = document.body.style.background
+    const previousHtmlBackground = document.documentElement.style.background
+
+    if (root) {
+      root.style.background = 'transparent'
+    }
+    document.body.style.background = 'transparent'
+    document.documentElement.style.background = 'transparent'
+
+    return () => {
+      if (root) {
+        root.style.background = previousRootBackground || ''
+      }
+      document.body.style.background = previousBodyBackground || ''
+      document.documentElement.style.background = previousHtmlBackground || ''
+    }
+  }, [])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length)
+    }, 4500)
+
+    return () => window.clearInterval(interval)
+  }, [])
 
   const formik = useFormik({
     initialValues,
@@ -118,12 +160,58 @@ export function Login() {
   })
 
   return (
-    <form
-      className='form w-100'
-      onSubmit={formik.handleSubmit}
-      noValidate
-      id='kt_login_signin_form'
-    >
+    <>
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        {images.map((image, index) => (
+          <div
+            key={image.url}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url('${toAbsoluteUrl(image.url)}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: currentImageIndex === index ? 1 : 0,
+              transform: 'scale(1.02)',
+              filter: 'saturate(1.02) contrast(1.02)',
+              transition: 'opacity 1.2s ease-in-out',
+            }}
+          />
+        ))}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(135deg, rgba(8,26,53,0.28) 0%, rgba(15,79,200,0.12) 50%, rgba(8,26,53,0.18) 100%)',
+          }}
+        />
+      </div>
+
+      <form
+        className='form w-100'
+        onSubmit={formik.handleSubmit}
+        noValidate
+        id='kt_login_signin_form'
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          background: 'rgba(255,255,255,0.36)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.28)',
+          borderRadius: '28px',
+          padding: '2.5rem',
+          boxShadow: '0 24px 60px rgba(8,26,53,0.18)',
+        }}
+      >
       {/* ── Heading ─────────────────────────────────────────────────────────── */}
       <div className='text-center mb-11'>
         <h1 className='text-gray-900 fw-bolder mb-3'>ເຂົ້າສູ່ລະບົບ</h1>
@@ -267,11 +355,12 @@ export function Login() {
 
       {/* ── Register Link ────────────────────────────────────────────────────── */}
       <div className='text-gray-500 text-center fw-semibold fs-6'>
-        ບໍ່ແມ່ນສະມາຊິກທັນ?{' '}
+        ບໍ່ແມ່ນສະມາຊິກ?{' '}
         <Link to='/auth/registration' className='link-primary fw-bold'>
           ສ້າງບັນຊີ
         </Link>
       </div>
-    </form>
+      </form>
+    </>
   )
 }
