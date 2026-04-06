@@ -26,4 +26,10 @@ export default defineConfig({
       'firebase/storage',
     ],
   },
+
+  // 🔥 เพิ่มตรงนี้เพื่อให้เข้าจาก IP EC2 ได้
+  server: {
+    host: true,  // bind ทุก IP
+    port: 5173,  // port ที่คุณใช้
+  },
 })
