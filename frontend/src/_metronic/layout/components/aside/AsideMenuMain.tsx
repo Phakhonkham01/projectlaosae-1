@@ -102,6 +102,15 @@ export function AsideMenuMain() {
         fontIcon='bi-layers'
       />
 
+      {isCustomer && (
+        <AsideMenuItem
+          to='/apps/products-in-shop/list'
+          icon='basket'
+          title='ສິນຄ້າໃນຮ້ານ'
+          fontIcon='bi-bag'
+        />
+      )}
+
       {!isCustomer && (
         <>
           <AsideMenuItem

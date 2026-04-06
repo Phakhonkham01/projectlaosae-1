@@ -22,6 +22,7 @@ const PrivateRoutes = () => {
   const UserRequired = lazy(() => import('../modules/apps/user-required/UserRequired'))
   const ShipsPage = lazy(() => import('../modules/apps/create-ships/ShipsPage'))
   const AddFood  = lazy(()=> import('../modules/apps/addFood/addFoodPage'))
+  const ProductsInShopPage = lazy(() => import('../modules/apps/Products_in_shop/ProductsInShopPage'))
   const BookingShipsPage = lazy(() => import('../modules/apps/booking-management/BookingShipsPage'))
   const EmployeePage = lazy(()=> import('../modules/apps/employees-management/EmployeesPage'))
   const HistoryPage = lazy(()=> import('../modules/apps/User-history/UserHistoryPage'))
@@ -145,6 +146,14 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <AddFood />
+            </SuspensedView>
+          }
+        />
+        <Route
+          path='apps/products-in-shop/*'
+          element={
+            <SuspensedView>
+              <ProductsInShopPage />
             </SuspensedView>
           }
         />
