@@ -318,7 +318,7 @@ const Dashboard = () => {
             <div className='text-gray-600 fw-semibold fs-8 text-uppercase mb-2 dashboard-eyebrow'>
               {title}
             </div>
-            <div className='fs-2hx fw-bold text-gray-900 lh-1 mb-2'>{value}</div>
+            <div className='fs-2hx fw-bold text-gray-900 lh-1 mb-2 dashboard-stat-value'>{value}</div>
             <div className='text-muted fs-7 dashboard-stat-hint'>{hint}</div>
           </div>
         </div>
@@ -812,7 +812,6 @@ const Dashboard = () => {
           className='dashboard-hero-image'
           style={{backgroundImage: `url('${currentHero.url}')`}}
         />
-        <div className='dashboard-hero-overlay' />
         <div className='card-body p-8 p-lg-12'>
           <div className='d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-8'>
             <div className='me-xl-8'>
@@ -836,7 +835,9 @@ const Dashboard = () => {
                       <div className='dashboard-eyebrow text-white opacity-75 mb-2'>
                         {metric.label}
                       </div>
-                      <div className='text-white fw-bolder fs-2'>{metric.value}</div>
+                      <div className='text-white fw-bolder fs-2 dashboard-hero-metric-value'>
+                        {metric.value}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -907,12 +908,26 @@ const Dashboard = () => {
 
       <style>{`
         .dashboard-shell {
-          padding-bottom: 2rem;
+          --dashboard-bg: #f4f7fb;
+          --dashboard-surface: #ffffff;
+          --dashboard-border: rgba(15, 23, 42, 0.08);
+          --dashboard-shadow: 0 12px 36px rgba(15, 23, 42, 0.07);
+          --dashboard-shadow-hover: 0 20px 46px rgba(15, 23, 42, 0.12);
+          --dashboard-hero-gradient:
+            linear-gradient(120deg, #10233f 0%, #1d4778 54%, #2f87bf 100%);
+          --dashboard-text-main: #0f172a;
+          --dashboard-text-muted: #6b7280;
+          padding: 0.5rem 0.35rem 2rem;
+          background:
+            radial-gradient(circle at 0% -20%, rgba(98, 160, 255, 0.18), transparent 36%),
+            radial-gradient(circle at 100% 0%, rgba(63, 205, 170, 0.13), transparent 28%),
+            var(--dashboard-bg);
         }
 
         .dashboard-shell .card:not(.dashboard-hero) {
-          border: 1px solid rgba(15, 23, 42, 0.06) !important;
-          box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07) !important;
+          border: 1px solid var(--dashboard-border) !important;
+          background: var(--dashboard-surface);
+          box-shadow: var(--dashboard-shadow) !important;
         }
 
         .dashboard-shell .card-header {
@@ -920,7 +935,8 @@ const Dashboard = () => {
         }
 
         .dashboard-shell .card-title .card-label {
-          font-size: 1.15rem;
+          font-size: 1.1rem;
+          color: var(--dashboard-text-main);
           letter-spacing: -0.01em;
         }
 
@@ -931,8 +947,9 @@ const Dashboard = () => {
         .dashboard-hero {
           position: relative;
           border-radius: 28px;
-          background: linear-gradient(135deg, #07111f 0%, #12365d 50%, #1d6fa3 100%);
-          box-shadow: 0 30px 80px rgba(5, 18, 35, 0.28);
+          background: var(--dashboard-hero-gradient);
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          box-shadow: 0 34px 72px rgba(4, 14, 31, 0.26);
         }
 
         .dashboard-hero-image {
@@ -940,18 +957,10 @@ const Dashboard = () => {
           inset: 0;
           background-position: center;
           background-size: cover;
-          opacity: 0.32;
+          opacity: 0.85;
+          filter: brightness(1.08);
           transform: scale(1.04);
           transition: background-image 0.8s ease, opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .dashboard-hero-overlay {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          background:
-            radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 30%),
-            linear-gradient(135deg, rgba(4, 11, 24, 0.88), rgba(8, 30, 54, 0.5));
         }
 
         .dashboard-hero .card-body {
@@ -976,86 +985,151 @@ const Dashboard = () => {
         .dashboard-hero-caption {
           display: inline-block;
           max-width: 420px;
-          padding: 1rem 1.25rem;
-          border: 1px solid rgba(255, 255, 255, 0.24);
-          border-radius: 1.25rem;
-          background: rgba(15, 23, 42, 0.28);
-          backdrop-filter: blur(14px);
+          padding: 0.95rem 1.2rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 1rem;
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(12px);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
 
         .dashboard-hero-metric,
         .dashboard-profile-card,
         .dashboard-summary-tile {
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.12);
+          backdrop-filter: blur(12px);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
 
         .dashboard-hero-metric {
           height: 100%;
-          padding: 1.1rem 1.15rem;
-          border-radius: 20px;
+          padding: 1rem 1.1rem;
+          border-radius: 16px;
         }
 
         .dashboard-profile-card {
-          border-radius: 24px;
+          border-radius: 18px;
           padding: 1.25rem;
+        }
+
+        .dashboard-avatar {
+          width: 56px;
+          height: 56px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.16);
+          color: #ffffff;
+          font-size: 1.2rem;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background-position: center;
+          background-size: cover;
+          flex: 0 0 auto;
         }
 
         .dashboard-summary-tile {
           padding: 1rem 1.1rem;
-          border-radius: 20px;
+          border-radius: 16px;
         }
 
         .dashboard-panel {
-          border-radius: 24px;
+          border-radius: 18px;
         }
 
         .dashboard-stat-card {
-          border-radius: 22px;
-          transition: transform 0.22s ease, box-shadow 0.22s ease;
+          border-radius: 16px;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .dashboard-stat-card .card-body {
+          overflow: hidden;
+          padding: 1.35rem 1.35rem 1.25rem;
+        }
+
+        .dashboard-stat-card .flex-grow-1 {
+          min-width: 0;
+        }
+
+        .dashboard-shell .table-responsive {
+          border-radius: 14px;
+          border: 1px solid rgba(15, 23, 42, 0.06);
+          overflow: hidden;
         }
 
         .dashboard-stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 22px 56px rgba(15, 23, 42, 0.12) !important;
+          transform: translateY(-3px);
+          border-color: rgba(58, 125, 196, 0.28) !important;
+          box-shadow: var(--dashboard-shadow-hover) !important;
         }
 
         .dashboard-stat-icon {
-          border-radius: 18px;
+          border-radius: 14px;
         }
 
         .dashboard-stat-hint {
           line-height: 1.55;
+          color: var(--dashboard-text-muted) !important;
+        }
+
+        .dashboard-stat-value,
+        .dashboard-hero-metric-value {
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          letter-spacing: -0.02em;
+        }
+
+        .dashboard-stat-value {
+          font-size: clamp(1.7rem, 2.6vw, 2.45rem) !important;
+          line-height: 1.15 !important;
+        }
+
+        .dashboard-hero-metric-value {
+          font-size: clamp(1.55rem, 2.1vw, 2rem) !important;
+          line-height: 1.2;
         }
 
         .dashboard-list-item {
           padding: 1.35rem 1.5rem;
-          border-radius: 20px;
-          background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-          border: 1px solid rgba(44, 93, 147, 0.12);
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+          border-radius: 14px;
+          background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+          border: 1px solid rgba(44, 93, 147, 0.1);
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dashboard-list-item:hover {
+          border-color: rgba(44, 93, 147, 0.2);
+          box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
         }
 
         .dashboard-table thead tr {
-          background: #f5f8fc !important;
+          background: #f6f9ff !important;
         }
 
         .dashboard-table th {
           padding-top: 1rem;
           padding-bottom: 1rem;
-          font-size: 0.78rem;
+          font-size: 0.74rem;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #7e8299;
+          letter-spacing: 0.12em;
+          color: #8491a7;
         }
 
         .dashboard-table td {
           padding-top: 1rem;
           padding-bottom: 1rem;
           border-bottom-color: #eef2f7;
+        }
+
+        .dashboard-table tbody tr {
+          transition: background-color 0.18s ease;
+        }
+
+        .dashboard-table tbody tr:hover {
+          background: #f8fbff;
         }
 
         @media (max-width: 991.98px) {
@@ -1066,8 +1140,7 @@ const Dashboard = () => {
 
         @media (max-width: 767.98px) {
           .dashboard-shell {
-            padding-left: 0.25rem;
-            padding-right: 0.25rem;
+            padding: 0 0.1rem 1.25rem;
           }
 
           .dashboard-hero-metric,
@@ -1076,7 +1149,12 @@ const Dashboard = () => {
           .dashboard-list-item,
           .dashboard-panel,
           .dashboard-stat-card {
-            border-radius: 18px;
+            border-radius: 14px;
+          }
+
+          .dashboard-shell .card-body {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
           }
         }
       `}</style>

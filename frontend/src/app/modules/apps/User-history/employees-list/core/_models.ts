@@ -25,7 +25,7 @@ interface HistoryBooking {
   ship_name: string
   ship_price_per_hour: number
   slip_url: string
-  status: 'pending' | 'approved' | 'rejected' | 'payment failed'
+  status: 'pending' | 'approved' | 'rejected' | 'payment failed' | 'under_review_again'
   total_food_price: number
   total_ship_price: number
   user_email: string

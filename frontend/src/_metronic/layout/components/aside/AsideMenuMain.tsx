@@ -101,7 +101,12 @@ export function AsideMenuMain() {
         title='ຈອງເຮືອ ແລະ ອາຫານ'
         fontIcon='bi-layers'
       />
-
+      <AsideMenuItem
+            to='/apps/my-profile'
+            icon='profile-circle'
+            title='ໂປຣໄຟລ໌'
+            fontIcon='bi-layers'
+          />
       {isCustomer && (
         <AsideMenuItem
           to='/apps/products-in-shop/list'
@@ -119,12 +124,7 @@ export function AsideMenuMain() {
             title='ຈັດການເຮືອໃນຮ້ານ'
             fontIcon='bi-layers'
           />
-          <AsideMenuItem
-            to='/apps/my-profile'
-            icon='profile-circle'
-            title='ໂປຣໄຟລ໌'
-            fontIcon='bi-layers'
-          />
+    
 
           <AsideMenuItem
             to='/apps/check-bill/check-bills'

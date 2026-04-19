@@ -87,11 +87,14 @@ export const updatePaymentStatus = async (
   payment_status: string,
   slip_url?: string
 ): Promise<void> => {
-  await updateDoc(doc(db, COLLECTION, id), {
+  const payload = {
     payment_status,
     ...(slip_url !== undefined && { slip_url }),
     updatedAt: new Date().toISOString(),
-  })
+  }
+
+  await updateDoc(doc(db, COLLECTION, id), payload)
+  await updateDoc(doc(db, 'history_booking', id), payload).catch(() => undefined)
 }
 
 // Update booking status only

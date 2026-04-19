@@ -9,16 +9,16 @@ import {CustomHeaderColumn} from './columns/CustomHeaderColumn'
 import {CustomRow} from './columns/CustomRow'
 import {HistoryBookingColumns} from './columns/_columns'
 
-type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 'payment failed'
+type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 'payment_failed' | 'under_review_again'
 
 const tabs: {label: string; value: StatusTab; color: string}[] = [
-  {label: 'ທັງໝົດ', value: 'all', color: '#64748b'},
-  {label: 'ລໍຖ້າ', value: 'pending', color: '#f59e0b'},
-  {label: 'ອະນຸມັດແລ້ວ', value: 'approved', color: '#10b981'},
-  {label: 'ປະຕິເສດແລ້ວ', value: 'rejected', color: '#ef4444'},
-  {label: 'ການຊຳລະລົ້ມເຫຼວ', value: 'payment failed', color: '#8b5cf6'},
+  {label: 'All', value: 'all', color: '#64748b'},
+  {label: 'Pending', value: 'pending', color: '#f59e0b'},
+  {label: 'Approved', value: 'approved', color: '#10b981'},
+  {label: 'Rejected', value: 'rejected', color: '#ef4444'},
+  {label: 'Payment Failed', value: 'payment_failed', color: '#8b5cf6'},
+  {label: 'Under Review Again', value: 'under_review_again', color: '#0ea5e9'},
 ]
-
 const getCurrentUserId = (): string | null => {
   try {
     const stored = localStorage.getItem('user')
@@ -30,7 +30,7 @@ const getCurrentUserId = (): string | null => {
   }
 }
 
-const normalizeStatus = (value?: string) => value?.toLowerCase().replace(/_/g, ' ').trim() ?? ''
+const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
 
 const HistoryTable = () => {
   const allData = useQueryResponseData()

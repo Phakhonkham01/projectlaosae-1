@@ -1,7 +1,12 @@
-import {FC, useState} from 'react'
+import {FC, useRef, useState, type ChangeEvent, type ReactNode} from 'react'
+import Swal from 'sweetalert2'
+import {getDownloadURL, ref, uploadBytes} from 'firebase/storage'
 import {useListView} from '../core/ListViewProvider'
+import {useQueryResponse} from '../core/QueryResponseProvider'
 import {HistoryBooking} from '../core/_models'
 import {EmployeesListLoading} from '../components/loading/EmployeesListLoading'
+import {updatePaymentStatus} from '../core/_requests'
+import {storage} from '../../../../../../../../firebase/useFirebase'
 
 type Props = {
   isLoading: boolean
@@ -14,8 +19,10 @@ const statusMap: Record<string, {label: string; cls: string}> = {
   cancelled: {label: 'ຍົກເລີກແລ້ວ', cls: 'badge-light-danger'},
   completed: {label: 'ສຳເລັດແລ້ວ', cls: 'badge-light-primary'},
   paid: {label: 'ຊຳລະແລ້ວ', cls: 'badge-light-success'},
-  failed: {label: 'ລົ້ມເຫຼວ', cls: 'badge-light-danger'},
-  refunded: {label: 'ຄືນເງິນແລ້ວ', cls: 'badge-light-info'},
+  failed: {label: 'Failed', cls: 'badge-light-danger'},
+  refunded: {label: 'Refunded', cls: 'badge-light-info'},
+  'payment failed': {label: 'Payment Failed', cls: 'badge-light-danger'},
+  under_review_again: {label: 'Under Review Again', cls: 'badge-light-info'},
 }
 
 const paymentMethodLabels: Record<string, string> = {
@@ -42,7 +49,7 @@ const SectionTitle = ({icon, title}: {icon: string; title: string}) => (
   </div>
 )
 
-const InfoRow = ({label, children}: {label: string; children: React.ReactNode}) => (
+const InfoRow = ({label, children}: {label: string; children: ReactNode}) => (
   <div className='row mb-4 align-items-center'>
     <div className='col-5'>
       <span className='text-muted fw-semibold fs-7'>{label}</span>
@@ -88,7 +95,10 @@ const SlipLightbox = ({url, onClose}: {url: string; onClose: () => void}) => (
 
 const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
   const {setItemIdForUpdate} = useListView()
+  const {refetch} = useQueryResponse()
   const [showSlip, setShowSlip] = useState(false)
+  const [isRepayLoading, setIsRepayLoading] = useState(false)
+  const repayInputRef = useRef<HTMLInputElement>(null)
 
   const methodIcon: Record<string, string> = {
     cash: '💵',
@@ -98,6 +108,46 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
   }
 
   const fmt = (n?: number) => (n != null ? `${n.toLocaleString()} LAK` : '-')
+  const normalizedPaymentStatus = booking?.payment_status?.toLowerCase?.().replace(/ /g, '_')
+
+  const handleRepaySlipUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !booking) return
+
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({icon: 'error', title: 'Invalid file', text: 'Please choose an image file only.'})
+      return
+    }
+
+    setIsRepayLoading(true)
+    try {
+      const storageRef = ref(storage, `slips/${booking.id}_${Date.now()}_${file.name}`)
+      await uploadBytes(storageRef, file)
+      const slipUrl = await getDownloadURL(storageRef)
+
+      await updatePaymentStatus(booking.id, 'under_review_again', slipUrl)
+      await refetch()
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Submitted',
+        text: 'Your bill has been submitted for re-check.',
+        timer: 1800,
+        showConfirmButton: false,
+      })
+      setItemIdForUpdate(undefined)
+    } catch (error) {
+      console.error(error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload failed',
+        text: 'Cannot submit payment slip. Please try again.',
+      })
+    } finally {
+      setIsRepayLoading(false)
+      if (repayInputRef.current) repayInputRef.current.value = ''
+    }
+  }
 
   return (
     <>
@@ -245,6 +295,33 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
           </div>
         </div>
 
+
+        {normalizedPaymentStatus === 'payment_failed' && (
+          <div className='card card-flush border border-dashed border-danger'>
+            <div className='card-body py-5 px-6'>
+              <SectionTitle icon='ki-pencil' title='Pay Again / Edit Bill' />
+              <div className='text-muted fs-7 mb-4'>
+                Payment failed. Upload a new slip to submit this bill for re-check.
+              </div>
+              <input
+                type='file'
+                accept='image/*'
+                className='d-none'
+                ref={repayInputRef}
+                onChange={handleRepaySlipUpload}
+                disabled={isRepayLoading}
+              />
+              <button
+                type='button'
+                className='btn btn-light-danger'
+                onClick={() => repayInputRef.current?.click()}
+                disabled={isRepayLoading}
+              >
+                {isRepayLoading ? 'Uploading...' : 'Pay Again'}
+              </button>
+            </div>
+          </div>
+        )}
         <div className='d-flex justify-content-end pt-2'>
           <button
             type='button'
