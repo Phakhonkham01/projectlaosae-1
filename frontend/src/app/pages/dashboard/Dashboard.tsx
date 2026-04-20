@@ -736,7 +736,7 @@ const Dashboard = () => {
           <div className='card border-0 shadow-sm h-100 dashboard-panel'>
             <div className='card-header border-0 pt-6'>
               <div className='card-title flex-column'>
-                <h3 className='card-label fw-bold text-gray-900'>ລາຍການສິນຄ້າແບບໄວ</h3>
+                
                 <span className='text-muted mt-1 fw-semibold fs-7'>
                   ລາຍການຫຼ້າສຸດພ້ອມການຈັບຄູ່ໝວດໝູ່
                 </span>
@@ -781,9 +781,9 @@ const Dashboard = () => {
               <div className='card-header border-0 pt-6'>
                 <div className='card-title flex-column'>
                   <h3 className='card-label fw-bold text-gray-900'>ການແຈກຢາຍສະຖານະການຊໍາລະ</h3>
-                  <span className='text-muted mt-1 fw-semibold fs-7'>
+                  {/* <span className='text-muted mt-1 fw-semibold fs-7'>
                     ມຸມມອງລະດັບສູງສໍາລັບເຈົ້າຂອງຈາກບິນທັງໝົດ
-                  </span>
+                  </span> */}
                 </div>
               </div>
               <div className='card-body pt-2'>
@@ -897,7 +897,7 @@ const Dashboard = () => {
       {isLoading ? (
         <div className='card border-0 shadow-sm dashboard-panel'>
           <div className='card-body py-20 text-center'>
-            <div className='text-muted fw-semibold fs-4'>ກໍາລັງໂຫລດແດຊບອດ Firebase emulator...</div>
+            <div className='text-muted fw-semibold fs-4'>ກໍາລັງໂຫລດແດຊບອດ</div>
           </div>
         </div>
       ) : currentRole === 'customer' ? (
