@@ -24,6 +24,7 @@ type PaymentStatus =
   | 'approved'
   | 'rejected'
   | 'payment failed'
+  | 'under_review_again'
 
 interface Bill {
   id: string
@@ -55,7 +56,8 @@ const STATUS_META: Record<
   pending: {label: 'ລໍຖ້າ', badge: 'badge-light-warning', icon: 'time'},
   approved: {label: 'ອະນຸມັດແລ້ວ', badge: 'badge-light-success', icon: 'check-circle'},
   rejected: {label: 'ປະຕິເສດແລ້ວ', badge: 'badge-light-danger', icon: 'cross-circle'},
-  'payment failed': {label: 'ການຊຳລະລົ້ມເຫຼວ', badge: 'badge-light-info', icon: 'cross-circle'},
+  'payment failed': {label: 'Payment Failed', badge: 'badge-light-info', icon: 'cross-circle'},
+  under_review_again: {label: 'Under Review Again', badge: 'badge-light-primary', icon: 'time'},
 }
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
@@ -127,7 +129,7 @@ const BillDetailModal: FC<{
       const storageRef = ref(storage, `slips/${Date.now()}_${file.name}`)
       await uploadBytes(storageRef, file)
       const url = await getDownloadURL(storageRef)
-      const update = {slip_url: url, payment_status: 'payment failed', reject_reason: ''}
+      const update = {slip_url: url, payment_status: 'under_review_again', reject_reason: ''}
       await updateDoc(doc(db, 'bill', bill.id), update)
       await updateDoc(doc(db, 'history_booking', bill.id), update).catch(() => {})
       Swal.fire({
@@ -270,7 +272,7 @@ const BillDetailModal: FC<{
             </div>
 
             {isEmployee &&
-              bill.payment_status === 'payment failed' && (
+              ['payment failed', 'under_review_again'].includes(bill.payment_status) && (
                 <div className='card border-warning mb-4'>
                   <div className='card-body py-4 px-5'>
                     <div className='fw-bold mb-3'>ການດຳເນີນການຂອງພະນັກງານ</div>
@@ -308,7 +310,7 @@ const BillDetailModal: FC<{
                 </div>
               )}
 
-            {!isEmployee && bill.payment_status === 'rejected' && (
+            {!isEmployee && ['payment failed', 'rejected'].includes(bill.payment_status) && (
               <div className='card border-danger'>
                 <div className='card-body py-4 px-5'>
                   <div className='fw-bold mb-3 text-danger'>ອັບໂຫລດສະລິບໂອນເງິນໃໝ່</div>
@@ -498,10 +500,10 @@ const BillManagement: FC = () => {
                           {meta.label}
                         </span>
                         {isEmployee &&
-                          b.payment_status === 'payment failed' && (
+                          ['payment failed', 'under_review_again'].includes(b.payment_status) && (
                             <span className='ms-2 badge badge-circle badge-warning w-10px h-10px' />
                           )}
-                        {!isEmployee && b.payment_status === 'rejected' && (
+                        {!isEmployee && ['payment failed', 'rejected'].includes(b.payment_status) && (
                           <div className='text-danger fs-8 mt-1'>ຕ້ອງດຳເນີນການ</div>
                         )}
                       </td>

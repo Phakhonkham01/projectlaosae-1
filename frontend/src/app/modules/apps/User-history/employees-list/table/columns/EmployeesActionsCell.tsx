@@ -1,60 +1,26 @@
-import { FC } from "react";
-import { useMutation, useQueryClient } from "react-query";
-import { useListView } from "../../core/ListViewProvider";
-import { useQueryResponse } from "../../core/QueryResponseProvider";
-import { deleteHistoryBooking } from "../../core/_requests";
-import { KTIcon, QUERIES } from "../../../../../../../_metronic/helpers";
-import Swal from "sweetalert2";
+import {FC} from 'react'
+import {useListView} from '../../core/ListViewProvider'
 
 type Props = {
-  id: string;
-};
+  id: string
+  paymentStatus?: string
+}
 
-const EmployeesActionsCell: FC<Props> = ({ id }) => {
-  const { setItemIdForUpdate } = useListView();
-  const { query } = useQueryResponse();
-  const queryClient = useQueryClient();
-
-  const deleteMutation = useMutation(() => deleteHistoryBooking(id), {
-    onSuccess: () => {
-      Swal.fire({
-        icon: "success",
-        title: "ລຶບແລ້ວ!",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-      queryClient.invalidateQueries([
-        `${QUERIES.USERS_LIST}-employeess-${query}`,
-      ]);
-    },
-  });
-
-  const handleDelete = () => {
-    Swal.fire({
-      icon: "warning",
-      title: "ທ່ານແນ່ໃຈບໍ?",
-      showCancelButton: true,
-      confirmButtonText: "ແມ່ນ, ລຶບເລີຍ!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        deleteMutation.mutate();
-      }
-    });
-  };
+const EmployeesActionsCell: FC<Props> = ({id, paymentStatus}) => {
+  const {setItemIdForUpdate} = useListView()
+  const normalizedPaymentStatus = paymentStatus?.toLowerCase().trim().replace(/[\s-]+/g, '_')
+  const canRepay = normalizedPaymentStatus === 'payment_failed'
 
   return (
-    <div className="d-flex justify-content-end gap-2">
+    <div className='d-flex justify-content-end gap-2'>
       <button
-        className="btn btn-light-primary btn-sm"
+        className={`btn btn-sm ${canRepay ? 'btn-light-danger' : 'btn-light-primary'}`}
         onClick={() => setItemIdForUpdate(id)}
       >
-        ລາຍລະອຽດ
+        {canRepay ? 'Pay Again' : 'Details'}
       </button>
-      {/* <button className="btn btn-icon btn-light-danger btn-sm" onClick={handleDelete}>
-        <KTIcon iconName="trash" className="fs-3" />
-      </button> */}
     </div>
-  );
-};
+  )
+}
 
-export { EmployeesActionsCell };
+export {EmployeesActionsCell}

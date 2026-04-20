@@ -5,6 +5,7 @@ export type PaymentStatus =
   | 'approved'
   | 'rejected'
   | 'payment failed'
+  | 'under_review_again'
 
 export interface FoodItem {
   product_id: string
@@ -60,14 +61,16 @@ export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
   'approved',
   'rejected',
   'payment failed',
+  'under_review_again',
 ]
 
 export const PAYMENT_STATUS_META: Record<
   PaymentStatus,
   {label: string; badgeClass: string}
 > = {
-  pending: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
-  approved: {label: 'ອະນຸມັດແລ້ວ', badgeClass: 'badge-light-success'},
-  rejected: {label: 'ປະຕິເສດແລ້ວ', badgeClass: 'badge-light-danger'},
-  'payment failed': {label: 'ການຊຳລະລົ້ມເຫຼວ', badgeClass: 'badge-light-info'},
+  pending: {label: 'Pending', badgeClass: 'badge-light-warning'},
+  approved: {label: 'Approved', badgeClass: 'badge-light-success'},
+  rejected: {label: 'Rejected', badgeClass: 'badge-light-danger'},
+  'payment failed': {label: 'Payment Failed', badgeClass: 'badge-light-info'},
+  under_review_again: {label: 'Under Review Again', badgeClass: 'badge-light-primary'},
 }

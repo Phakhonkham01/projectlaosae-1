@@ -11,16 +11,20 @@ const bookingStatusStyles: Record<string, {bg: string; color: string}> = {
   approved: {bg: '#e8f5e9', color: '#10b981'},
   rejected: {bg: '#fce8e8', color: '#ef4444'},
   payment_failed: {bg: '#ede9fe', color: '#8b5cf6'},
+  'payment failed': {bg: '#ede9fe', color: '#8b5cf6'},
+  under_review_again: {bg: '#e0f2fe', color: '#0284c7'},
 }
 
 const bookingStatusLabels: Record<string, string> = {
-  pending: 'ລໍຖ້າ',
-  confirmed: 'ຢືນຢັນແລ້ວ',
-  cancelled: 'ຍົກເລີກແລ້ວ',
-  completed: 'ສຳເລັດແລ້ວ',
-  approved: 'ອະນຸມັດແລ້ວ',
-  rejected: 'ປະຕິເສດແລ້ວ',
-  payment_failed: 'ການຊຳລະລົ້ມເຫຼວ',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  cancelled: 'Cancelled',
+  completed: 'Completed',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  payment_failed: 'Payment Failed',
+  'payment failed': 'Payment Failed',
+  under_review_again: 'Under Review Again',
 }
 
 const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
@@ -28,27 +32,28 @@ const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
   paid: {bg: '#e8f5e9', color: '#10b981'},
   failed: {bg: '#fce8e8', color: '#ef4444'},
   refunded: {bg: '#ede9fe', color: '#8b5cf6'},
+  approved: {bg: '#e8f5e9', color: '#10b981'},
+  rejected: {bg: '#fce8e8', color: '#ef4444'},
+  'payment failed': {bg: '#ede9fe', color: '#8b5cf6'},
+  under_review_again: {bg: '#e0f2fe', color: '#0284c7'},
 }
 
 const paymentStatusLabels: Record<string, string> = {
-  pending: 'ລໍຖ້າ',
-  paid: 'ຊຳລະແລ້ວ',
-  failed: 'ລົ້ມເຫຼວ',
-  refunded: 'ຄືນເງິນແລ້ວ',
+  pending: 'Pending',
+  paid: 'Paid',
+  failed: 'Failed',
+  refunded: 'Refunded',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  'payment failed': 'Payment Failed',
+  under_review_again: 'Under Review Again',
 }
 
 const paymentMethodLabels: Record<string, string> = {
-  cash: 'ເງິນສົດ',
-  transfer: 'ໂອນເງິນ',
-  credit_card: 'ບັດເຄຣດິດ',
-  promptpay: 'ພຣອມເພ',
-}
-
-const methodIcon: Record<string, string> = {
-  cash: '💵',
-  transfer: '🏦',
-  credit_card: '💳',
-  promptpay: '📱',
+  cash: 'Cash',
+  transfer: 'Transfer',
+  credit_card: 'Credit Card',
+  promptpay: 'PromptPay',
 }
 
 const BookingDateCell = ({booking}: {booking: HistoryBooking}) => (
@@ -90,7 +95,7 @@ const PaymentCell = ({booking}: {booking: HistoryBooking}) => {
   return (
     <div className='d-flex flex-column gap-1'>
       <span className='text-gray-800 fw-bold' style={{fontSize: 13}}>
-        {methodIcon[booking.payment_method] ?? '💳'} {paymentMethodLabels[booking.payment_method] ?? booking.payment_method}
+        {paymentMethodLabels[booking.payment_method] ?? booking.payment_method}
       </span>
       <span
         style={{
@@ -117,34 +122,36 @@ const GrandTotalCell = ({value}: {value: number}) => (
 
 const HistoryBookingColumns: ReadonlyArray<Column<HistoryBooking>> = [
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='ເຮືອ' className='min-w-130px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Boat' className='min-w-130px' />,
     accessor: 'ship_name',
     Cell: ({value}) => <span className='text-gray-800 fw-bold'>{value ?? '-'}</span>,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='ວັນທີຈອງ' className='min-w-130px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Booking Date' className='min-w-130px' />,
     id: 'booking_date',
     Cell: ({row}) => <BookingDateCell booking={row.original} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='ສະຖານະ' className='min-w-110px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Booking Status' className='min-w-110px' />,
     accessor: 'status',
     Cell: ({value}) => <BookingStatusCell status={value} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='ການຊຳລະ' className='min-w-150px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Payment' className='min-w-150px' />,
     id: 'payment',
     Cell: ({row}) => <PaymentCell booking={row.original} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='ລວມ' className='min-w-100px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Total' className='min-w-100px' />,
     accessor: 'grand_total',
     Cell: ({value}) => <GrandTotalCell value={value} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='ຈັດການ' className='text-end min-w-100px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='Actions' className='text-end min-w-100px' />,
     id: 'actions',
-    Cell: ({row}) => <EmployeesActionsCell id={row.original.id} />,
+    Cell: ({row}) => (
+      <EmployeesActionsCell id={row.original.id} paymentStatus={row.original.payment_status} />
+    ),
   },
 ]
 

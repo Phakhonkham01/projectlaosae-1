@@ -224,291 +224,241 @@ export function Registration() {
         style={{
           position: 'relative',
           zIndex: 1,
-          background: 'rgba(255,255,255,0.36)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.28)',
-          borderRadius: '28px',
-          padding: '2.5rem',
+          maxWidth: '980px',
+          margin: '0 auto',
+          background: 'rgba(255,255,255,0.62)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.45)',
+          borderRadius: '24px',
+          padding: '2rem',
           boxShadow: '0 24px 60px rgba(8,26,53,0.18)',
         }}
       >
-      {/* ── Heading ─────────────────────────────────────────────────────────── */}
-      <div className='text-center mb-11'>
-        <h1 className='text-gray-900 fw-bolder mb-3'>ລົງທະບຽນ</h1>
-        <div className='text-gray-500 fw-semibold fs-6'>ລະບົບ ຜູ້ໃຊ້ຂອງທ່ານ</div>
-      </div>
-
-      {/* ── Social Login Options ─────────────────────────────────────────────── */}
-      <div className='row g-3 mb-9'>
-        {/* <div className='col-md-6'>
-          <a
-            href='#'
-            className='btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100'
-          >
-            <img
-              alt='Google'
-              src={toAbsoluteUrl('media/svg/brand-logos/google-icon.svg')}
-              className='h-15px me-3'
-            />
-            ເຂົ້າສູ່ລະບົບ ໂດຍໃຊ້ Google
-          </a>
-        </div> */}
-        {/* <div className='col-md-6'>
-          <a
-            href='#'
-            className='btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100'
-          >
-            <img
-              alt='Apple'
-              src={toAbsoluteUrl('media/svg/brand-logos/apple-black.svg')}
-              className='theme-light-show h-15px me-3'
-            />
-            <img
-              alt='Apple'
-              src={toAbsoluteUrl('media/svg/brand-logos/apple-black-dark.svg')}
-              className='theme-dark-show h-15px me-3'
-            />
-            ເຂົ້າສູ່ລະບົບ ໂດຍໃຊ້ Apple
-          </a>
-        </div> */}
-      </div>
-
-      {/* ── Divider ─────────────────────────────────────────────────────────── */}
-      {/* <div className='separator separator-content my-14'>
-        <span className='w-125px text-gray-500 fw-semibold fs-7'>ຫຼື ໂດຍໃຊ້ອີເມວ</span>
-      </div> */}
-
-      {/* ── Error Alert ─────────────────────────────────────────────────────── */}
-      {formik.status && (
-        <div className='mb-lg-15 alert alert-danger'>
-          <div className='alert-text font-weight-bold'>{formik.status}</div>
+        <div className='text-center mb-8'>
+          <h1 className='text-gray-900 fw-bolder mb-2'>ສ້າງບັນຊີ</h1>
+          <div className='text-gray-700 fw-semibold fs-6'>ລົງທະບຽນໄດ້ໄວ ແລະ ໃຊ້ງານງ່າຍ</div>
         </div>
-      )}
 
-      {/* ── First Name ──────────────────────────────────────────────────────── */}
-      <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>ຊື່</label>
-        <input
-          placeholder='ຊື່'
-          type='text'
-          autoComplete='off'
-          {...formik.getFieldProps('firstname')}
-          className={clsx(
-            'form-control bg-transparent',
-            {'is-invalid': formik.touched.firstname && formik.errors.firstname},
-            {'is-valid': formik.touched.firstname && !formik.errors.firstname}
-          )}
-        />
-        {formik.touched.firstname && formik.errors.firstname && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.firstname}</span>
-            </div>
+        {formik.status && (
+          <div className='mb-7 alert alert-danger'>
+            <div className='alert-text font-weight-bold'>{formik.status}</div>
           </div>
         )}
-      </div>
 
-      {/* ── Last Name ───────────────────────────────────────────────────────── */}
-      <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>ນາມສະກຸນ</label>
-        <input
-          placeholder='ນາມສະກຸນ'
-          type='text'
-          autoComplete='off'
-          {...formik.getFieldProps('lastname')}
-          className={clsx(
-            'form-control bg-transparent',
-            {'is-invalid': formik.touched.lastname && formik.errors.lastname},
-            {'is-valid': formik.touched.lastname && !formik.errors.lastname}
-          )}
-        />
-        {formik.touched.lastname && formik.errors.lastname && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.lastname}</span>
-            </div>
-          </div>
-        )}
-      </div>
+        <div className='row g-6'>
+          <div className='col-12 col-lg-6'>
+            <div className='p-6 h-100 rounded-4 border border-gray-200 bg-white bg-opacity-75'>
+              <div className='fw-bolder text-gray-900 mb-5 fs-5'>ຂໍ້ມູນສ່ວນຕົວ</div>
 
-      {/* ── Email ───────────────────────────────────────────────────────────── */}
-      <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>ອີເມວ</label>
-        <input
-          placeholder='ອີເມວ'
-          type='email'
-          autoComplete='off'
-          {...formik.getFieldProps('email')}
-          className={clsx(
-            'form-control bg-transparent',
-            {'is-invalid': formik.touched.email && formik.errors.email},
-            {'is-valid': formik.touched.email && !formik.errors.email}
-          )}
-        />
-        {formik.touched.email && formik.errors.email && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.email}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Phone Number ────────────────────────────────────────────────────── */}
-      <div className='fv-row mb-8'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>ເບີໂທ</label>
-        <input
-          placeholder='ຕົວຢ່າງ: +856 20 XXXX XXXX'
-          type='tel'
-          autoComplete='off'
-          {...formik.getFieldProps('phone_number')}
-          className={clsx(
-            'form-control bg-transparent',
-            {'is-invalid': formik.touched.phone_number && formik.errors.phone_number},
-            {'is-valid': formik.touched.phone_number && !formik.errors.phone_number}
-          )}
-        />
-        {formik.touched.phone_number && formik.errors.phone_number && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.phone_number}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Password ────────────────────────────────────────────────────────── */}
-      <div className='fv-row mb-8' data-kt-password-meter='true'>
-        <div className='mb-1'>
-          <label className='form-label fw-bolder text-gray-900 fs-6'>ລະຫັດຜ່ານ</label>
-          <div className='position-relative mb-3'>
-            <input
-              type='password'
-              placeholder='ລະຫັດຜ່ານ'
-              autoComplete='off'
-              {...formik.getFieldProps('password')}
-              className={clsx(
-                'form-control bg-transparent',
-                {'is-invalid': formik.touched.password && formik.errors.password},
-                {'is-valid': formik.touched.password && !formik.errors.password}
-              )}
-            />
-            {formik.touched.password && formik.errors.password && (
-              <div className='fv-plugins-message-container'>
-                <div className='fv-help-block'>
-                  <span role='alert'>{formik.errors.password}</span>
-                </div>
+              <div className='fv-row mb-5'>
+                <label className='form-label fw-bolder text-gray-900 fs-6'>ຊື່</label>
+                <input
+                  placeholder='ຊື່'
+                  type='text'
+                  autoComplete='off'
+                  {...formik.getFieldProps('firstname')}
+                  className={clsx(
+                    'form-control form-control-solid',
+                    {'is-invalid': formik.touched.firstname && formik.errors.firstname},
+                    {'is-valid': formik.touched.firstname && !formik.errors.firstname}
+                  )}
+                />
+                {formik.touched.firstname && formik.errors.firstname && (
+                  <div className='fv-plugins-message-container'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.firstname}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {/* Password Strength Meter */}
-          <div
-            className='d-flex align-items-center mb-3'
-            data-kt-password-meter-control='highlight'
-          >
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
-            <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px'></div>
-          </div>
-        </div>
-        <div className='text-muted'>
-          ໃຊ້ 8 ຕົວອັກສອນ ຫຼື ຫຼາຍກວ່າ ທີ່ລວມເອົາ ຕົວອັກษອ, ຕົວເລກ ແລະ ສັນຍາລັກ.
-        </div>
-      </div>
 
-      {/* ── Confirm Password ────────────────────────────────────────────────── */}
-      <div className='fv-row mb-5'>
-        <label className='form-label fw-bolder text-gray-900 fs-6'>ຢືນຢັນລະຫັດຜ່ານ</label>
-        <input
-          type='password'
-          placeholder='ຢືນຢັນລະຫັດຜ່ານ'
-          autoComplete='off'
-          {...formik.getFieldProps('changepassword')}
-          className={clsx(
-            'form-control bg-transparent',
-            {'is-invalid': formik.touched.changepassword && formik.errors.changepassword},
-            {'is-valid': formik.touched.changepassword && !formik.errors.changepassword}
-          )}
-        />
-        {formik.touched.changepassword && formik.errors.changepassword && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.changepassword}</span>
+              <div className='fv-row mb-5'>
+                <label className='form-label fw-bolder text-gray-900 fs-6'>ນາມສະກຸນ</label>
+                <input
+                  placeholder='ນາມສະກຸນ'
+                  type='text'
+                  autoComplete='off'
+                  {...formik.getFieldProps('lastname')}
+                  className={clsx(
+                    'form-control form-control-solid',
+                    {'is-invalid': formik.touched.lastname && formik.errors.lastname},
+                    {'is-valid': formik.touched.lastname && !formik.errors.lastname}
+                  )}
+                />
+                {formik.touched.lastname && formik.errors.lastname && (
+                  <div className='fv-plugins-message-container'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.lastname}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className='fv-row mb-5'>
+                <label className='form-label fw-bolder text-gray-900 fs-6'>ອີເມວ</label>
+                <input
+                  placeholder='ອີເມວ'
+                  type='email'
+                  autoComplete='off'
+                  {...formik.getFieldProps('email')}
+                  className={clsx(
+                    'form-control form-control-solid',
+                    {'is-invalid': formik.touched.email && formik.errors.email},
+                    {'is-valid': formik.touched.email && !formik.errors.email}
+                  )}
+                />
+                {formik.touched.email && formik.errors.email && (
+                  <div className='fv-plugins-message-container'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.email}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className='fv-row mb-0'>
+                <label className='form-label fw-bolder text-gray-900 fs-6'>ເບີໂທ</label>
+                <input
+                  placeholder='ຕົວຢ່າງ: +856 20 XXXX XXXX'
+                  type='tel'
+                  autoComplete='off'
+                  {...formik.getFieldProps('phone_number')}
+                  className={clsx(
+                    'form-control form-control-solid',
+                    {'is-invalid': formik.touched.phone_number && formik.errors.phone_number},
+                    {'is-valid': formik.touched.phone_number && !formik.errors.phone_number}
+                  )}
+                />
+                {formik.touched.phone_number && formik.errors.phone_number && (
+                  <div className='fv-plugins-message-container'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.phone_number}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* ── Accept Terms ────────────────────────────────────────────────────── */}
-      <div className='fv-row mb-8'>
-        <label className='form-check form-check-inline' htmlFor='kt_login_toc_agree'>
-          <input
-            className='form-check-input'
-            type='checkbox'
-            id='kt_login_toc_agree'
-            {...formik.getFieldProps('acceptTerms')}
-            checked={formik.values.acceptTerms}
-          />
-          <span className='fw-semibold fs-6 text-gray-700'>
-            ຂ້າພະເຈົ້າ ຍອມຮັບ{' '}
-            <a
-              href='https://keenthemes.com/metronic/?page=faq'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='ms-1 link-primary fw-bold'
-            >
-              ເງື່ອນໄຂທັງໝົດ
-            </a>
-          </span>
-        </label>
-        {formik.touched.acceptTerms && formik.errors.acceptTerms && (
-          <div className='fv-plugins-message-container'>
-            <div className='fv-help-block'>
-              <span role='alert'>{formik.errors.acceptTerms}</span>
+          <div className='col-12 col-lg-6'>
+            <div className='p-6 h-100 rounded-4 border border-gray-200 bg-white bg-opacity-75'>
+              <div className='fw-bolder text-gray-900 mb-5 fs-5'>ຄວາມປອດໄພ</div>
+
+              <div className='fv-row mb-5' data-kt-password-meter='true'>
+                <label className='form-label fw-bolder text-gray-900 fs-6'>ລະຫັດຜ່ານ</label>
+                <input
+                  type='password'
+                  placeholder='ລະຫັດຜ່ານ'
+                  autoComplete='off'
+                  {...formik.getFieldProps('password')}
+                  className={clsx(
+                    'form-control form-control-solid mb-3',
+                    {'is-invalid': formik.touched.password && formik.errors.password},
+                    {'is-valid': formik.touched.password && !formik.errors.password}
+                  )}
+                />
+                {formik.touched.password && formik.errors.password && (
+                  <div className='fv-plugins-message-container mb-3'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.password}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className='d-flex align-items-center mb-3' data-kt-password-meter-control='highlight'>
+                  <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
+                  <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
+                  <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2'></div>
+                  <div className='flex-grow-1 bg-secondary bg-active-success rounded h-5px'></div>
+                </div>
+
+                <div className='text-muted fs-7 mb-2'>ໃຊ້ຢ່າງນ້ອຍ 8 ຕົວອັກສອນ ໂດຍມີທັງຕົວອັກສອນ ແລະ ຕົວເລກ</div>
+              </div>
+
+              <div className='fv-row mb-6'>
+                <label className='form-label fw-bolder text-gray-900 fs-6'>ຢືນຢັນລະຫັດຜ່ານ</label>
+                <input
+                  type='password'
+                  placeholder='ຢືນຢັນລະຫັດຜ່ານ'
+                  autoComplete='off'
+                  {...formik.getFieldProps('changepassword')}
+                  className={clsx(
+                    'form-control form-control-solid',
+                    {'is-invalid': formik.touched.changepassword && formik.errors.changepassword},
+                    {'is-valid': formik.touched.changepassword && !formik.errors.changepassword}
+                  )}
+                />
+                {formik.touched.changepassword && formik.errors.changepassword && (
+                  <div className='fv-plugins-message-container'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.changepassword}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className='fv-row mb-6'>
+                <label className='form-check form-check-inline' htmlFor='kt_login_toc_agree'>
+                  <input
+                    className='form-check-input'
+                    type='checkbox'
+                    id='kt_login_toc_agree'
+                    {...formik.getFieldProps('acceptTerms')}
+                    checked={formik.values.acceptTerms}
+                  />
+                  <span className='fw-semibold fs-6 text-gray-700'>
+                    ຂ້ອຍຍອມຮັບ{' '}
+                    <a
+                      href='https://keenthemes.com/metronic/?page=faq'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='ms-1 link-primary fw-bold'
+                    >
+                      ເງື່ອນໄຂ ແລະ ຂໍ້ກຳນົດ
+                    </a>
+                  </span>
+                </label>
+                {formik.touched.acceptTerms && formik.errors.acceptTerms && (
+                  <div className='fv-plugins-message-container'>
+                    <div className='fv-help-block'>
+                      <span role='alert'>{formik.errors.acceptTerms}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type='submit'
+                id='kt_sign_up_submit'
+                className='btn btn-lg btn-primary w-100 mb-3'
+                disabled={formik.isSubmitting || !formik.isValid || !formik.values.acceptTerms}
+              >
+                {!loading ? (
+                  <span className='indicator-label'>
+                    <i className='ki-duotone ki-check fs-3 me-2'>
+                      <span className='path1'></span>
+                      <span className='path2'></span>
+                    </i>
+                    ສ້າງບັນຊີ
+                  </span>
+                ) : (
+                  <span className='indicator-progress' style={{display: 'block'}}>
+                    ກະລຸນາລໍຖ້າ...
+                    <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
+                  </span>
+                )}
+              </button>
+
+              <Link to='/auth/login' className='btn btn-lg btn-light-primary w-100' id='kt_login_signup_form_cancel_button'>
+                <i className='ki-duotone ki-arrow-left fs-3 me-2'>
+                  <span className='path1'></span>
+                  <span className='path2'></span>
+                </i>
+                ມີບັນຊີແລ້ວ? ເຂົ້າສູ່ລະບົບ
+              </Link>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* ── Submit / Cancel ─────────────────────────────────────────────────── */}
-      <div className='text-center'>
-        <button
-          type='submit'
-          id='kt_sign_up_submit'
-          className='btn btn-lg btn-primary w-100 mb-5'
-          disabled={formik.isSubmitting || !formik.isValid || !formik.values.acceptTerms}
-        >
-          {!loading ? (
-            <span className='indicator-label'>
-              <i className='ki-duotone ki-check fs-3 me-2'>
-                <span className='path1'></span>
-                <span className='path2'></span>
-              </i>
-              ສ້າງບັນຊີ
-            </span>
-          ) : (
-            <span className='indicator-progress' style={{display: 'block'}}>
-              ກະລຸນາ ລໍຖ້າ...{' '}
-              <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
-            </span>
-          )}
-        </button>
-
-        <Link to='/auth/login'>
-          <button
-            type='button'
-            id='kt_login_signup_form_cancel_button'
-            className='btn btn-lg btn-light-primary w-100 mb-5'
-          >
-            <i className='ki-duotone ki-arrow-left fs-3 me-2'>
-              <span className='path1'></span>
-              <span className='path2'></span>
-            </i>
-            ທ່ານ ມີບັນຊີ ແລ້ວ? ເຂົ້າສູ່ລະບົບ
-          </button>
-        </Link>
-      </div>
+        </div>
       </form>
     </>
   )

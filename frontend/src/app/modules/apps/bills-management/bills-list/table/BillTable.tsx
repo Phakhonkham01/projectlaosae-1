@@ -36,7 +36,8 @@ const statusTabs: {label: string; value: StatusTab}[] = [
   {label: 'ລໍຖ້າ', value: 'pending'},
   {label: 'ອະນຸມັດແລ້ວ', value: 'approved'},
   {label: 'ປະຕິເສດແລ້ວ', value: 'rejected'},
-  {label: 'ການຊຳລະລົ້ມເຫຼວ', value: 'payment failed'},
+  {label: 'Payment Failed', value: 'payment failed'},
+  {label: 'Under Review Again', value: 'under_review_again'},
 ]
 
 const BillSummaryCard = ({
