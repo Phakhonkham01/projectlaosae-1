@@ -7,11 +7,11 @@ import {useMemo} from 'react'
 
 const mappedLabel = (label: string): string => {
   if (label === '&laquo; Previous') {
-    return 'Previous'
+    return 'ກ່ອນໜ້າ'
   }
 
   if (label === 'Next &raquo;') {
-    return 'Next'
+    return 'ຖັດໄປ'
   }
 
   return label
@@ -104,7 +104,7 @@ const EmployeesListPagination = () => {
               })}
             >
               <a onClick={() => updatePage(1)} style={{cursor: 'pointer'}} className='page-link'>
-                First
+                ໜ້າທຳອິດ
               </a>
             </li>
             {paginationLinks
@@ -117,14 +117,14 @@ const EmployeesListPagination = () => {
                   className={clsx('page-item', {
                     active: pagination.page === link.page,
                     disabled: isLoading,
-                    previous: link.label === 'Previous',
-                    next: link.label === 'Next',
+                    previous: link.label === 'ກ່ອນໜ້າ',
+                    next: link.label === 'ຖັດໄປ',
                   })}
                 >
                   <a
                     className={clsx('page-link', {
-                      'page-text': link.label === 'Previous' || link.label === 'Next',
-                      'me-5': link.label === 'Previous',
+                      'page-text': link.label === 'ກ່ອນໜ້າ' || link.label === 'ຖັດໄປ',
+                      'me-5': link.label === 'ກ່ອນໜ້າ',
                     })}
                     onClick={() => updatePage(link.page)}
                     style={{cursor: 'pointer'}}
@@ -143,7 +143,7 @@ const EmployeesListPagination = () => {
                 style={{cursor: 'pointer'}}
                 className='page-link'
               >
-                Last
+                ໜ້າສຸດທ້າຍ
               </a>
             </li>
           </ul>

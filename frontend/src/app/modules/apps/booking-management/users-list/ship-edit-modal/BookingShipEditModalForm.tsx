@@ -7,6 +7,8 @@ import Swal from 'sweetalert2'
 import { collection, addDoc, doc, getDoc, getDocs } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../../../../../../../firebase/useFirebase'
+import { io } from 'socket.io-client'
+import QRCode from 'qrcode'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +54,7 @@ interface SavedBill {
   foods: SelectedFood[]
   total_food_price: number
   grand_total: number
-  payment_method: 'cash' | 'transfer' | 'cash+transfer'
+  payment_method: 'cash' | 'transfer' | 'cash+transfer' | 'bcel'
   payment_status: 'pending' | 'slip_submitted' | 'approved'
   user_name: string
   user_email: string
@@ -71,8 +73,16 @@ const TIME_PICKER_CLOSE_MINUTES = 19 * 60 + 30
 const SAME_DAY_LAST_BOOKING_MINUTES = 17 * 60
 const SAME_DAY_PREP_BUFFER_MINUTES = 30
 const TIME_STEP_MINUTES = 30
-const MIN_BOOKING_HOURS = 1
 const DURATION_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
+
+// ─── BCEL Config ──────────────────────────────────────────────────────────────
+const BCEL_SECRET_KEY = '$2a$10$3QS4pUfHGqrBXorKeL04AukzcKTdfwcvqTfDDQWyFTym86qnc1/3W'
+const BCEL_API_URL = 'https://payment-gateway.phajay.co/v1/api/payment/generate-bcel-qr'
+const BCEL_SOCKET_URL = 'https://payment-gateway.phajay.co/'
+const LAK_PER_USD = 21000
+const BCEL_MAX_USD = 999
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const pad2 = (value: number) => value.toString().padStart(2, '0')
 
@@ -129,7 +139,17 @@ const downloadReceiptPng = (bill: SavedBill) => {
   ctx.font = '20px Arial'
   ctx.fillStyle = '#8b6d48'
   ctx.fillText(`Receipt ID: ${bill.id.slice(0, 8).toUpperCase()}`, 90, 142)
-  ctx.fillText(`Payment: ${bill.payment_method === 'transfer' ? 'Transfer' : 'Cash'}`, 730, 142)
+  ctx.fillText(
+    `Payment: ${
+      bill.payment_method === 'transfer'
+        ? 'Transfer'
+        : bill.payment_method === 'bcel'
+        ? 'BCEL QR'
+        : 'Cash'
+    }`,
+    730,
+    142
+  )
 
   let y = 210
   const drawRow = (label: string, value: string, color = '#2b2b2b') => {
@@ -244,25 +264,50 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     return () => window.clearInterval(intervalId)
   }, [])
 
-  // Step 1 state
+  // ─── Step 1 state ──────────────────────────────────────────────────────────
   const [bookingDate, setBookingDate] = useState('')
   const [bookingTime, setBookingTime] = useState('')
   const [numPeople, setNumPeople] = useState(1)
   const [numHours, setNumHours] = useState(1)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Step 2 state
+  // ─── Step 2 state ──────────────────────────────────────────────────────────
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([])
 
-  // Step 4 state
+  // ─── Step 4 state ──────────────────────────────────────────────────────────
   const isStaff = customerRole === 'employee' || customerRole === 'owner'
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'cash+transfer'>('cash')
+  const [paymentMethod, setPaymentMethod] = useState<
+    'cash' | 'transfer' | 'cash+transfer' | 'bcel'
+  >('cash')
   const [cashAmount, setCashAmount] = useState<number>(0)
   const [transferAmount, setTransferAmount] = useState<number>(0)
   const [slipUrl, setSlipUrl] = useState('')
   const [slipUploading, setSlipUploading] = useState(false)
   const slipInputRef = useRef<HTMLInputElement>(null)
   const [savedBill, setSavedBill] = useState<SavedBill | null>(null)
+
+  // ─── BCEL state ────────────────────────────────────────────────────────────
+  const BCEL_COUNTDOWN_SECONDS = 90
+  const [bcelQrDataUrl, setBcelQrDataUrl] = useState<string>('')
+  const [bcelStatus, setBcelStatus] = useState<
+    'idle' | 'loading' | 'waiting' | 'paid' | 'error'
+  >('idle')
+  const [bcelErrorMsg, setBcelErrorMsg] = useState('')
+  const [bcelCountdown, setBcelCountdown] = useState(90)
+  const bcelSocketRef = useRef<ReturnType<typeof io> | null>(null)
+  const bcelCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const bcelTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Ref to always hold the latest handleSave (avoids stale closure in socket callback)
+  const handleSaveRef = useRef<() => Promise<void>>(async () => {})
+
+  // Cleanup BCEL socket + timers on unmount
+  useEffect(() => {
+    return () => {
+      bcelSocketRef.current?.disconnect()
+      if (bcelCountdownRef.current) clearInterval(bcelCountdownRef.current)
+      if (bcelTimeoutRef.current) clearTimeout(bcelTimeoutRef.current)
+    }
+  }, [])
 
   // ─── Load ship data ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -298,9 +343,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     Math.max(SHOP_OPEN_MINUTES, currentMinutes + SAME_DAY_PREP_BUFFER_MINUTES),
     TIME_STEP_MINUTES
   )
-  const minimumBookingMinutes = isTodaySelected
-    ? earliestTodayBookingMinutes
-    : SHOP_OPEN_MINUTES
+  const minimumBookingMinutes = isTodaySelected ? earliestTodayBookingMinutes : SHOP_OPEN_MINUTES
   const latestBookingMinutes = isTodaySelected
     ? Math.min(SAME_DAY_LAST_BOOKING_MINUTES, TIME_PICKER_CLOSE_MINUTES)
     : TIME_PICKER_CLOSE_MINUTES
@@ -308,12 +351,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const availableTimeOptions =
     minimumBookingMinutes <= latestBookingMinutes
       ? Array.from(
-        {
-          length:
-            Math.floor((latestBookingMinutes - minimumBookingMinutes) / TIME_STEP_MINUTES) + 1,
-        },
-        (_, index) => minutesToTimeString(minimumBookingMinutes + index * TIME_STEP_MINUTES)
-      )
+          {
+            length:
+              Math.floor((latestBookingMinutes - minimumBookingMinutes) / TIME_STEP_MINUTES) + 1,
+          },
+          (_, index) => minutesToTimeString(minimumBookingMinutes + index * TIME_STEP_MINUTES)
+        )
       : []
   const { hour: selectedHour, minute: selectedMinute } = getTimeParts(bookingTime)
   const availableHourOptions = Array.from(
@@ -321,8 +364,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   )
   const availableMinuteOptions = selectedHour
     ? availableTimeOptions
-      .filter((timeOption) => timeOption.startsWith(`${selectedHour}:`))
-      .map((timeOption) => timeOption.split(':')[1])
+        .filter((timeOption) => timeOption.startsWith(`${selectedHour}:`))
+        .map((timeOption) => timeOption.split(':')[1])
     : []
   const maxBookableHours =
     !Number.isNaN(bookingTimeMinutes) && bookingTimeMinutes < SHOP_CLOSE_MINUTES
@@ -334,20 +377,22 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     (currentMinutes > SAME_DAY_LAST_BOOKING_MINUTES ||
       earliestTodayBookingMinutes > SAME_DAY_LAST_BOOKING_MINUTES)
 
+  // ─── BCEL computed ─────────────────────────────────────────────────────────
+  const bcelAmountUsd = Math.min(Math.round(grandTotal / LAK_PER_USD), BCEL_MAX_USD)
+  const bcelAmountCapped = grandTotal / LAK_PER_USD > BCEL_MAX_USD
+
+  // ─── Download receipt ──────────────────────────────────────────────────────
   const handleDownloadSavedBill = () => {
     if (!savedBill) return
     try {
       downloadReceiptPng(savedBill)
     } catch (error) {
       console.error(error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Download failed',
-        text: 'Could not generate the bill PNG.',
-      })
+      Swal.fire({ icon: 'error', title: 'Download failed', text: 'Could not generate the bill PNG.' })
     }
   }
 
+  // ─── Time helpers ──────────────────────────────────────────────────────────
   const updateBookingTime = (nextHour: string, nextMinute: string) => {
     setBookingTime(nextHour && nextMinute ? `${nextHour}:${nextMinute}` : '')
     setErrors((p) => {
@@ -360,32 +405,15 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
   useEffect(() => {
     if (!bookingDate || !bookingTime) return
-
-    if (isSameDayBookingClosed) {
-      setBookingTime('')
-      return
-    }
-
-    if (
-      bookingTimeMinutes < minimumBookingMinutes ||
-      bookingTimeMinutes > latestBookingMinutes
-    ) {
+    if (isSameDayBookingClosed) { setBookingTime(''); return }
+    if (bookingTimeMinutes < minimumBookingMinutes || bookingTimeMinutes > latestBookingMinutes) {
       setBookingTime('')
     }
-  }, [
-    bookingDate,
-    bookingTime,
-    bookingTimeMinutes,
-    isSameDayBookingClosed,
-    latestBookingMinutes,
-    minimumBookingMinutes,
-  ])
+  }, [bookingDate, bookingTime, bookingTimeMinutes, isSameDayBookingClosed, latestBookingMinutes, minimumBookingMinutes])
 
   useEffect(() => {
     if (!bookingTime || maxBookableHours < 1) return
-    if (numHours > maxBookableHours) {
-      setNumHours(maxBookableHours)
-    }
+    if (numHours > maxBookableHours) setNumHours(maxBookableHours)
   }, [bookingTime, maxBookableHours, numHours])
 
   // ─── Upload transfer slip ──────────────────────────────────────────────────
@@ -412,6 +440,102 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     }
   }
 
+  // ─── BCEL QR Pay ───────────────────────────────────────────────────────────
+  const handleBcelPay = async () => {
+    if (bcelAmountUsd < 1) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ຈຳນວນເງິນຕ່ຳເກີນໄປ',
+        text: 'ຍອດຕໍ່າສຸດທີ່ສາມາດ QR ໄດ້ຄື 21,000 LAK',
+      })
+      return
+    }
+
+    setBcelStatus('loading')
+    setBcelQrDataUrl('')
+    setBcelErrorMsg('')
+    bcelSocketRef.current?.disconnect()
+
+    try {
+      const resp = await fetch(BCEL_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          secretKey: BCEL_SECRET_KEY,
+        },
+        body: JSON.stringify({
+          amount: bcelAmountUsd,
+          description: `Booking: ${shipData?.ship_name ?? ''}`,
+        }),
+      })
+      const data = await resp.json()
+      if (!data.qrCode) throw new Error(data.message ?? 'ບໍ່ໄດ້ຮັບ QR Code')
+
+      const dataUrl = await QRCode.toDataURL(data.qrCode, { width: 240, margin: 2 })
+      setBcelQrDataUrl(dataUrl)
+      setBcelStatus('waiting')
+
+      const socket = io(BCEL_SOCKET_URL, { transports: ['websocket', 'polling'] })
+      bcelSocketRef.current = socket
+
+      // ─── Start countdown 1:30 ───────────────────────────────────────────
+      setBcelCountdown(90)
+      bcelCountdownRef.current = setInterval(() => {
+        setBcelCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(bcelCountdownRef.current!)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      // ─── Auto-expire after 90s ──────────────────────────────────────────
+      bcelTimeoutRef.current = setTimeout(() => {
+        socket.disconnect()
+        clearInterval(bcelCountdownRef.current!)
+        setBcelStatus('error')
+        setBcelErrorMsg('QR ໝົດອາຍຸແລ້ວ — ກະລຸນາສ້າງໃໝ່')
+        setBcelQrDataUrl('')
+        setBcelCountdown(0)
+      }, 90 * 1000)
+
+      socket.on('join::' + BCEL_SECRET_KEY, () => {
+        clearBcelTimers()
+        setBcelStatus('paid')
+        setBcelQrDataUrl('')
+        socket.disconnect()
+      })
+
+      socket.on('connect_error', () => {
+        clearBcelTimers()
+        setBcelErrorMsg('ເຊື່ອມຕໍ່ socket ບໍ່ໄດ້ — ກະລຸນາລອງໃໝ່')
+        setBcelStatus('error')
+      })
+    } catch (err: unknown) {
+      setBcelErrorMsg(err instanceof Error ? err.message : 'ເກີດຂໍ້ຜິດພາດ')
+      setBcelStatus('error')
+    }
+  }
+
+  const clearBcelTimers = () => {
+    if (bcelCountdownRef.current) clearInterval(bcelCountdownRef.current)
+    if (bcelTimeoutRef.current) clearTimeout(bcelTimeoutRef.current)
+    bcelCountdownRef.current = null
+    bcelTimeoutRef.current = null
+  }
+  const clearBcelTimersRef = useRef(clearBcelTimers)
+  clearBcelTimersRef.current = clearBcelTimers
+
+  const resetBcel = () => {
+    bcelSocketRef.current?.disconnect()
+    clearBcelTimers()
+    setBcelStatus('idle')
+    setBcelQrDataUrl('')
+    setBcelErrorMsg('')
+    setBcelCountdown(90)
+  }
+
   // ─── Validation ────────────────────────────────────────────────────────────
   const validateStep1 = (): boolean => {
     const errs: Record<string, string> = {}
@@ -428,9 +552,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       } else if (isTodaySelected && bookingTimeMinutes < minimumBookingMinutes) {
         errs.time = `For today, please choose ${minutesToTimeString(minimumBookingMinutes)} or later`
       } else if (isTodaySelected && bookingTimeMinutes > SAME_DAY_LAST_BOOKING_MINUTES) {
-        errs.time = `For today, booking time must be ${minutesToTimeString(
-          SAME_DAY_LAST_BOOKING_MINUTES
-        )} or earlier`
+        errs.time = `For today, booking time must be ${minutesToTimeString(SAME_DAY_LAST_BOOKING_MINUTES)} or earlier`
       }
     }
     if (numPeople < 1) errs.people = 'ຕ້ອງມີຢ່າງໜ້ອຍ 1 ຄົນ'
@@ -474,7 +596,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     }
   }
 
-  // ─── Navigation ───────────────────────────────────────────────────────────
+  // ─── Navigation ────────────────────────────────────────────────────────────
   const nextStep = () => {
     if (currentStep === 1 && !validateStep1()) return
     if (currentStep === 4 && paymentMethod === 'transfer' && !slipUrl && !isStaff) {
@@ -488,7 +610,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       }
       const total = cashAmount + transferAmount
       if (total !== grandTotal) {
-        Swal.fire({ icon: 'warning', title: 'ຈຳນວນເງິນບໍ່ຖືກ', text: `ລວມ ${total.toLocaleString()} LAK ຕ້ອງເທົ່າກັບ ${grandTotal.toLocaleString()} LAK` })
+        Swal.fire({
+          icon: 'warning',
+          title: 'ຈຳນວນເງິນບໍ່ຖືກ',
+          text: `ລວມ ${total.toLocaleString()} LAK ຕ້ອງເທົ່າກັບ ${grandTotal.toLocaleString()} LAK`,
+        })
         return
       }
     }
@@ -504,8 +630,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       const paymentStatus: BookingPaymentStatus = isStaff
         ? 'approved'
         : paymentMethod === 'cash'
-          ? 'pending'
-          : 'slip_submitted'
+        ? 'pending'
+        : paymentMethod === 'bcel'
+        ? 'approved'
+        : 'slip_submitted'
 
       const bookingPayload = {
         ship_id: itemIdForUpdate,
@@ -522,13 +650,24 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         payment_method: paymentMethod,
         slip_url: paymentMethod === 'transfer' ? slipUrl : '',
         payment_status: paymentStatus,
-        cash_amount: paymentMethod === 'cash+transfer' ? cashAmount : paymentMethod === 'cash' ? grandTotal : 0,
-        transfer_amount: paymentMethod === 'cash+transfer' ? transferAmount : paymentMethod === 'transfer' ? grandTotal : 0,
+        cash_amount:
+          paymentMethod === 'cash+transfer'
+            ? cashAmount
+            : paymentMethod === 'cash'
+            ? grandTotal
+            : 0,
+        transfer_amount:
+          paymentMethod === 'cash+transfer'
+            ? transferAmount
+            : paymentMethod === 'transfer'
+            ? grandTotal
+            : 0,
+        bcel_amount_usd: paymentMethod === 'bcel' ? bcelAmountUsd : 0,
         // ─── Customer info ───
         user_id: currentUser?._id ?? '',
         user_name: currentUser?.user_name ?? '',
         user_email: currentUser?.user_email ?? '',
-        status: isStaff ? 'approved' : 'pending',
+        status: isStaff || paymentMethod === 'bcel' ? 'approved' : 'pending',
         createdAt: new Date().toISOString(),
       }
 
@@ -542,6 +681,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         timer: 2000,
         showConfirmButton: false,
       })
+
       setSavedBill({
         id: billRef.id,
         ship_name: bookingPayload.ship_name,
@@ -567,6 +707,29 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     }
   }
 
+  // Keep ref always pointing to latest handleSave (fixes stale closure in socket)
+  handleSaveRef.current = handleSave
+
+  // ─── Auto-save when BCEL confirms payment ──────────────────────────────────
+  useEffect(() => {
+    if (bcelStatus === 'paid') {
+      handleSaveRef.current()
+    }
+  }, [bcelStatus])
+
+  // ─── Reset BCEL QR if grand total changes while QR is showing ─────────────
+  useEffect(() => {
+    if (bcelStatus === 'waiting') {
+      bcelSocketRef.current?.disconnect()
+      clearBcelTimersRef.current()
+      setBcelStatus('idle')
+      setBcelQrDataUrl('')
+      setBcelErrorMsg('')
+      setBcelCountdown(90)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grandTotal])
+
   // ─── Loading skeleton ──────────────────────────────────────────────────────
   if (loading && !shipData) {
     return (
@@ -578,7 +741,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     )
   }
 
-  // ─── Render ────────────────────────────────────────────────────────────────
+  // ─── Bill view after save ──────────────────────────────────────────────────
   if (savedBill) {
     return (
       <div
@@ -624,10 +787,16 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </div>
                 <div className='text-end'>
                   <div className='badge badge-light-success fs-7 mb-2'>
-                    {savedBill.payment_method === 'transfer' ? 'Transfer Paid' : 'Booked'}
+                    {savedBill.payment_method === 'transfer'
+                      ? 'Transfer Paid'
+                      : savedBill.payment_method === 'bcel'
+                      ? 'BCEL QR Paid'
+                      : 'Booked'}
                   </div>
                   <div className='text-muted fs-8'>
-                    {savedBill.payment_method === 'transfer' ? 'ຊຳລະແລ້ວ' : 'ລໍຊຳລະຫນ້າງານ'}
+                    {savedBill.payment_method === 'transfer' || savedBill.payment_method === 'bcel'
+                      ? 'ຊຳລະແລ້ວ'
+                      : 'ລໍຊຳລະຫນ້າງານ'}
                   </div>
                 </div>
               </div>
@@ -650,7 +819,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </div>
               </div>
 
-              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }}></div>
+              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }} />
 
               <div className='d-flex justify-content-between align-items-center mb-3'>
                 <span className='text-muted'>Ship Charge</span>
@@ -671,7 +840,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       <span className='fw-semibold'>{formatLak(food.price * food.quantity)}</span>
                     </div>
                   ))}
-
                   <div className='d-flex justify-content-between align-items-center mb-3'>
                     <span className='text-muted'>Food Total</span>
                     <span className='fw-bold text-info'>{formatLak(savedBill.total_food_price)}</span>
@@ -679,7 +847,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </>
               )}
 
-              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }}></div>
+              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }} />
 
               <div className='d-flex justify-content-between align-items-center'>
                 <div>
@@ -696,7 +864,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         </div>
 
         <div className='modal-footer'>
-          <button type='button' className='btn btn-light' onClick={() => setItemIdForUpdate(undefined)}>
+          <button
+            type='button'
+            className='btn btn-light'
+            onClick={() => setItemIdForUpdate(undefined)}
+          >
             ປິດ
           </button>
         </div>
@@ -704,6 +876,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     )
   }
 
+  // ─── Main wizard render ────────────────────────────────────────────────────
   return (
     <div
       className='modal-content h-100 border-0'
@@ -712,8 +885,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       {/* ── Header ── */}
       <div className='modal-header'>
         <h2 className='fw-bold'>
-          ຈອງເຮືອ:{' '}
-          <span className='text-primary'>{shipData?.ship_name}</span>
+          ຈອງເຮືອ: <span className='text-primary'>{shipData?.ship_name}</span>
         </h2>
         <div
           className='btn btn-icon btn-sm btn-active-icon-primary'
@@ -732,24 +904,22 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             const done = currentStep > stepNum
             const active = currentStep === stepNum
             return (
-              <div
-                key={i}
-                className='d-flex flex-column align-items-center'
-                style={{ flex: 1 }}
-              >
+              <div key={i} className='d-flex flex-column align-items-center' style={{ flex: 1 }}>
                 <div
-                  className={`w-35px h-35px rounded-circle d-flex align-items-center justify-content-center fw-bold fs-6 ${done
-                    ? 'bg-success text-white'
-                    : active
+                  className={`w-35px h-35px rounded-circle d-flex align-items-center justify-content-center fw-bold fs-6 ${
+                    done
+                      ? 'bg-success text-white'
+                      : active
                       ? 'bg-primary text-white'
                       : 'bg-light text-muted'
-                    }`}
+                  }`}
                 >
                   {done ? '✓' : stepNum}
                 </div>
                 <span
-                  className={`fs-8 mt-1 text-center ${active ? 'text-primary fw-bold' : done ? 'text-success' : 'text-muted'
-                    }`}
+                  className={`fs-8 mt-1 text-center ${
+                    active ? 'text-primary fw-bold' : done ? 'text-success' : 'text-muted'
+                  }`}
                 >
                   {label}
                 </span>
@@ -757,7 +927,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             )
           })}
         </div>
-        {/* Progress bar */}
         <div className='h-4px bg-light rounded overflow-hidden mb-2'>
           <div
             className='h-100 bg-primary rounded'
@@ -780,10 +949,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
           <div>
             {/* Customer info banner */}
             <div className='d-flex align-items-center p-3 rounded bg-light mb-4 border-start border-4 border-primary'>
-              <div
-                className='w-40px h-40px rounded-circle bg-primary d-flex align-items-center
-                  justify-content-center text-white fw-bolder fs-5 me-3 flex-shrink-0'
-              >
+              <div className='w-40px h-40px rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bolder fs-5 me-3 flex-shrink-0'>
                 {customerInitial}
               </div>
               <div className='flex-grow-1'>
@@ -843,9 +1009,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     })
                   }}
                 />
-                {errors.date && (
-                  <div className='invalid-feedback d-block'>{errors.date}</div>
-                )}
+                {errors.date && <div className='invalid-feedback d-block'>{errors.date}</div>}
               </div>
               <div className='col-6'>
                 <label className='required fw-bold fs-6 mb-2'>ເວລາ</label>
@@ -857,26 +1021,19 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       disabled={isSameDayBookingClosed}
                       onChange={(e) => {
                         const nextHour = e.target.value
-                        if (!nextHour) {
-                          updateBookingTime('', '')
-                          return
-                        }
-
+                        if (!nextHour) { updateBookingTime('', ''); return }
                         const nextMinuteOptions = availableTimeOptions
-                          .filter((timeOption) => timeOption.startsWith(`${nextHour}:`))
-                          .map((timeOption) => timeOption.split(':')[1])
+                          .filter((t) => t.startsWith(`${nextHour}:`))
+                          .map((t) => t.split(':')[1])
                         const nextMinute = nextMinuteOptions.includes(selectedMinute)
                           ? selectedMinute
                           : nextMinuteOptions[0] ?? ''
-
                         updateBookingTime(nextHour, nextMinute)
                       }}
                     >
                       <option value=''>Hour</option>
-                      {availableHourOptions.map((hourOption) => (
-                        <option key={hourOption} value={hourOption}>
-                          {hourOption}
-                        </option>
+                      {availableHourOptions.map((h) => (
+                        <option key={h} value={h}>{h}</option>
                       ))}
                     </select>
                   </div>
@@ -888,38 +1045,29 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       onChange={(e) => updateBookingTime(selectedHour, e.target.value)}
                     >
                       <option value=''>Minute</option>
-                      {availableMinuteOptions.map((minuteOption) => (
-                        <option key={minuteOption} value={minuteOption}>
-                          {minuteOption}
-                        </option>
+                      {availableMinuteOptions.map((m) => (
+                        <option key={m} value={m}>{m}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-                {errors.time && (
-                  <div className='invalid-feedback d-block'>{errors.time}</div>
-                )}
+                {errors.time && <div className='invalid-feedback d-block'>{errors.time}</div>}
               </div>
             </div>
 
             {bookingDate && (
               <div
-                className={`mb-5 p-3 rounded ${isSameDayBookingClosed ? 'bg-light-danger text-danger' : 'bg-light-info text-info'
-                  }`}
+                className={`mb-5 p-3 rounded ${
+                  isSameDayBookingClosed
+                    ? 'bg-light-danger text-danger'
+                    : 'bg-light-info text-info'
+                }`}
               >
                 {isTodaySelected
                   ? isSameDayBookingClosed
                     ? 'Today can no longer be booked because same-day booking closes after 17:00.'
-                    : `For today, booking starts from ${minutesToTimeString(
-                      minimumBookingMinutes
-                    )} and must be made by ${minutesToTimeString(
-                      SAME_DAY_LAST_BOOKING_MINUTES
-                    )}.`
-                  : `Bookings start from ${minutesToTimeString(
-                    SHOP_OPEN_MINUTES
-                  )}. You can choose any later time, but the booking must still end by ${minutesToTimeString(
-                    SHOP_CLOSE_MINUTES
-                  )}.`}
+                    : `For today, booking starts from ${minutesToTimeString(minimumBookingMinutes)} and must be made by ${minutesToTimeString(SAME_DAY_LAST_BOOKING_MINUTES)}.`
+                  : `Bookings start from ${minutesToTimeString(SHOP_OPEN_MINUTES)}. You can choose any later time, but the booking must still end by ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
               </div>
             )}
 
@@ -937,16 +1085,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 max={shipData?.capacity}
                 onChange={(e) => {
                   setNumPeople(parseInt(e.target.value) || 1)
-                  setErrors((p) => {
-                    const n = { ...p }
-                    delete n.people
-                    return n
-                  })
+                  setErrors((p) => { const n = { ...p }; delete n.people; return n })
                 }}
               />
-              {errors.people && (
-                <div className='invalid-feedback d-block'>{errors.people}</div>
-              )}
+              {errors.people && <div className='invalid-feedback d-block'>{errors.people}</div>}
             </div>
 
             {/* Duration */}
@@ -967,21 +1109,15 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
               {bookingTime && maxBookableHours > 0 && (
                 <div className='text-muted fs-8 mt-2'>
-                  {`From ${bookingTime}, you can book up to ${maxBookableHours} hour(s) before ${minutesToTimeString(
-                    SHOP_CLOSE_MINUTES
-                  )}.`}
+                  {`From ${bookingTime}, you can book up to ${maxBookableHours} hour(s) before ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
                 </div>
               )}
               {bookingTime && maxBookableHours < 1 && (
                 <div className='text-danger fs-8 mt-2'>
-                  {`This time is too close to closing time at ${minutesToTimeString(
-                    SHOP_CLOSE_MINUTES
-                  )}.`}
+                  {`This time is too close to closing time at ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
                 </div>
               )}
-              {errors.hours && (
-                <div className='text-danger fs-7 mt-2'>{errors.hours}</div>
-              )}
+              {errors.hours && <div className='text-danger fs-7 mt-2'>{errors.hours}</div>}
             </div>
 
             {/* Price preview */}
@@ -1015,10 +1151,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   const qty = getFoodQty(product.product_id)
                   return (
                     <div key={product.product_id} className='col-6 col-xl-4'>
-                      <div
-                        className={`card h-100 ${qty > 0 ? 'border border-primary' : ''
-                          }`}
-                      >
+                      <div className={`card h-100 ${qty > 0 ? 'border border-primary' : ''}`}>
                         <div className='card-body p-3 d-flex flex-column'>
                           {product.image ? (
                             <img
@@ -1035,20 +1168,15 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                               <i className='bi bi-image text-muted fs-3' />
                             </div>
                           )}
-                          <div className='fw-bold fs-7 mb-1 flex-grow-1'>
-                            {product.name}
-                          </div>
+                          <div className='fw-bold fs-7 mb-1 flex-grow-1'>{product.name}</div>
                           <div className='text-primary fw-semibold fs-8 mb-2'>
                             {product.price.toLocaleString()} LAK
                           </div>
-                          {/* Qty counter */}
                           <div className='d-flex align-items-center justify-content-between'>
                             <button
                               type='button'
                               className='btn btn-sm btn-icon btn-light-danger w-25px h-25px'
-                              onClick={() =>
-                                handleFoodQuantity(product, Math.max(0, qty - 1))
-                              }
+                              onClick={() => handleFoodQuantity(product, Math.max(0, qty - 1))}
                               disabled={qty === 0}
                             >
                               −
@@ -1070,7 +1198,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             )}
 
-            {/* Food sub-total */}
             {selectedFoods.length > 0 && (
               <div className='mt-5 p-4 rounded bg-light-info'>
                 <div className='fw-bold mb-2'>
@@ -1081,9 +1208,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </div>
                 <div className='d-flex justify-content-between'>
                   <span className='text-muted'>ລວມຄ່າອາຫານ</span>
-                  <span className='fw-bolder text-info'>
-                    {totalFoodPrice.toLocaleString()} LAK
-                  </span>
+                  <span className='fw-bolder text-info'>{totalFoodPrice.toLocaleString()} LAK</span>
                 </div>
               </div>
             )}
@@ -1095,7 +1220,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
           <div>
             <div className='fw-bold fs-5 mb-5'>ສະຫຼຸບການຈອງ</div>
 
-            {/* Customer info */}
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
                 <div className='fw-bold text-dark mb-3'>ຜູ້ຈອງ</div>
@@ -1110,7 +1234,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             </div>
 
-            {/* Ship details */}
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
                 <div className='fw-bold text-primary mb-3'>ລາຍລະອຽດເຮືອ</div>
@@ -1123,10 +1246,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     ['ໄລຍະເວລາ', `${numHours} ຊົ່ວໂມງ`],
                   ] as [string, string | undefined][]
                 ).map(([label, value]) => (
-                  <div
-                    key={label}
-                    className='d-flex justify-content-between mb-2'
-                  >
+                  <div key={label} className='d-flex justify-content-between mb-2'>
                     <span className='text-muted'>{label}</span>
                     <span className='fw-semibold'>{value}</span>
                   </div>
@@ -1140,18 +1260,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             </div>
 
-            {/* Food details */}
             {selectedFoods.length > 0 && (
               <div className='card bg-light mb-4'>
                 <div className='card-body py-4 px-5'>
-                  <div className='fw-bold text-info mb-3'>
-                    ອາຫານ ແລະ ເຄື່ອງດື່ມ
-                  </div>
+                  <div className='fw-bold text-info mb-3'>ອາຫານ ແລະ ເຄື່ອງດື່ມ</div>
                   {selectedFoods.map((f) => (
-                    <div
-                      key={f.product_id}
-                      className='d-flex justify-content-between mb-2'
-                    >
+                    <div key={f.product_id} className='d-flex justify-content-between mb-2'>
                       <span>
                         {f.name} × {f.quantity}
                       </span>
@@ -1168,7 +1282,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             )}
 
-            {/* Grand total */}
             <div className='card border-primary'>
               <div className='card-body py-4 px-5'>
                 <div className='d-flex justify-content-between align-items-center'>
@@ -1189,32 +1302,43 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
             {/* Method selector */}
             <div className='d-flex gap-3 mb-6' style={{ flexWrap: 'wrap' }}>
-              {(isStaff
-                ? (['cash', 'transfer', 'cash+transfer'] as const)
-                : (['cash', 'transfer'] as const)
+              {(
+                isStaff
+                  ? (['cash', 'transfer', 'cash+transfer', 'bcel'] as const)
+                  : (['transfer', 'bcel'] as const)
               ).map((method) => (
                 <div
                   key={method}
-                  className={`card flex-fill text-center p-4 border-2 ${paymentMethod === method
-                    ? 'border-primary bg-light-primary'
-                    : 'border-light'
-                    }`}
+                  className={`card flex-fill text-center p-4 border-2 ${
+                    paymentMethod === method
+                      ? 'border-primary bg-light-primary'
+                      : 'border-light'
+                  }`}
                   onClick={() => {
                     setPaymentMethod(method)
                     setCashAmount(0)
                     setTransferAmount(0)
+                    // Do NOT reset BCEL here — keep QR alive while switching tabs
                   }}
-                  style={{ cursor: 'pointer', minWidth: 110 }}
+                  style={{ cursor: 'pointer', minWidth: 100 }}
                 >
                   <div className='fs-1 mb-2'>
-                    {method === 'cash' ? '💵' : method === 'transfer' ? '📱' : '💵📱'}
+                    {method === 'cash'
+                      ? '💵'
+                      : method === 'transfer'
+                      ? '📱'
+                      : method === 'bcel'
+                      ? '🏦'
+                      : '💵📱'}
                   </div>
                   <div className='fw-bold fs-7'>
                     {method === 'cash'
                       ? 'ເງິນສົດ'
                       : method === 'transfer'
-                        ? 'ໂອນເງິນ'
-                        : 'ເງິນສົດ + ໂອນ'}
+                      ? 'ໂອນເງິນ'
+                      : method === 'bcel'
+                      ? 'BCEL QR'
+                      : 'ເງິນສົດ + ໂອນ'}
                   </div>
                 </div>
               ))}
@@ -1225,12 +1349,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               <div className='alert alert-info d-flex align-items-center gap-2 py-3 mb-5'>
                 <KTIcon iconName='shield-tick' className='fs-3 text-info' />
                 <span className='fw-semibold fs-7'>
-                  ຈ່າຍໜ້າເຄົາເຕີ — ບິນຈະຖືກອະນຸມັດທັນທີ (status: <strong>approved</strong>)
+                  ຈ່າຍໜ້າເຄົາເຕີ — ບິນຈະຖືກອະນຸມັດທັນທີ (status:{' '}
+                  <strong>approved</strong>)
                 </span>
               </div>
             )}
 
-            {/* Cash */}
+            {/* ── Cash ── */}
             {paymentMethod === 'cash' && (
               <div className='p-5 rounded bg-light-warning text-center'>
                 <div className='fs-2 mb-2'>💵</div>
@@ -1244,17 +1369,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             )}
 
-            {/* Transfer + QR + Slip Upload */}
+            {/* ── Transfer + QR + Slip ── */}
             {paymentMethod === 'transfer' && (
               <div>
-                {/* QR Code */}
                 <div className='text-center mb-6'>
-                  <div className='fw-bold fs-6 mb-3'>
-                    ຂັ້ນຕອນ 1: ສະແກນ QR Code ເພື່ອຊຳລະ
-                  </div>
+                  <div className='fw-bold fs-6 mb-3'>ຂັ້ນຕອນ 1: ສະແກນ QR Code ເພື່ອຊຳລະ</div>
                   <div
-                    className='d-inline-flex align-items-center justify-content-center
-                      border border-2 border-dashed border-primary rounded p-4'
+                    className='d-inline-flex align-items-center justify-content-center border border-2 border-dashed border-primary rounded p-4'
                     style={{ minWidth: 200, minHeight: 200 }}
                   >
                     <img
@@ -1277,7 +1398,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   </div>
                 </div>
 
-                {/* Slip Upload — required only for customer */}
                 <div className='separator separator-dashed mb-5' />
                 {!isStaff && (
                   <div className='fw-bold fs-6 mb-3 text-center'>
@@ -1343,7 +1463,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             )}
 
-            {/* Mixed: Cash + Transfer (staff only) */}
+            {/* ── Cash + Transfer (staff only) ── */}
             {paymentMethod === 'cash+transfer' && isStaff && (
               <div>
                 <div className='p-5 rounded border border-primary mb-4'>
@@ -1355,7 +1475,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       ຍອດລວມ: {grandTotal.toLocaleString()} LAK
                     </span>
                   </div>
-
                   <div className='row g-4 mb-3'>
                     <div className='col-6'>
                       <label className='fw-bold fs-7 mb-2 d-block'>💵 ເງິນສົດ (LAK)</label>
@@ -1390,23 +1509,27 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       />
                     </div>
                   </div>
-
-                  {/* Running balance check */}
                   <div
-                    className={`p-3 rounded text-center fs-7 fw-bold ${cashAmount + transferAmount === grandTotal
-                      ? 'bg-light-success text-success'
-                      : 'bg-light-danger text-danger'
-                      }`}
+                    className={`p-3 rounded text-center fs-7 fw-bold ${
+                      cashAmount + transferAmount === grandTotal
+                        ? 'bg-light-success text-success'
+                        : 'bg-light-danger text-danger'
+                    }`}
                   >
                     {cashAmount + transferAmount === grandTotal ? (
-                      <><KTIcon iconName='check-circle' className='fs-4 me-1' />ຈຳນວນຖືກຕ້ອງ ✓</>
+                      <>
+                        <KTIcon iconName='check-circle' className='fs-4 me-1' />
+                        ຈຳນວນຖືກຕ້ອງ ✓
+                      </>
                     ) : (
-                      <>ລວມ {(cashAmount + transferAmount).toLocaleString()} LAK — ຍັງຂາດ / ເກີນ {Math.abs(grandTotal - cashAmount - transferAmount).toLocaleString()} LAK</>
+                      <>
+                        ລວມ {(cashAmount + transferAmount).toLocaleString()} LAK — ຍັງຂາດ / ເກີນ{' '}
+                        {Math.abs(grandTotal - cashAmount - transferAmount).toLocaleString()} LAK
+                      </>
                     )}
                   </div>
                 </div>
 
-                {/* Optional transfer slip */}
                 <input
                   type='file'
                   ref={slipInputRef}
@@ -1447,6 +1570,132 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </div>
               </div>
             )}
+
+            {/* ── BCEL QR Pay ── */}
+            {paymentMethod === 'bcel' && (
+              <div className='text-center'>
+                {/* Amount info */}
+                <div className='p-4 rounded bg-light-primary mb-5'>
+                  <div className='fs-6 fw-bold mb-1'>🏦 ຊຳລະຜ່ານ BCEL QR (phajay)</div>
+                  <div className='text-muted fs-7 mt-1'>
+                    ຍອດ:{' '}
+                    <strong className='text-primary'>{grandTotal.toLocaleString()} LAK</strong>
+                    {' '}≈{' '}
+                    <strong className='text-success'>{bcelAmountUsd} USD</strong>
+                    {bcelAmountCapped && (
+                      <span className='text-warning ms-1'>(ຈຳກັດ {BCEL_MAX_USD} USD test key)</span>
+                    )}
+                  </div>
+                  <div className='text-muted fs-8 mt-1'>
+                    ອັດຕາແລກປ່ຽນ: 1 USD = {LAK_PER_USD.toLocaleString()} LAK
+                  </div>
+                </div>
+
+                {/* idle */}
+                {bcelStatus === 'idle' && (
+                  <button
+                    type='button'
+                    className='btn btn-primary btn-lg'
+                    onClick={handleBcelPay}
+                    disabled={grandTotal < LAK_PER_USD}
+                  >
+                    <KTIcon iconName='scan-barcode' className='fs-3 me-2' />
+                    ສ້າງ QR ເພື່ອຊຳລະ
+                  </button>
+                )}
+
+                {/* loading */}
+                {bcelStatus === 'loading' && (
+                  <div className='py-6'>
+                    <span className='spinner-border text-primary mb-3' />
+                    <div className='text-muted fs-7 mt-2'>ກຳລັງສ້າງ QR Code...</div>
+                  </div>
+                )}
+
+                {/* waiting — show QR + countdown */}
+                {bcelStatus === 'waiting' && bcelQrDataUrl && (
+                  <div>
+                    <img
+                      src={bcelQrDataUrl}
+                      alt='BCEL QR Code'
+                      className='rounded border border-2 border-primary mb-3'
+                      style={{ width: 240, height: 240 }}
+                    />
+
+                    {/* Countdown ring */}
+                    <div className='d-flex flex-column align-items-center mb-4'>
+                      <div
+                        className='position-relative d-flex align-items-center justify-content-center mb-2'
+                        style={{ width: 72, height: 72 }}
+                      >
+                        <svg width='72' height='72' style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                          <circle cx='36' cy='36' r='30' fill='none' stroke='#e9ecef' strokeWidth='6' />
+                          <circle
+                            cx='36' cy='36' r='30' fill='none'
+                            stroke={bcelCountdown > 30 ? '#0d6efd' : bcelCountdown > 10 ? '#ffc107' : '#dc3545'}
+                            strokeWidth='6'
+                            strokeDasharray={`${2 * Math.PI * 30}`}
+                            strokeDashoffset={`${2 * Math.PI * 30 * (1 - bcelCountdown / 90)}`}
+                            style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
+                          />
+                        </svg>
+                        <span
+                          className='fw-bolder fs-5'
+                          style={{ color: bcelCountdown > 30 ? '#0d6efd' : bcelCountdown > 10 ? '#ffc107' : '#dc3545' }}
+                        >
+                          {`${Math.floor(bcelCountdown / 60)}:${String(bcelCountdown % 60).padStart(2, '0')}`}
+                        </span>
+                      </div>
+                      <div className='d-flex align-items-center gap-2 text-warning fw-bold fs-7'>
+                        <span className='spinner-border spinner-border-sm' />
+                        ລໍຖ້າການຊຳລະ...
+                      </div>
+                      <div className='text-muted fs-8 mt-1'>QR ໝົດອາຍຸໃນ {`${Math.floor(bcelCountdown / 60)}:${String(bcelCountdown % 60).padStart(2, '0')}`} ນາທີ</div>
+                    </div>
+
+                    <button
+                      type='button'
+                      className='btn btn-sm btn-light'
+                      onClick={resetBcel}
+                    >
+                      ສ້າງ QR ໃໝ່
+                    </button>
+                  </div>
+                )}
+
+                {/* paid */}
+                {bcelStatus === 'paid' && (
+                  <div className='py-4'>
+                    <div className='text-success fw-bolder fs-3 mb-3'>
+                      <KTIcon iconName='check-circle' className='fs-1 text-success me-2' />
+                      ຊຳລະສຳເລັດ!
+                    </div>
+                    <div className='badge badge-light-success fs-6 px-4 py-2 mb-3'>
+                      ✅ BCEL ຢືນຢັນການຊຳລະແລ້ວ
+                    </div>
+                    <div className='d-flex align-items-center justify-content-center gap-2 text-muted fs-7 mt-2'>
+                      <span className='spinner-border spinner-border-sm text-primary' />
+                      ກຳລັງບັນທຶກການຈອງ...
+                    </div>
+                  </div>
+                )}
+
+                {/* error */}
+                {bcelStatus === 'error' && (
+                  <div className='alert alert-danger py-3 text-start'>
+                    <div className='fw-bold mb-1'>ເກີດຂໍ້ຜິດພາດ</div>
+                    <div className='fs-7'>{bcelErrorMsg}</div>
+                    <button
+                      type='button'
+                      className='btn btn-sm btn-light-danger mt-2'
+                      onClick={resetBcel}
+                    >
+                      ລອງໃໝ່
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1457,9 +1706,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
           type='button'
           className='btn btn-light'
           disabled={loading}
-          onClick={
-            currentStep === 1 ? () => setItemIdForUpdate(undefined) : prevStep
-          }
+          onClick={currentStep === 1 ? () => setItemIdForUpdate(undefined) : prevStep}
         >
           {currentStep === 1 ? (
             'ຍົກເລີກ'
@@ -1482,7 +1729,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             disabled={
               loading ||
               (!isStaff && paymentMethod === 'transfer' && !slipUrl) ||
-              (isStaff && paymentMethod === 'cash+transfer' && cashAmount + transferAmount !== grandTotal)
+              (isStaff &&
+                paymentMethod === 'cash+transfer' &&
+                cashAmount + transferAmount !== grandTotal) ||
+              (paymentMethod === 'bcel' && bcelStatus !== 'paid')
             }
           >
             {loading ? (

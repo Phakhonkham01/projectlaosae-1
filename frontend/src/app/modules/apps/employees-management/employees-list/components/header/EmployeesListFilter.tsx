@@ -43,13 +43,13 @@ const EmployeesListFilter = () => {
         data-kt-menu-placement='bottom-end'
       >
         <KTIcon iconName='filter' className='fs-2' />
-        Filter
+        ຕົວກອງ
       </button>
 
       {/* Dropdown menu */}
       <div className='menu menu-sub menu-sub-dropdown w-300px w-md-325px' data-kt-menu='true'>
         <div className='px-7 py-5'>
-          <div className='fs-5 text-gray-900 fw-bolder'>Filter Options</div>
+          <div className='fs-5 text-gray-900 fw-bolder'>ຕົວເລືອກການກອງ</div>
         </div>
 
         <div className='separator border-gray-200' />
@@ -72,16 +72,15 @@ const EmployeesListFilter = () => {
 
           {/* Status */}
           <div className='mb-10'>
-            <label className='form-label fs-6 fw-bold'>Status:</label>
+            <label className='form-label fs-6 fw-bold'>ສະຖານະ:</label>
             <select
               className='form-select form-select-solid fw-bolder'
               onChange={(e) => setStatus(e.target.value)}
               value={status}
             >
-              <option value=''>All Status</option>
-              <option value='Active'>Active</option>
-              <option value='Inactive'>Inactive</option>
-              <option value='On Leave'>On Leave</option>
+              <option value=''>ທຸກສະຖານະ</option>
+              <option value='Active'>ໃຊ້ງານ</option>
+              <option value='Inactive'>ປິດໃຊ້ງານ</option>
             </select>
           </div>
 
@@ -94,7 +93,7 @@ const EmployeesListFilter = () => {
               className='btn btn-light btn-active-light-primary fw-bold me-2 px-6'
               data-kt-menu-dismiss='true'
             >
-              Reset
+              ລ້າງ
             </button>
             <button
               type='button'
@@ -103,7 +102,7 @@ const EmployeesListFilter = () => {
               className='btn btn-primary fw-bold px-6'
               data-kt-menu-dismiss='true'
             >
-              Apply
+              ນຳໃຊ້
             </button>
           </div>
         </div>

@@ -19,18 +19,18 @@ type Props = {
 };
 
 const userSchema = Yup.object().shape({
-  name: Yup.string().required("Name is required"),
-  lastname: Yup.string().required("Last name is required"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
+  name: Yup.string().required("ກະລຸນາປ້ອນຊື່"),
+  lastname: Yup.string().required("ກະລຸນາປ້ອນນາມສະກຸນ"),
+  email: Yup.string().email("ຮູບແບບອີເມວບໍ່ຖືກຕ້ອງ").required("ກະລຸນາປ້ອນອີເມວ"),
   phone_number: Yup.string(),
   password: Yup.string().when("_id", {
     is: (id: string) => !id,
     then: (schema) =>
-      schema.min(6, "Minimum 6 characters").required("Password is required"),
+      schema.min(6, "ຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ").required("ກະລຸນາປ້ອນລະຫັດຜ່ານ"),
     otherwise: (schema) => schema.notRequired(),
   }),
-  status: Yup.string().required("Status is required"),
-  role: Yup.string().required("Role is required"),
+  status: Yup.string().required("ກະລຸນາເລືອກສະຖານະ"),
+  role: Yup.string().required("ກະລຸນາເລືອກບົດບາດ"),
 });
 
 const initialValues: Partial<User> = {
@@ -84,12 +84,12 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
   const createMutation = useMutation(createUser, {
     onSuccess: () => {
-      Swal.fire({
-        icon: "success",
-        title: '<span style="color: #10b981;">User Created</span>',
-        timer: 2000,
-        showConfirmButton: false,
-      }).then(() => {
+        Swal.fire({
+          icon: "success",
+          title: '<span style="color: #10b981;">ສ້າງຜູ້ໃຊ້ສຳເລັດ</span>',
+          timer: 2000,
+          showConfirmButton: false,
+        }).then(() => {
         invalidateUsers();
         setItemIdForUpdate(undefined);
         window.location.reload();
@@ -98,9 +98,9 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
     onError: (error: any) => {
       Swal.fire({
         icon: "error",
-        title: "Failed to Create User",
-        text: error?.message || "Something went wrong!",
-        confirmButtonText: "OK",
+        title: "ສ້າງຜູ້ໃຊ້ບໍ່ສຳເລັດ",
+        text: error?.message || "ມີບັນຫາບາງຢ່າງ",
+        confirmButtonText: "ຕົກລົງ",
       });
     },
   });
@@ -111,7 +111,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
       onSuccess: () => {
         Swal.fire({
           icon: "success",
-          title: '<span style="color: #10b981;">User Updated</span>',
+          title: '<span style="color: #10b981;">ອັບເດດຜູ້ໃຊ້ສຳເລັດ</span>',
           timer: 2000,
           showConfirmButton: false,
         }).then(() => {
@@ -123,8 +123,8 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
       onError: () => {
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: "Failed to update user",
+          title: "ຂໍ້ຜິດພາດ",
+          text: "ອັບເດດຜູ້ໃຊ້ບໍ່ສຳເລັດ",
         });
       },
     }
@@ -176,7 +176,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Profile Image */}
         <div className="fv-row mb-7 text-center">
-          <label className="fw-bold fs-6 mb-3 d-block">Profile Image</label>
+          <label className="fw-bold fs-6 mb-3 d-block">ຮູບໂປຣໄຟລ໌</label>
           <div
             className="position-relative d-inline-block"
             style={{ cursor: "pointer" }}
@@ -224,7 +224,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 onClick={() => { setImagePreview(""); setImageFile(null); formik.setFieldValue("image_url", ""); }}
                 disabled={isSubmitting || isUserLoading}
               >
-                Remove
+                ລຶບຮູບ
               </button>
             </div>
           )}
@@ -232,7 +232,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Name */}
         <div className="fv-row mb-7">
-          <label className="required fw-bold fs-6 mb-2">Name</label>
+          <label className="required fw-bold fs-6 mb-2">ຊື່</label>
           <input
             type="text"
             {...formik.getFieldProps("name")}
@@ -248,7 +248,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Last Name */}
         <div className="fv-row mb-7">
-          <label className="required fw-bold fs-6 mb-2">Last Name</label>
+          <label className="required fw-bold fs-6 mb-2">ນາມສະກຸນ</label>
           <input
             type="text"
             {...formik.getFieldProps("lastname")}
@@ -264,7 +264,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Email */}
         <div className="fv-row mb-7">
-          <label className="required fw-bold fs-6 mb-2">Email</label>
+          <label className="required fw-bold fs-6 mb-2">ອີເມວ</label>
           <input
             type="email"
             {...formik.getFieldProps("email")}
@@ -281,7 +281,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
         {/* Password */}
         {!isEditMode && (
           <div className="fv-row mb-7">
-            <label className="required fw-bold fs-6 mb-2">Password</label>
+            <label className="required fw-bold fs-6 mb-2">ລະຫັດຜ່ານ</label>
             <div className="position-relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -321,7 +321,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Phone Number */}
         <div className="fv-row mb-7">
-          <label className="fw-bold fs-6 mb-2">Phone Number</label>
+          <label className="fw-bold fs-6 mb-2">ເບີໂທ</label>
           <input
             type="text"
             {...formik.getFieldProps("phone_number")}
@@ -332,7 +332,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Role */}
         <div className="mb-7">
-          <label className="required fw-bold fs-6 mb-5">Role</label>
+          <label className="required fw-bold fs-6 mb-5">ບົດບາດ</label>
           {(["owner", "employee", "customer"] as User["role"][]).map((r) => (
             <div key={r} className="form-check form-check-custom form-check-solid mb-3">
               <input
@@ -345,7 +345,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 disabled={isSubmitting || isUserLoading}
               />
               <label htmlFor={`role-${r}`} className="form-check-label fw-bold text-gray-800">
-                {r.toUpperCase()}
+                {r === 'owner' ? 'ເຈົ້າຂອງ' : r === 'employee' ? 'ພະນັກງານ' : 'ລູກຄ້າ'}
               </label>
             </div>
           ))}
@@ -353,8 +353,8 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
         {/* Status */}
         <div className="mb-7">
-          <label className="required fw-bold fs-6 mb-5">Status</label>
-          {(["Active", "Inactive", "On Leave"] as User["status"][]).map((s) => (
+          <label className="required fw-bold fs-6 mb-5">ສະຖານະ</label>
+          {(["Active", "Inactive"] as User["status"][]).map((s) => (
             <div key={s} className="form-check form-check-custom form-check-solid mb-3">
               <input
                 id={`status-${s}`}
@@ -366,7 +366,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 disabled={isSubmitting || isUserLoading}
               />
               <label htmlFor={`status-${s}`} className="form-check-label fw-bold text-gray-800">
-                {s}
+                {s === 'Active' ? 'ໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}
               </label>
             </div>
           ))}
@@ -380,7 +380,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
             onClick={() => setItemIdForUpdate(undefined)}
             disabled={isSubmitting}
           >
-            Cancel
+            ຍົກເລີກ
           </button>
           <button
             type="submit"
@@ -389,10 +389,10 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           >
             {isSubmitting ? (
               <>
-                {isUploading ? "Uploading..." : "Please wait..."}
+                {isUploading ? "ກຳລັງອັບໂຫຼດ..." : "ກະລຸນາລໍຖ້າ..."}
                 <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
               </>
-            ) : isEditMode ? "Update" : "Create"}
+            ) : isEditMode ? "ບັນທຶກ" : "ສ້າງ"}
           </button>
         </div>
       </form>

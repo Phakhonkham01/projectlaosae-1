@@ -1,4 +1,4 @@
-import {useQueryClient, useMutation} from 'react-query'
+import {useMutation, useQueryClient} from 'react-query'
 import {QUERIES} from '../../../../../../../_metronic/helpers'
 import {useListView} from '../../core/ListViewProvider'
 import {useQueryResponse} from '../../core/QueryResponseProvider'
@@ -23,9 +23,7 @@ const EmployeesListGrouping = () => {
     currentUser?.role === 'employee' && !!currentUser._id && selected.includes(currentUser._id)
 
   const deleteSelectedItems = useMutation(() => deleteSelectedUsers(selected), {
-    // 💡 response of the mutation is passed to onSuccess
     onSuccess: () => {
-      // ✅ update detail view directly
       queryClient.invalidateQueries([`${QUERIES.USERS_LIST}-${query}`])
       clearSelected()
     },
@@ -34,7 +32,7 @@ const EmployeesListGrouping = () => {
   return (
     <div className='d-flex justify-content-end align-items-center'>
       <div className='fw-bolder me-5'>
-        <span className='me-2'>{selected.length}</span> Selected
+        <span className='me-2'>{selected.length}</span> ລາຍການທີ່ເລືອກ
       </div>
 
       <button
@@ -45,14 +43,14 @@ const EmployeesListGrouping = () => {
             await Swal.fire({
               icon: 'warning',
               title: 'ບໍ່ສາມາດລຶບບັນຊີຂອງຕົນເອງໄດ້',
-              text: 'ກະລຸນາເອົາບັນຊີທີ່ກຳລັງ login ອອກຈາກລາຍການກ່ອນລຶບ',
+              text: 'ກະລຸນາເອົາບັນຊີທີ່ກຳລັງໃຊ້ງານອອກຈາກລາຍການກ່ອນ',
             })
             return
           }
           await deleteSelectedItems.mutateAsync()
         }}
       >
-        Delete Selected
+        ລຶບທີ່ເລືອກ
       </button>
     </div>
   )

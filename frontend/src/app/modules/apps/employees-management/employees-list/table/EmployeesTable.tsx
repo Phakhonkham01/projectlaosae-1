@@ -9,13 +9,13 @@ import { CustomRow } from './columns/CustomRow'
 import { EmployeesListLoading } from '../components/loading/EmployeesListLoading'
 import { EmployeesListPagination } from '../components/pagination/EmployeesListPagination'
 
-type RoleTab = 'all' | 'ownner' | 'employee' | 'customer'
+type RoleTab = 'all' | 'owner' | 'employee' | 'customer'
 
 const tabs: { label: string; value: RoleTab }[] = [
-  { label: 'All',      value: 'all'      },
-  { label: 'Owner',    value: 'ownner'   },
-  { label: 'Employee', value: 'employee' },
-  { label: 'Customer', value: 'customer' },
+  { label: 'ທັງໝົດ', value: 'all' },
+  { label: 'ເຈົ້າຂອງ', value: 'owner' },
+  { label: 'ພະນັກງານ', value: 'employee' },
+  { label: 'ລູກຄ້າ', value: 'customer' },
 ]
 
 const EmployeesTable = () => {
@@ -94,7 +94,7 @@ const EmployeesTable = () => {
               <tr>
                 <td colSpan={7}>
                   <div className='d-flex text-center w-100 align-content-center justify-content-center'>
-                    No matching records found
+                    ບໍ່ພົບຂໍ້ມູນ
                   </div>
                 </td>
               </tr>
