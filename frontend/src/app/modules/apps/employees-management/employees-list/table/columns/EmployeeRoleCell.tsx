@@ -5,6 +5,9 @@ type Props = {
 }
 
 const UserRoleCell: FC<Props> = ({ role }) => {
+  const roleLabel =
+    role === 'owner' ? 'ເຈົ້າຂອງ' : role === 'employee' ? 'ພະນັກງານ' : role === 'customer' ? 'ລູກຄ້າ' : role
+
   const getBadgeClass = (r: string) => {
     switch (r?.toLowerCase()) {
       case 'owner': return 'badge-light-danger'
@@ -16,7 +19,7 @@ const UserRoleCell: FC<Props> = ({ role }) => {
 
   return (
     <div className={`badge ${getBadgeClass(role)} fw-bold px-3 py-2`}>
-      {role}
+      {roleLabel}
     </div>
   )
 }
