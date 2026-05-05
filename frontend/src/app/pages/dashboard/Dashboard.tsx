@@ -286,7 +286,7 @@ const Dashboard = () => {
 
   const roleDescription =
     currentRole === 'customer'
-      ? 'ຕິດຕາມການຈອງ, ການຊໍາລະເງິນ, ແລະປະຫວັດການຈອງຂອງທ່ານຈາກ Firebase emulator'
+      ? 'ຕິດຕາມການຈອງ, ການຊໍາລະເງິນ, ການອະນຸມັດການຈອງ, ແລະລາຍການອາຫານ'
       : currentRole === 'owner' || currentRole === 'admin'
       ? 'ເບິ່ງພາບລວມທຸລະກິດ, ການເຄື່ອນໄຫວລູກຄ້າ, ການຊໍາລະທີ່ຍັງຄ້າງ, ສິນຄ້າ, ແລະສະຖານະເຮືອ'
       : 'ຕິດຕາມວຽກຈອງປະຈໍາວັນ, ການຕິດຕາມການຊໍາລະ, ແລະຄວາມພ້ອມໃຫ້ບໍລິການ'
@@ -816,7 +816,7 @@ const Dashboard = () => {
           <div className='d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-8'>
             <div className='me-xl-8'>
               <div className='dashboard-hero-kicker'>
-                <span className='badge badge-light-primary'>Firebase Overview</span>
+                <span className='badge badge-light-primary'>WELCOME</span>
                 <span className='dashboard-hero-dot' />
                 <span className='text-white opacity-75 fs-8 text-uppercase fw-semibold'>
                   {currentRole}
