@@ -16,15 +16,15 @@ const bookingStatusStyles: Record<string, {bg: string; color: string}> = {
 }
 
 const bookingStatusLabels: Record<string, string> = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  cancelled: 'Cancelled',
-  completed: 'Completed',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  payment_failed: 'Payment Failed',
-  'payment failed': 'Payment Failed',
-  under_review_again: 'Under Review Again',
+  pending: 'ລໍຖ້າ',
+  confirmed: 'ຢືນຢັນແລ້ວ',
+  cancelled: 'ຍົກເລີກ',
+  completed: 'ສຳເລັດ',
+  approved: 'ອະນຸມັດ',
+  rejected: 'ປະຕິເສດ',
+  payment_failed: 'ຊຳລະບໍ່ສຳເລັດ',
+  'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
+  under_review_again: 'ກວດສອບອີກຄັ້ງ',
 }
 
 const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
@@ -39,27 +39,47 @@ const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
 }
 
 const paymentStatusLabels: Record<string, string> = {
-  pending: 'Pending',
-  paid: 'Paid',
-  failed: 'Failed',
-  refunded: 'Refunded',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  'payment failed': 'Payment Failed',
-  under_review_again: 'Under Review Again',
+  pending: 'ລໍຖ້າ',
+  paid: 'ຊຳລະແລ້ວ',
+  failed: 'ບໍ່ສຳເລັດ',
+  refunded: 'ຄືນເງິນແລ້ວ',
+  approved: 'ອະນຸມັດ',
+  rejected: 'ປະຕິເສດ',
+  'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
+  under_review_again: 'ກວດສອບອີກຄັ້ງ',
 }
 
 const paymentMethodLabels: Record<string, string> = {
-  cash: 'Cash',
-  transfer: 'Transfer',
-  credit_card: 'Credit Card',
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
+  credit_card: 'ບັດເຄຣດິດ',
   promptpay: 'PromptPay',
+}
+
+const getBookingTimeRange = (startTime?: string, hours?: number) => {
+  if (!startTime) return '-'
+
+  const [hourText, minuteText = '0'] = startTime.split(':')
+  const startHour = Number(hourText)
+  const startMinute = Number(minuteText)
+
+  if (!Number.isFinite(startHour) || !Number.isFinite(startMinute) || !hours) {
+    return startTime
+  }
+
+  const startTotalMinutes = startHour * 60 + startMinute
+  const endTotalMinutes = Math.round(startTotalMinutes + hours * 60)
+  const endHour = Math.floor(endTotalMinutes / 60) % 24
+  const endMinute = endTotalMinutes % 60
+  const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
+
+  return `${startTime} - ${endTime}`
 }
 
 const BookingDateCell = ({booking}: {booking: HistoryBooking}) => (
   <div className='d-flex flex-column'>
     <span className='text-gray-800 fw-bold'>{booking.booking_date}</span>
-    <span className='text-gray-500 fs-7'>{booking.booking_time}</span>
+    <span className='text-gray-500 fs-7'>{getBookingTimeRange(booking.booking_time, booking.num_hours)}</span>
   </div>
 )
 
@@ -120,34 +140,60 @@ const GrandTotalCell = ({value}: {value: number}) => (
   <span className='text-gray-800 fw-bold'>{value != null ? `${value.toLocaleString()} LAK` : '-'}</span>
 )
 
+const PaymentSlipCell = ({url}: {url?: string}) => {
+  if (!url) return <span className='text-muted'>-</span>
+
+  return (
+    <a href={url} target='_blank' rel='noreferrer' className='d-inline-block'>
+      <img
+        src={url}
+        alt='payment slip'
+        className='rounded'
+        style={{
+          width: 100,
+          height: 100,
+          objectFit: 'contain',
+          border: '1px solid var(--bs-gray-300)',
+          background: 'var(--bs-gray-100)',
+        }}
+      />
+    </a>
+  )
+}
+
 const HistoryBookingColumns: ReadonlyArray<Column<HistoryBooking>> = [
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Boat' className='min-w-130px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ເຮືອ' className='min-w-130px' />,
     accessor: 'ship_name',
     Cell: ({value}) => <span className='text-gray-800 fw-bold'>{value ?? '-'}</span>,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Booking Date' className='min-w-130px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ວັນທີຈອງ' className='min-w-130px' />,
     id: 'booking_date',
     Cell: ({row}) => <BookingDateCell booking={row.original} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Booking Status' className='min-w-110px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ສະຖານະການຈອງ' className='min-w-110px' />,
     accessor: 'status',
     Cell: ({value}) => <BookingStatusCell status={value} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Payment' className='min-w-150px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ການຊຳລະ' className='min-w-150px' />,
     id: 'payment',
     Cell: ({row}) => <PaymentCell booking={row.original} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Total' className='min-w-100px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ບິນ' className='min-w-250px' />,
+    accessor: 'slip_url',
+    Cell: ({value}) => <PaymentSlipCell url={value} />,
+  },
+  {
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ລວມ' className='min-w-100px' />,
     accessor: 'grand_total',
     Cell: ({value}) => <GrandTotalCell value={value} />,
   },
   {
-    Header: (props) => <EmployeesListHeader tableProps={props} title='Actions' className='text-end min-w-100px' />,
+    Header: (props) => <EmployeesListHeader tableProps={props} title='ຈັດການ' className='text-end min-w-100px' />,
     id: 'actions',
     Cell: ({row}) => (
       <EmployeesActionsCell id={row.original.id} paymentStatus={row.original.payment_status} />

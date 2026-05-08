@@ -1,7 +1,28 @@
+import Swal from 'sweetalert2'
 import {KTIcon, toAbsoluteUrl} from '../../../helpers'
 import {HeaderNotificationsMenu, HeaderUserMenu, QuickLinks} from '../../../partials'
+import {useAuth} from '../../../../app/modules/auth'
 
 const AsideFooter = () => {
+  const {logout} = useAuth()
+
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      icon: 'question',
+      title: 'ອອກຈາກລະບົບ?',
+      text: 'ທ່ານຕ້ອງການອອກຈາກລະບົບແທ້ບໍ?',
+      showCancelButton: true,
+      confirmButtonText: 'ຕົກລົງ',
+      cancelButtonText: 'ຍົກເລີກ',
+      confirmButtonColor: '#f1416c',
+    })
+
+    if (!result.isConfirmed) return
+
+    logout()
+    window.location.href = import.meta.env.BASE_URL
+  }
+
   return (
     <div
       className='aside-footer d-flex flex-column align-items-center flex-column-auto'
@@ -83,6 +104,17 @@ const AsideFooter = () => {
         <HeaderUserMenu />
       </div>
       {/* end::User */}
+
+      <button
+        type='button'
+        className='btn btn-icon btn-light-danger btn-active-danger position-fixed bottom-0 start-0 mb-8'
+        title='ອອກຈາກລະບົບ'
+        aria-label='ອອກຈາກລະບົບ'
+        style={{marginLeft: 30, zIndex: 110}}
+        onClick={handleLogout}
+      >
+        <i className='bi bi-box-arrow-right fs-2' />
+      </button>
     </div>
   )
 }

@@ -1,174 +1,174 @@
 import {useEffect, useState} from 'react'
 import {MenuComponent} from '../../../../../../../_metronic/assets/ts/components'
-import {initialQueryState, KTIcon} from '../../../../../../../_metronic/helpers'
+import {initialQueryState} from '../../../../../../../_metronic/helpers'
 import {PAYMENT_METHOD_OPTIONS} from '../../core/bill_models'
 import {useQueryRequest} from '../../core/QueryRequestProvider'
 import {useQueryResponse} from '../../core/QueryResponseProvider'
 
-type DateTab = 'all' | 'today' | 'this_month' | 'this_year'
+type DateRange = 'day' | 'month' | 'year'
 
-const dateTabs: { label: string; value: DateTab }[] = [
-  { label: 'ທັງໝົດ', value: 'all' },
-  { label: 'ມື້ນີ້', value: 'today' },
-]
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
+  'cash+transfer': 'ເງິນສົດ + ໂອນ',
+  bcel: 'BCEL QR',
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 const UsersListFilter = () => {
   const {updateState} = useQueryRequest()
   const {isLoading} = useQueryResponse()
-  const [activeTab, setActiveTab] = useState<DateTab>('all')
+  const today = new Date()
+  const [activeRange, setActiveRange] = useState<DateRange>('month')
+  const [dayValue, setDayValue] = useState(today.getDate())
+  const [monthValue, setMonthValue] = useState(today.getMonth() + 1)
+  const [yearValue, setYearValue] = useState(today.getFullYear())
   const [paymentMethod, setPaymentMethod] = useState('')
-  const [rangeType, setRangeType] = useState<'this_month' | 'this_year'>('this_month')
-  const [rangeValue, setRangeValue] = useState<number>(() => {
-    const now = new Date()
-    return now.getMonth() + 1
-  })
 
   useEffect(() => {
     MenuComponent.reinitialization()
+    updateState({
+      filter: {
+        dateRange: 'month',
+        dateMonth: monthValue,
+        dateYear: yearValue,
+      },
+      ...initialQueryState,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const now = new Date()
-  const monthNow = now.getMonth() + 1
-  const yearNow = now.getFullYear()
-
-  const getOffset = (type: 'this_month' | 'this_year', value: number) =>
-    type === 'this_month' ? value - monthNow : value - yearNow
-
-  const applyFilter = (tab: DateTab, method: string, offset = 0) => {
-    const filter: Record<string, string | number | undefined> = {
-      dateRange: tab !== 'all' ? tab : undefined,
-      paymentMethod: method || undefined,
-      dateOffset: tab === 'this_month' || tab === 'this_year' ? offset : undefined,
-    }
-
+  const applyFilter = (
+    range: DateRange = activeRange,
+    method = paymentMethod,
+    day = dayValue,
+    month = monthValue,
+    year = yearValue
+  ) => {
     updateState({
-      filter: Object.values(filter).some(Boolean) ? filter : undefined,
+      filter: {
+        dateRange: range,
+        dateDay: range === 'day' ? day : undefined,
+        dateMonth: range === 'day' || range === 'month' ? month : undefined,
+        dateYear: year,
+        paymentMethod: method || undefined,
+      },
       ...initialQueryState,
     })
   }
 
-  const handleTabChange = (tab: DateTab) => {
-    setActiveTab(tab)
-    if (tab === 'all' || tab === 'today') {
-      applyFilter(tab, paymentMethod, 0)
-    }
-  }
-
-  const applyRange = (type: 'this_month' | 'this_year', value: number) => {
-    const offset = getOffset(type, value)
-    setRangeType(type)
-    setRangeValue(value)
-    setActiveTab(type)
-    applyFilter(type, paymentMethod, offset)
-  }
-
   const resetData = () => {
-    const nowMonth = new Date().getMonth() + 1
-    const nowYear = new Date().getFullYear()
+    const now = new Date()
+    const nextDay = now.getDate()
+    const nextMonth = now.getMonth() + 1
+    const nextYear = now.getFullYear()
 
-    setActiveTab('all')
+    setActiveRange('month')
+    setDayValue(nextDay)
+    setMonthValue(nextMonth)
+    setYearValue(nextYear)
     setPaymentMethod('')
-    setRangeType('this_month')
-    setRangeValue(nowMonth)
     updateState({filter: undefined, ...initialQueryState})
   }
 
-  const changeRangeValue = (delta: number) => {
-    let next = rangeValue + delta
-    if (rangeType === 'this_month') {
-      next = Math.min(12, Math.max(1, next))
-    }
-    if (rangeType === 'this_year') {
-      next = Math.max(1900, next)
-    }
-
-    applyRange(rangeType, next)
+  const selectRange = (range: DateRange) => {
+    setActiveRange(range)
+    applyFilter(range)
   }
+
+  const updateDay = (value: number) => {
+    const next = clamp(value, 1, 31)
+    setDayValue(next)
+    setActiveRange('day')
+    applyFilter('day', paymentMethod, next, monthValue, yearValue)
+  }
+
+  const updateMonth = (value: number) => {
+    const next = clamp(value, 1, 12)
+    setMonthValue(next)
+    setActiveRange('month')
+    applyFilter('month', paymentMethod, dayValue, next, yearValue)
+  }
+
+  const updateYear = (value: number) => {
+    const next = Math.max(1900, value)
+    setYearValue(next)
+    setActiveRange('year')
+    applyFilter('year', paymentMethod, dayValue, monthValue, next)
+  }
+
+  const stepButtonClass = 'btn btn-light btn-sm px-3'
+  const inputClass = 'form-control form-control-sm text-center mw-75px'
 
   return (
     <>
-      {/* Date Tabs */}
-      <div className='d-flex align-items-center me-3'>
-        <ul className='nav nav-tabs nav-line-tabs nav-stretch fs-6 border-0'>
-          {dateTabs.map(tab => (
-            <li key={tab.value} className='nav-item'>
-              <a
-                className={`nav-link fw-bold ${activeTab === tab.value ? 'active' : 'text-muted'}`}
-                onClick={() => handleTabChange(tab.value)}
-                style={{cursor: 'pointer'}}
-              >
-                {tab.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Month/Year controls (no separate tabs for this_month/this_year) */}
-      <div className='d-flex align-items-center mb-3'>
-        <label className='form-label me-2 fw-bold'>ຊ່ວງເວລາ</label>
-
+      <div className='d-flex align-items-center flex-wrap gap-2 mb-3'>
         <button
           type='button'
-          className={`btn btn-sm me-2 ${rangeType === 'this_month' ? 'btn-primary text-white' : 'btn-light'}`}
-          onClick={() => applyRange('this_month', new Date().getMonth() + 1)}
+          className={`btn btn-sm ${activeRange === 'day' ? 'btn-primary text-white' : 'btn-light'}`}
+          onClick={() => selectRange('day')}
         >
-          ເດືອນ
+          ວັນ
         </button>
-        <button
-          type='button'
-          className={`btn btn-sm me-3 ${rangeType === 'this_year' ? 'btn-primary text-white' : 'btn-light'}`}
-          onClick={() => applyRange('this_year', new Date().getFullYear())}
-        >
-          ປີ
-        </button>
-
-        <button
-          type='button'
-          className='btn btn-light btn-sm me-1'
-          onClick={() => changeRangeValue(-1)}
-        >
+        <button type='button' className={stepButtonClass} onClick={() => updateDay(dayValue - 1)}>
           -
         </button>
-
         <input
           type='number'
-          min={rangeType === 'this_month' ? 1 : 1900}
-          max={rangeType === 'this_month' ? 12 : undefined}
-          className='form-control form-control-sm text-center mw-75px me-1'
-          value={rangeValue}
-          onChange={(e) => {
-            let next = Number(e.target.value)
-            if (Number.isNaN(next)) return
-            if (rangeType === 'this_month') {
-              next = Math.max(1, Math.min(12, next))
-            }
-            applyRange(rangeType, next)
-          }}
+          min={1}
+          max={31}
+          className={inputClass}
+          value={dayValue}
+          onChange={(e) => updateDay(Number(e.target.value) || 1)}
         />
-
-        <button
-          type='button'
-          className='btn btn-light btn-sm'
-          onClick={() => changeRangeValue(1)}
-        >
+        <button type='button' className={stepButtonClass} onClick={() => updateDay(dayValue + 1)}>
           +
         </button>
 
-        {/* <span className='ms-2 text-muted'>default is {rangeType === 'this_month' ? `${monthNow} (this month)` : `${yearNow} (this year)`}</span> */}
-      </div>
+        <button
+          type='button'
+          className={`btn btn-sm ms-2 ${activeRange === 'month' ? 'btn-primary text-white' : 'btn-light'}`}
+          onClick={() => selectRange('month')}
+        >
+          ເດືອນ
+        </button>
+        <button type='button' className={stepButtonClass} onClick={() => updateMonth(monthValue - 1)}>
+          -
+        </button>
+        <input
+          type='number'
+          min={1}
+          max={12}
+          className={inputClass}
+          value={monthValue}
+          onChange={(e) => updateMonth(Number(e.target.value) || 1)}
+        />
+        <button type='button' className={stepButtonClass} onClick={() => updateMonth(monthValue + 1)}>
+          +
+        </button>
 
-      {/* Payment Method Filter */}
-      {/* <button
-        disabled={isLoading}
-        type='button'
-        className='btn btn-light-primary me-3'
-        data-kt-menu-trigger='click'
-        data-kt-menu-placement='bottom-end'
-      >
-        <KTIcon iconName='filter' className='fs-2' />
-        Filter Bills
-      </button> */}
+        <button
+          type='button'
+          className={`btn btn-sm ms-2 ${activeRange === 'year' ? 'btn-primary text-white' : 'btn-light'}`}
+          onClick={() => selectRange('year')}
+        >
+          ປີ
+        </button>
+        <button type='button' className={stepButtonClass} onClick={() => updateYear(yearValue - 1)}>
+          -
+        </button>
+        <input
+          type='number'
+          min={1900}
+          className={inputClass}
+          value={yearValue}
+          onChange={(e) => updateYear(Number(e.target.value) || today.getFullYear())}
+        />
+        <button type='button' className={stepButtonClass} onClick={() => updateYear(yearValue + 1)}>
+          +
+        </button>
+      </div>
 
       <div className='menu menu-sub menu-sub-dropdown w-325px' data-kt-menu='true'>
         <div className='px-7 py-5'>
@@ -185,13 +185,13 @@ const UsersListFilter = () => {
               value={paymentMethod}
               onChange={(e) => {
                 setPaymentMethod(e.target.value)
-                applyFilter(activeTab, e.target.value)
+                applyFilter(activeRange, e.target.value)
               }}
             >
               <option value=''>ທຸກວິທີ</option>
               {PAYMENT_METHOD_OPTIONS.map((method) => (
                 <option key={method} value={method}>
-                  {method === 'cash' ? 'ເງິນສົດ' : 'ໂອນເງິນ'}
+                  {paymentMethodLabels[method] ?? method}
                 </option>
               ))}
             </select>

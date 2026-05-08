@@ -21,8 +21,10 @@ interface FoodItem {
 
 type PaymentStatus =
   | 'pending'
+  | 'slip_submitted'
   | 'approved'
   | 'rejected'
+  | 're_submitted'
   | 'payment failed'
   | 'under_review_again'
 
@@ -39,7 +41,7 @@ interface Bill {
   foods: FoodItem[]
   total_food_price: number
   grand_total: number
-  payment_method: 'cash' | 'transfer'
+  payment_method: 'cash' | 'transfer' | 'cash+transfer' | 'bcel'
   slip_url: string
   payment_status: PaymentStatus
   user_id: string
@@ -56,11 +58,20 @@ const STATUS_META: Record<
   pending: {label: 'ລໍຖ້າ', badge: 'badge-light-warning', icon: 'time'},
   approved: {label: 'ອະນຸມັດແລ້ວ', badge: 'badge-light-success', icon: 'check-circle'},
   rejected: {label: 'ປະຕິເສດແລ້ວ', badge: 'badge-light-danger', icon: 'cross-circle'},
-  'payment failed': {label: 'Payment Failed', badge: 'badge-light-info', icon: 'cross-circle'},
-  under_review_again: {label: 'Under Review Again', badge: 'badge-light-primary', icon: 'time'},
+  slip_submitted: {label: 'ສົ່ງສະລິບແລ້ວ', badge: 'badge-light-info', icon: 'time'},
+  re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', badge: 'badge-light-info', icon: 'time'},
+  'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', badge: 'badge-light-danger', icon: 'cross-circle'},
+  under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', badge: 'badge-light-primary', icon: 'time'},
 }
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
+  'cash+transfer': 'ເງິນສົດ + ໂອນ',
+  bcel: 'BCEL QR',
+}
+const getPaymentMethodLabel = (method?: string) => paymentMethodLabels[method || ''] || method || '-'
 
 const BillDetailModal: FC<{
   bill: Bill
@@ -247,7 +258,7 @@ const BillDetailModal: FC<{
                 <div className='d-flex justify-content-between mb-3'>
                   <span className='text-muted'>ວິທີ</span>
                   <span className='fw-semibold text-capitalize'>
-                    {bill.payment_method === 'cash' ? 'ເງິນສົດ' : 'ໂອນເງິນ'}
+                    {getPaymentMethodLabel(bill.payment_method)}
                   </span>
                 </div>
 
@@ -489,9 +500,9 @@ const BillManagement: FC = () => {
                       <td className='fw-bold text-primary'>{fmt(b.grand_total)}</td>
                       <td>
                         <span
-                          className={`badge ${b.payment_method === 'transfer' ? 'badge-light-info' : 'badge-light-warning'}`}
+                          className={`badge ${b.payment_method === 'transfer' || b.payment_method === 'bcel' ? 'badge-light-info' : 'badge-light-warning'}`}
                         >
-                          {b.payment_method === 'transfer' ? 'ໂອນເງິນ' : 'ເງິນສົດ'}
+                          {getPaymentMethodLabel(b.payment_method)}
                         </span>
                       </td>
                       <td>

@@ -1,9 +1,11 @@
-export type PaymentMethod = 'cash' | 'transfer'
+export type PaymentMethod = 'cash' | 'transfer' | 'cash+transfer' | 'bcel'
 
 export type PaymentStatus =
   | 'pending'
+  | 'slip_submitted'
   | 'approved'
   | 'rejected'
+  | 're_submitted'
   | 'payment failed'
   | 'under_review_again'
 
@@ -36,6 +38,9 @@ export interface BillData {
   payment_method: PaymentMethod
   payment_status: PaymentStatus
   slip_url?: string
+  cash_amount?: number
+  transfer_amount?: number
+  bcel_amount_usd?: number
   user_id?: string
   user_name: string
   user_email: string
@@ -50,16 +55,20 @@ export type BillFilter = {
   bookingDateTo?: string
   paymentMethod?: PaymentMethod
   paymentStatus?: PaymentStatus
-  dateRange?: 'today' | 'this_month' | 'this_year'
-  dateOffset?: number
+  dateRange?: 'day' | 'month' | 'year'
+  dateDay?: number
+  dateMonth?: number
+  dateYear?: number
 }
 
-export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'transfer']
+export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'transfer', 'cash+transfer', 'bcel']
 
 export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
   'pending',
+  'slip_submitted',
   'approved',
   'rejected',
+  're_submitted',
   'payment failed',
   'under_review_again',
 ]
@@ -68,9 +77,11 @@ export const PAYMENT_STATUS_META: Record<
   PaymentStatus,
   {label: string; badgeClass: string}
 > = {
-  pending: {label: 'Pending', badgeClass: 'badge-light-warning'},
-  approved: {label: 'Approved', badgeClass: 'badge-light-success'},
-  rejected: {label: 'Rejected', badgeClass: 'badge-light-danger'},
-  'payment failed': {label: 'Payment Failed', badgeClass: 'badge-light-info'},
-  under_review_again: {label: 'Under Review Again', badgeClass: 'badge-light-primary'},
+  pending: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
+  slip_submitted: {label: 'ສົ່ງສະລິບແລ້ວ', badgeClass: 'badge-light-info'},
+  approved: {label: 'ອະນຸມັດແລ້ວ', badgeClass: 'badge-light-success'},
+  rejected: {label: 'ປະຕິເສດ', badgeClass: 'badge-light-danger'},
+  re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', badgeClass: 'badge-light-info'},
+  'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', badgeClass: 'badge-light-danger'},
+  under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', badgeClass: 'badge-light-primary'},
 }

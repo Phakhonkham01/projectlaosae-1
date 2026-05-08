@@ -8,6 +8,14 @@ import {useQueryResponse, useQueryResponseData} from '../core/QueryResponseProvi
 
 const defaultPaymentStatus = PAYMENT_STATUS_OPTIONS[0]
 const defaultPaymentStatusMeta = PAYMENT_STATUS_META[defaultPaymentStatus]
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
+  'cash+transfer': 'ເງິນສົດ + ໂອນ',
+  bcel: 'BCEL QR',
+}
+
+const getPaymentMethodLabel = (method?: string) => paymentMethodLabels[method || ''] || method || '-'
 
 const BookingShipEditModal = () => {
   const {itemIdForUpdate, setItemIdForUpdate} = useListView()
@@ -129,7 +137,7 @@ const BookingShipEditModal = () => {
                         {bill.grand_total.toLocaleString()} LAK
                       </div>
                       <div className='text-muted text-capitalize'>
-                        {bill.payment_method === 'cash' ? 'ຊຳລະເງິນສົດ' : 'ຊຳລະໂດຍໂອນເງິນ'}
+                        ຊຳລະດ້ວຍ {getPaymentMethodLabel(bill.payment_method)}
                       </div>
                     </div>
                   </div>
@@ -164,7 +172,7 @@ const BookingShipEditModal = () => {
                     <div className='col-md-4'>
                       <div className='text-muted fs-7 mb-2'>ວິທີຊຳລະ</div>
                       <div className='fw-bold fs-6 text-capitalize'>
-                        {bill.payment_method === 'cash' ? 'ເງິນສົດ' : bill.payment_method === 'transfer' ? 'ໂອນເງິນ' : '-'}
+                        {getPaymentMethodLabel(bill.payment_method)}
                       </div>
                     </div>
                   </div>

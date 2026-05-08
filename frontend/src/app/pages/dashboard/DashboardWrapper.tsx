@@ -1,11 +1,10 @@
 import {useEffect} from 'react'
-import {useIntl} from 'react-intl'
 import {PageLink, PageTitle} from '../../../_metronic/layout/core'
 import Dashboard from './Dashboard'
 
 const dashboardBreadCrumbs: Array<PageLink> = [
   {
-    title: 'Home',
+    title: 'ໜ້າຫຼັກ',
     path: '/dashboard',
     isSeparator: false,
     isActive: false,
@@ -29,12 +28,9 @@ const DashboardPage = () => {
 }
 
 const DashboardWrapper = () => {
-  const intl = useIntl()
   return (
     <>
-      <PageTitle breadcrumbs={dashboardBreadCrumbs}>
-        {intl.formatMessage({id: 'MENU.DASHBOARD'})}
-      </PageTitle>
+      <PageTitle breadcrumbs={dashboardBreadCrumbs}>ໜ້າຫຼັກ</PageTitle>
       <DashboardPage />
     </>
   )

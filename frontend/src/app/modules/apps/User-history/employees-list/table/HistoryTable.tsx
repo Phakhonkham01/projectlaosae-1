@@ -12,12 +12,12 @@ import {HistoryBookingColumns} from './columns/_columns'
 type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 'payment_failed' | 'under_review_again'
 
 const tabs: {label: string; value: StatusTab; color: string}[] = [
-  {label: 'All', value: 'all', color: '#64748b'},
-  {label: 'Pending', value: 'pending', color: '#f59e0b'},
-  {label: 'Approved', value: 'approved', color: '#10b981'},
-  {label: 'Rejected', value: 'rejected', color: '#ef4444'},
-  {label: 'Payment Failed', value: 'payment_failed', color: '#8b5cf6'},
-  {label: 'Under Review Again', value: 'under_review_again', color: '#0ea5e9'},
+  {label: 'ທັງໝົດ', value: 'all', color: '#64748b'},
+  {label: 'ລໍຖ້າ', value: 'pending', color: '#f59e0b'},
+  {label: 'ອະນຸມັດ', value: 'approved', color: '#10b981'},
+  {label: 'ປະຕິເສດ', value: 'rejected', color: '#ef4444'},
+  {label: 'ຊຳລະບໍ່ສຳເລັດ', value: 'payment_failed', color: '#8b5cf6'},
+  {label: 'ກວດສອບອີກຄັ້ງ', value: 'under_review_again', color: '#0ea5e9'},
 ]
 const getCurrentUserId = (): string | null => {
   try {

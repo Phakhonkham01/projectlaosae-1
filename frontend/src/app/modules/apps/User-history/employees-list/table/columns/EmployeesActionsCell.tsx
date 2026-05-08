@@ -17,7 +17,7 @@ const EmployeesActionsCell: FC<Props> = ({id, paymentStatus}) => {
         className={`btn btn-sm ${canRepay ? 'btn-light-danger' : 'btn-light-primary'}`}
         onClick={() => setItemIdForUpdate(id)}
       >
-        {canRepay ? 'Pay Again' : 'Details'}
+        {canRepay ? 'ຊຳລະອີກຄັ້ງ' : 'ລາຍລະອຽດ'}
       </button>
     </div>
   )

@@ -35,6 +35,8 @@ type QueryResponseContextProps = BaseQueryResponseContextProps<BillData> & {
   response: BillsQueryResponse
 }
 
+const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+
 const QueryResponseContext = createContext<QueryResponseContextProps | undefined>(undefined)
 
 const QueryResponseProvider: FC<WithChildren> = ({children}) => {
@@ -82,8 +84,9 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
       }
 
       if (filter.paymentStatus) {
+        const selectedStatus = normalizePaymentStatus(filter.paymentStatus)
         filteredBills = filteredBills.filter(
-          (bill) => bill.payment_status === filter.paymentStatus
+          (bill) => normalizePaymentStatus(bill.payment_status) === selectedStatus
         )
       }
 
@@ -100,20 +103,26 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
       }
 
       if (filter.dateRange) {
-        const now = new Date()
-        const offset = typeof filter.dateOffset === 'number' ? filter.dateOffset : 0
         filteredBills = filteredBills.filter((bill) => {
           const d = new Date(bill.booking_date)
-          if (filter.dateRange === 'today') {
-            return d.toDateString() === now.toDateString()
-          } else if (filter.dateRange === 'this_month') {
-            const target = new Date(now)
-            target.setMonth(now.getMonth() + offset)
-            return d.getMonth() === target.getMonth() && d.getFullYear() === target.getFullYear()
-          } else if (filter.dateRange === 'this_year') {
-            const targetYear = now.getFullYear() + offset
-            return d.getFullYear() === targetYear
+          if (Number.isNaN(d.getTime())) return false
+
+          const billDay = d.getDate()
+          const billMonth = d.getMonth() + 1
+          const billYear = d.getFullYear()
+
+          if (filter.dateRange === 'day') {
+            return billDay === filter.dateDay && billMonth === filter.dateMonth && billYear === filter.dateYear
           }
+
+          if (filter.dateRange === 'month') {
+            return billMonth === filter.dateMonth && billYear === filter.dateYear
+          }
+
+          if (filter.dateRange === 'year') {
+            return billYear === filter.dateYear
+          }
+
           return true
         })
       }

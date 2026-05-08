@@ -19,10 +19,10 @@ const statusMap: Record<string, {label: string; cls: string}> = {
   cancelled: {label: 'ຍົກເລີກແລ້ວ', cls: 'badge-light-danger'},
   completed: {label: 'ສຳເລັດແລ້ວ', cls: 'badge-light-primary'},
   paid: {label: 'ຊຳລະແລ້ວ', cls: 'badge-light-success'},
-  failed: {label: 'Failed', cls: 'badge-light-danger'},
-  refunded: {label: 'Refunded', cls: 'badge-light-info'},
-  'payment failed': {label: 'Payment Failed', cls: 'badge-light-danger'},
-  under_review_again: {label: 'Under Review Again', cls: 'badge-light-info'},
+  failed: {label: 'ບໍ່ສຳເລັດ', cls: 'badge-light-danger'},
+  refunded: {label: 'ຄືນເງິນແລ້ວ', cls: 'badge-light-info'},
+  'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', cls: 'badge-light-danger'},
+  under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', cls: 'badge-light-info'},
 }
 
 const paymentMethodLabels: Record<string, string> = {
@@ -69,7 +69,7 @@ const SlipLightbox = ({url, onClose}: {url: string; onClose: () => void}) => (
     <div
       onClick={(e) => e.stopPropagation()}
       className='card shadow-lg'
-      style={{maxWidth: 440, width: '90%', borderRadius: 16, overflow: 'hidden'}}
+      style={{maxWidth: 300, width: '90%', borderRadius: 16, overflow: 'hidden'}}
     >
       <div className='card-header border-0 d-flex align-items-center justify-content-between py-4 px-6'>
         <span className='fw-bolder text-gray-800 fs-6'>
@@ -87,11 +87,31 @@ const SlipLightbox = ({url, onClose}: {url: string; onClose: () => void}) => (
         </button>
       </div>
       <div className='card-body p-0'>
-        <img src={url} alt='slip' className='w-100' style={{maxHeight: 520, objectFit: 'contain'}} />
+        <img src={url} alt='slip' className='w-100' style={{maxHeight: 600, objectFit: 'contain'}} />
       </div>
     </div>
   </div>
 )
+
+const getBookingTimeRange = (startTime?: string, hours?: number) => {
+  if (!startTime) return '-'
+
+  const [hourText, minuteText = '0'] = startTime.split(':')
+  const startHour = Number(hourText)
+  const startMinute = Number(minuteText)
+
+  if (!Number.isFinite(startHour) || !Number.isFinite(startMinute) || !hours) {
+    return startTime
+  }
+
+  const startTotalMinutes = startHour * 60 + startMinute
+  const endTotalMinutes = Math.round(startTotalMinutes + hours * 60)
+  const endHour = Math.floor(endTotalMinutes / 60) % 24
+  const endMinute = endTotalMinutes % 60
+  const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
+
+  return `${startTime} - ${endTime}`
+}
 
 const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
   const {setItemIdForUpdate} = useListView()
@@ -115,7 +135,7 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
     if (!file || !booking) return
 
     if (!file.type.startsWith('image/')) {
-      Swal.fire({icon: 'error', title: 'Invalid file', text: 'Please choose an image file only.'})
+      Swal.fire({icon: 'error', title: 'ໄຟລ໌ບໍ່ຖືກຕ້ອງ', text: 'ກະລຸນາເລືອກໄຟລ໌ຮູບພາບເທົ່ານັ້ນ.'})
       return
     }
 
@@ -130,8 +150,8 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Submitted',
-        text: 'Your bill has been submitted for re-check.',
+        title: 'ສົ່ງແລ້ວ',
+        text: 'ບິນຂອງທ່ານຖືກສົ່ງໃຫ້ກວດສອບອີກຄັ້ງແລ້ວ.',
         timer: 1800,
         showConfirmButton: false,
       })
@@ -140,8 +160,8 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
       console.error(error)
       Swal.fire({
         icon: 'error',
-        title: 'Upload failed',
-        text: 'Cannot submit payment slip. Please try again.',
+        title: 'ອັບໂຫຼດບໍ່ສຳເລັດ',
+        text: 'ບໍ່ສາມາດສົ່ງສະລິບການຊຳລະໄດ້. ກະລຸນາລອງໃໝ່.',
       })
     } finally {
       setIsRepayLoading(false)
@@ -183,7 +203,7 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
               <div className='card-body py-5 px-6'>
                 <SectionTitle icon='ki-calendar' title='ຂໍ້ມູນການຈອງ' />
                 <InfoRow label='ວັນທີ'>{booking?.booking_date ?? '-'}</InfoRow>
-                <InfoRow label='ເວລາ'>{booking?.booking_time ?? '-'}</InfoRow>
+                <InfoRow label='ເວລາ'>{getBookingTimeRange(booking?.booking_time, booking?.num_hours)}</InfoRow>
                 <InfoRow label='ເຮືອ'>{booking?.ship_name ?? '-'}</InfoRow>
                 <InfoRow label='ລາຄາ / ຊົ່ວໂມງ'>{fmt(booking?.ship_price_per_hour)}</InfoRow>
                 <InfoRow label='ຈຳນວນຊົ່ວໂມງ'>{booking?.num_hours ?? '-'}</InfoRow>
@@ -261,27 +281,20 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
             <SectionTitle icon='ki-bill' title='ສະລິບການຊຳລະ' />
             {booking?.slip_url ? (
               <div
-                className='rounded overflow-hidden cursor-pointer position-relative'
-                style={{height: 160, border: '2px solid var(--bs-gray-200)', transition: 'border-color .2s'}}
+                className='rounded overflow-hidden cursor-pointer position-relative mx-auto'
+                style={{
+                  width: 300,
+                  maxWidth: '100%',
+                  height: 300,
+                  border: '2px solid var(--bs-gray-200)',
+                  transition: 'border-color .2s',
+                  background: 'var(--bs-gray-100)',
+                }}
                 onClick={() => setShowSlip(true)}
                 onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--bs-primary)')}
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--bs-gray-200)')}
               >
-                <img src={booking.slip_url} alt='slip' className='w-100 h-100' style={{objectFit: 'cover'}} />
-                <div
-                  className='position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center'
-                  style={{background: 'rgba(0,158,247,0)', transition: 'background .2s'}}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,158,247,0.15)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0,158,247,0)')}
-                >
-                  <span className='badge badge-primary fs-8 px-4 py-2'>
-                    <i className='ki-duotone ki-eye fs-6 me-1'>
-                      <span className='path1' />
-                      <span className='path2' />
-                    </i>
-                    ເບິ່ງສະລິບເຕັມ
-                  </span>
-                </div>
+                <img src={booking.slip_url} alt='slip' className='w-100 h-100' style={{objectFit: 'contain'}} />
               </div>
             ) : (
               <div className='d-flex flex-column align-items-center justify-content-center bg-light rounded py-8 gap-2'>
@@ -299,9 +312,9 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
         {normalizedPaymentStatus === 'payment_failed' && (
           <div className='card card-flush border border-dashed border-danger'>
             <div className='card-body py-5 px-6'>
-              <SectionTitle icon='ki-pencil' title='Pay Again / Edit Bill' />
+              <SectionTitle icon='ki-pencil' title='ຊຳລະອີກຄັ້ງ / ແກ້ໄຂບິນ' />
               <div className='text-muted fs-7 mb-4'>
-                Payment failed. Upload a new slip to submit this bill for re-check.
+                ການຊຳລະບໍ່ສຳເລັດ. ອັບໂຫຼດສະລິບໃໝ່ເພື່ອສົ່ງບິນນີ້ໃຫ້ກວດສອບອີກຄັ້ງ.
               </div>
               <input
                 type='file'
@@ -317,7 +330,7 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
                 onClick={() => repayInputRef.current?.click()}
                 disabled={isRepayLoading}
               >
-                {isRepayLoading ? 'Uploading...' : 'Pay Again'}
+                {isRepayLoading ? 'ກຳລັງອັບໂຫຼດ...' : 'ຊຳລະອີກຄັ້ງ'}
               </button>
             </div>
           </div>

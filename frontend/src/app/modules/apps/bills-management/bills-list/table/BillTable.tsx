@@ -1,7 +1,13 @@
 import {useMemo, useState} from 'react'
 import {KTCardBody} from '../../../../../../_metronic/helpers'
 import {useListView} from '../core/ListViewProvider'
-import {BillData, PaymentStatus, PAYMENT_STATUS_META} from '../core/bill_models'
+import {
+  BillData,
+  PaymentMethod,
+  PaymentStatus,
+  PAYMENT_METHOD_OPTIONS,
+  PAYMENT_STATUS_META,
+} from '../core/bill_models'
 import {useQueryResponseData, useQueryResponseLoading} from '../core/QueryResponseProvider'
 import {UsersListLoading} from '../components/loading/UsersListLoading'
 import {UsersListPagination} from '../components/pagination/UsersListPagination'
@@ -9,10 +15,36 @@ import {UsersListPagination} from '../components/pagination/UsersListPagination'
 const formatCurrency = (amount: number) => `${amount.toLocaleString()} LAK`
 const defaultStatusMeta = PAYMENT_STATUS_META.pending
 
+type PaymentMethodTab = PaymentMethod
+type StatusTab = 'all' | PaymentStatus
+
+const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+
 const getStatusMeta = (paymentStatus: string | undefined) => {
-  if (!paymentStatus) return defaultStatusMeta
-  return PAYMENT_STATUS_META[paymentStatus as keyof typeof PAYMENT_STATUS_META] || defaultStatusMeta
+  const normalized = normalizePaymentStatus(paymentStatus)
+  const key = normalized === 'payment_failed' ? 'payment failed' : normalized
+  return PAYMENT_STATUS_META[key as PaymentStatus] || defaultStatusMeta
 }
+
+const statusTabs: {label: string; value: StatusTab}[] = [
+  {label: 'ທັງໝົດ', value: 'all'},
+  {label: PAYMENT_STATUS_META.pending.label, value: 'pending'},
+  {label: PAYMENT_STATUS_META.slip_submitted.label, value: 'slip_submitted'},
+  {label: PAYMENT_STATUS_META.approved.label, value: 'approved'},
+  {label: PAYMENT_STATUS_META.rejected.label, value: 'rejected'},
+  {label: PAYMENT_STATUS_META.re_submitted.label, value: 're_submitted'},
+  {label: PAYMENT_STATUS_META['payment failed'].label, value: 'payment failed'},
+  {label: PAYMENT_STATUS_META.under_review_again.label, value: 'under_review_again'},
+]
+
+const paymentMethodMeta: Record<PaymentMethod, {title: string; shortLabel: string}> = {
+  cash: {title: 'ບິນເງິນສົດ', shortLabel: 'ເງິນສົດ'},
+  transfer: {title: 'ບິນໂອນເງິນ', shortLabel: 'ໂອນເງິນ'},
+  'cash+transfer': {title: 'ບິນເງິນສົດ + ໂອນ', shortLabel: 'ເງິນສົດ + ໂອນ'},
+  bcel: {title: 'ບິນ BCEL QR', shortLabel: 'BCEL QR'},
+}
+
+const getMethodLabel = (method?: string) => paymentMethodMeta[method as PaymentMethod]?.shortLabel || method || '-'
 
 const SUMMARY_PANEL_STYLE = {
   background: 'linear-gradient( #e6ffff 100%, #e6ffff 100%)',
@@ -27,18 +59,6 @@ const SUMMARY_ITEM_BASE_STYLE = {
   backgroundColor: '#006666',
   minHeight: '88px',
 } as const
-
-type PaymentMethodTab = 'cash' | 'transfer'
-type StatusTab = 'all' | PaymentStatus
-
-const statusTabs: {label: string; value: StatusTab}[] = [
-  {label: 'ທັງໝົດ', value: 'all'},
-  {label: 'ລໍຖ້າ', value: 'pending'},
-  {label: 'ອະນຸມັດແລ້ວ', value: 'approved'},
-  {label: 'ປະຕິເສດແລ້ວ', value: 'rejected'},
-  {label: 'Payment Failed', value: 'payment failed'},
-  {label: 'Under Review Again', value: 'under_review_again'},
-]
 
 const BillSummaryCard = ({
   title,
@@ -58,7 +78,7 @@ const BillSummaryCard = ({
   const accentStyle = isActive ? {border: '1px solid #6c7c', boxShadow: '0 0 0 2px #6c7c inset'} : {}
 
   return (
-    <div className='col-md-6'>
+    <div className='col-12 col-md-6 col-xl-3'>
       <button
         type='button'
         className='p-4 h-100 w-100 text-start'
@@ -77,7 +97,11 @@ const BillSummaryCard = ({
               {count}
             </div>
           </div>
-          {pendingCount > 0 && <span className='badge badge-danger' style={{minWidth: '28px'}}>{pendingCount}</span>}
+          {pendingCount > 0 && (
+            <span className='badge badge-danger' style={{minWidth: '28px'}}>
+              {pendingCount}
+            </span>
+          )}
         </div>
         <div className='d-flex justify-content-between align-items-end'>
           <div style={{color: '#c3d0e5', fontSize: '12px'}}>ບິນ</div>
@@ -161,7 +185,7 @@ const BillSection = ({
                   <tr key={bill.id}>
                     <td>
                       <div className='fw-bold'>#{bill.id.slice(0, 8).toUpperCase()}</div>
-                      <div className='text-muted fs-7'>{bill.payment_method}</div>
+                      <div className='text-muted fs-7'>{getMethodLabel(bill.payment_method)}</div>
                     </td>
                     <td>
                       <div>{bill.user_name || '-'}</div>
@@ -178,7 +202,7 @@ const BillSection = ({
                     </td>
                     <td className='text-end'>
                       <button type='button' className='btn btn-sm btn-light-primary' onClick={() => onEdit(bill.id)}>
-                        ແກ້ໄຂສະຖານະ
+                        ເບິ່ງລາຍລະອຽດ
                       </button>
                     </td>
                   </tr>
@@ -199,21 +223,22 @@ const ShipTable = () => {
   const [activeTab, setActiveTab] = useState<PaymentMethodTab>('cash')
   const [activeStatus, setActiveStatus] = useState<StatusTab>('all')
 
-  const cashBills = useMemo(() => bills.filter((b) => b.payment_method === 'cash'), [bills])
-  const transferBills = useMemo(() => bills.filter((b) => b.payment_method === 'transfer'), [bills])
-
-  const cashTotal = useMemo(() => cashBills.reduce((s, b) => s + (b.grand_total || 0), 0), [cashBills])
-  const cashPendingCount = useMemo(() => cashBills.filter((b) => b.payment_status === 'pending').length, [cashBills])
-  const transferTotal = useMemo(() => transferBills.reduce((s, b) => s + (b.grand_total || 0), 0), [transferBills])
-  const transferPendingCount = useMemo(
-    () => transferBills.filter((b) => b.payment_status === 'pending').length,
-    [transferBills]
+  const billsByMethod = useMemo(
+    () =>
+      PAYMENT_METHOD_OPTIONS.reduce((acc, method) => {
+        acc[method] = bills.filter((bill) => bill.payment_method === method)
+        return acc
+      }, {} as Record<PaymentMethod, BillData[]>),
+    [bills]
   )
 
-  const methodBills = activeTab === 'cash' ? cashBills : transferBills
+  const methodBills = billsByMethod[activeTab] || []
 
   const filteredBills = useMemo(
-    () => (activeStatus === 'all' ? methodBills : methodBills.filter((b) => b.payment_status === activeStatus)),
+    () =>
+      activeStatus === 'all'
+        ? methodBills
+        : methodBills.filter((bill) => normalizePaymentStatus(bill.payment_status) === normalizePaymentStatus(activeStatus)),
     [methodBills, activeStatus]
   )
 
@@ -221,44 +246,52 @@ const ShipTable = () => {
     () =>
       statusTabs.reduce((acc, tab) => {
         acc[tab.value] =
-          tab.value === 'all' ? methodBills.length : methodBills.filter((b) => b.payment_status === tab.value).length
+          tab.value === 'all'
+            ? methodBills.length
+            : methodBills.filter((bill) => normalizePaymentStatus(bill.payment_status) === normalizePaymentStatus(tab.value)).length
         return acc
       }, {} as Record<StatusTab, number>),
     [methodBills]
   )
 
-  const activePendingCount = activeTab === 'cash' ? cashPendingCount : transferPendingCount
-  const activeTitle = activeTab === 'cash' ? 'ບິນເງິນສົດ' : 'ບິນໂອນເງິນ'
-  const activeEmptyText =
-    activeTab === 'cash' ? 'ບໍ່ພົບບິນເງິນສົດຕາມຕົວກອງນີ້' : 'ບໍ່ພົບບິນໂອນເງິນຕາມຕົວກອງນີ້'
+  const methodSummaries = useMemo(
+    () =>
+      PAYMENT_METHOD_OPTIONS.map((method) => {
+        const methodItems = billsByMethod[method] || []
+        return {
+          method,
+          count: methodItems.length,
+          total: methodItems.reduce((sum, bill) => sum + (bill.grand_total || 0), 0),
+          pendingCount: methodItems.filter((bill) => normalizePaymentStatus(bill.payment_status) === 'pending').length,
+        }
+      }),
+    [billsByMethod]
+  )
+
+  const activeSummary = methodSummaries.find((item) => item.method === activeTab)
+  const activePendingCount = activeSummary?.pendingCount || 0
+  const activeTitle = paymentMethodMeta[activeTab].title
+  const activeEmptyText = `ບໍ່ພົບ${paymentMethodMeta[activeTab].title}ຕາມຕົວກອງນີ້`
 
   return (
     <KTCardBody className='py-4'>
       <div className='card border-0 mb-8' style={SUMMARY_PANEL_STYLE}>
         <div className='card-body py-5 px-5 px-md-7'>
           <div className='row g-4'>
-            <BillSummaryCard
-              title='ບິນເງິນສົດ'
-              count={cashBills.length}
-              total={cashTotal}
-              pendingCount={cashPendingCount}
-              isActive={activeTab === 'cash'}
-              onClick={() => {
-                setActiveTab('cash')
-                setActiveStatus('all')
-              }}
-            />
-            <BillSummaryCard
-              title='ບິນໂອນເງິນ'
-              count={transferBills.length}
-              total={transferTotal}
-              pendingCount={transferPendingCount}
-              isActive={activeTab === 'transfer'}
-              onClick={() => {
-                setActiveTab('transfer')
-                setActiveStatus('all')
-              }}
-            />
+            {methodSummaries.map((summary) => (
+              <BillSummaryCard
+                key={summary.method}
+                title={paymentMethodMeta[summary.method].title}
+                count={summary.count}
+                total={summary.total}
+                pendingCount={summary.pendingCount}
+                isActive={activeTab === summary.method}
+                onClick={() => {
+                  setActiveTab(summary.method)
+                  setActiveStatus('all')
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>

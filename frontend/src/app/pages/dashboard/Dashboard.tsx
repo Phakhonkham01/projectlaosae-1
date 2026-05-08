@@ -117,7 +117,7 @@ const formatDate = (value?: string | null) => {
   if (!value) return '-'
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return value
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('lo-LA', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -125,6 +125,42 @@ const formatDate = (value?: string | null) => {
 }
 
 const formatCurrency = (amount: number) => `${amount.toLocaleString()} LAK`
+
+const paymentStatusLabels: Record<string, string> = {
+  pending: 'ລໍຖ້າ',
+  slip_submitted: 'ສົ່ງສະລິບແລ້ວ',
+  approved: 'ອະນຸມັດ',
+  rejected: 'ປະຕິເສດ',
+  re_submitted: 'ສົ່ງກວດສອບອີກຄັ້ງ',
+  'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
+  under_review_again: 'ກວດສອບອີກຄັ້ງ',
+}
+
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
+  credit_card: 'ບັດເຄຣດິດ',
+  promptpay: 'PromptPay',
+}
+
+const roleLabels: Record<DashboardRole, string> = {
+  customer: 'ລູກຄ້າ',
+  employee: 'ພະນັກງານ',
+  owner: 'ເຈົ້າຂອງ',
+  admin: 'ຜູ້ດູແລ',
+  user: 'ຜູ້ໃຊ້',
+}
+
+const getPaymentStatusLabel = (status?: string) => {
+  const normalized = (status || 'pending').toLowerCase()
+  return paymentStatusLabels[normalized] ?? status ?? 'ລໍຖ້າ'
+}
+
+const getPaymentMethodLabel = (method?: string) => {
+  if (!method) return '-'
+  const normalized = method.toLowerCase()
+  return paymentMethodLabels[normalized] ?? method
+}
 
 const normalizeRole = (role?: string): DashboardRole => {
   const safeRole = role?.toLowerCase()
@@ -257,7 +293,7 @@ const Dashboard = () => {
   ).length
 
   const topCustomers = historyBookings.reduce<Record<string, number>>((accumulator, item) => {
-    const key = item.user_name || item.user_email || 'Unknown customer'
+    const key = item.user_name || item.user_email || 'ລູກຄ້າບໍ່ຮູ້ຊື່'
     accumulator[key] = (accumulator[key] || 0) + (item.grand_total || 0)
     return accumulator
   }, {})
@@ -295,14 +331,14 @@ const Dashboard = () => {
   const heroMetrics: HeroMetric[] =
     currentRole === 'customer'
       ? [
-          {label: 'Bookings', value: myHistory.length},
-          {label: 'Pending Bills', value: customerPendingBills.length},
-          {label: 'Total Spend', value: formatCurrency(customerTotalSpent)},
+          {label: 'ການຈອງ', value: myHistory.length},
+          {label: 'ບິນທີ່ຄ້າງ', value: customerPendingBills.length},
+          {label: 'ຍອດໃຊ້ຈ່າຍລວມ', value: formatCurrency(customerTotalSpent)},
         ]
       : [
-          {label: 'Customers', value: totalCustomers},
-          {label: 'Pending Review', value: pendingPayments.length},
-          {label: 'Approved Revenue', value: formatCurrency(approvedRevenue)},
+          {label: 'ລູກຄ້າ', value: totalCustomers},
+          {label: 'ລໍຖ້າກວດສອບ', value: pendingPayments.length},
+          {label: 'ລາຍຮັບທີ່ອະນຸມັດ', value: formatCurrency(approvedRevenue)},
         ]
 
   const StatCard = ({title, value, icon, badgeClass, hint}: StatCardProps) => (
@@ -395,7 +431,7 @@ const Dashboard = () => {
                             {formatCurrency(item.grand_total || 0)}
                           </div>
                           <div className={`badge mt-2 ${getPaymentBadgeClass(item.payment_status)}`}>
-                            {(item.payment_status || 'pending').toString()}
+                            {getPaymentStatusLabel(item.payment_status)}
                           </div>
                         </div>
                       </div>
@@ -438,11 +474,11 @@ const Dashboard = () => {
                         <tr key={item.id}>
                           <td className='ps-4 fw-bold text-gray-900'>{item.ship_name || '-'}</td>
                           <td>{formatDate(item.booking_date)}</td>
-                          <td className='text-gray-700'>{item.payment_method || '-'}</td>
+                          <td className='text-gray-700'>{getPaymentMethodLabel(item.payment_method)}</td>
                           <td className='fw-bold text-primary'>{formatCurrency(item.grand_total || 0)}</td>
                           <td>
                             <span className={`badge ${getPaymentBadgeClass(item.payment_status)}`}>
-                              {(item.payment_status || 'pending').toString()}
+                              {getPaymentStatusLabel(item.payment_status)}
                             </span>
                           </td>
                         </tr>
@@ -477,7 +513,7 @@ const Dashboard = () => {
                 <div>
                   <div className='fw-bold text-gray-900 fs-3'>{currentUser?.user_name || 'ລູກຄ້າ'}</div>
                   <div className='text-muted'>{currentUser?.user_email || '-'}</div>
-                  <div className='badge badge-light-primary mt-2'>{currentRole}</div>
+                  <div className='badge badge-light-primary mt-2'>{roleLabels[currentRole]}</div>
                 </div>
               </div>
               <div className='separator separator-dashed my-5' />
@@ -607,7 +643,7 @@ const Dashboard = () => {
                               item.payment_status || item.status
                             )}`}
                           >
-                            {(item.payment_status || item.status || 'pending').toString()}
+                            {getPaymentStatusLabel(item.payment_status || item.status)}
                           </span>
                         </div>
                       </div>
@@ -646,7 +682,7 @@ const Dashboard = () => {
                       {sortedBills.slice(0, 8).map((item) => (
                         <tr key={item.id}>
                           <td className='ps-4'>
-                            <div className='fw-bold text-gray-900'>{item.user_name || 'Unknown'}</div>
+                            <div className='fw-bold text-gray-900'>{item.user_name || 'ບໍ່ຮູ້ຊື່'}</div>
                             <div className='text-muted fs-8'>{item.user_email || '-'}</div>
                           </td>
                           <td>{item.ship_name || '-'}</td>
@@ -654,7 +690,7 @@ const Dashboard = () => {
                           <td className='fw-bold text-primary'>{formatCurrency(item.grand_total || 0)}</td>
                           <td>
                             <span className={`badge ${getPaymentBadgeClass(item.payment_status)}`}>
-                              {(item.payment_status || 'pending').toString()}
+                              {getPaymentStatusLabel(item.payment_status)}
                             </span>
                           </td>
                         </tr>
@@ -816,10 +852,10 @@ const Dashboard = () => {
           <div className='d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-8'>
             <div className='me-xl-8'>
               <div className='dashboard-hero-kicker'>
-                <span className='badge badge-light-primary'>WELCOME</span>
+                <span className='badge badge-light-primary'>ຍິນດີຕ້ອນຮັບ</span>
                 <span className='dashboard-hero-dot' />
                 <span className='text-white opacity-75 fs-8 text-uppercase fw-semibold'>
-                  {currentRole}
+                  {roleLabels[currentRole]}
                 </span>
               </div>
               <h1 className='text-white fw-bolder mb-3'>{roleTitle}</h1>
@@ -863,13 +899,13 @@ const Dashboard = () => {
                 <div className='text-white opacity-75 fs-7'>{currentUser?.user_email || '-'}</div>
                   </div>
                 </div>
-                <div className='badge badge-light-primary'>{currentRole}</div>
+                <div className='badge badge-light-primary'>{roleLabels[currentRole]}</div>
               </div>
 
               <div className='row g-3'>
                 <div className='col-6'>
                   <div className='dashboard-summary-tile h-100'>
-                    <div className='text-white opacity-75 fs-8 mb-1'>Collections</div>
+                    <div className='text-white opacity-75 fs-8 mb-1'>ລາຍການລວມ</div>
                     <div className='text-white fw-bold fs-2'>6</div>
                   </div>
                 </div>
