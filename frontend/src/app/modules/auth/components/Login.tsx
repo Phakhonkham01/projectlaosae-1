@@ -3,7 +3,7 @@ import * as Yup from 'yup'
 import clsx from 'clsx'
 import {useFormik} from 'formik'
 import {Link} from 'react-router-dom'
-import {signInWithEmailAndPassword} from 'firebase/auth'
+import {signInWithEmailAndPassword, signOut} from 'firebase/auth'
 import {doc, getDoc} from 'firebase/firestore'
 import {auth, db} from '../../../../../../firebase/useFirebase'
 import {useAuth} from '../core/Auth'
@@ -34,6 +34,7 @@ const loginSchema = Yup.object().shape({
       description: 'ທີມງານດູແລໃສ່ໃຈທຸກລາຍລະອຽດ ຕັ້ງແຕ່ການຈອງຈົນຈົບທຣິບ',
     }
   ]
+
 const initialValues = {
   user_email: '',
   password: '',
@@ -111,15 +112,26 @@ export function Login() {
 
         const userSnap = await getDoc(doc(db, 'Users', firebaseUser.uid))
 
+        let status = 'Active'
         if (userSnap.exists()) {
           const d = userSnap.data()
           name         = d.name         ?? ''
           lastname     = d.lastname     ?? ''
           role         = (d.role as UserRole) ?? 'employee'
           phone_number = d.phone_number ?? ''
+          status       = (d.status as string) ?? 'Active'
         } else {
           name = firebaseUser.email?.split('@')[0] ?? 'user' 
+        }
 
+        if (status.toLowerCase().trim() === 'inactive') {
+          await signOut(auth)
+          saveAuth(undefined)
+          localStorage.removeItem('user')
+          setStatus('ບັນຊີນີ້ຖືກປິດໃຊ້. ບໍ່ສາມາດເຂົ້າສູ່ລະບົບໄດ້.')
+          setSubmitting(false)
+          setLoading(false)
+          return
         }
 
         // Step 3: Build UserModel
