@@ -6,6 +6,14 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   base: "/metronic8/react/demo7/",
+  
+  // ✅ เพิ่มส่วนนี้เพื่อให้เครื่องอื่นใน WiFi เข้าถึงได้โดยไม่ต้องพิมพ์ --host ทุกครั้ง
+  server: {
+    host: '0.0.0.0', // เปิดรับการเชื่อมต่อจากทุก IP ในวง WiFi
+    port: 5173,      // ล็อค Port ไว้ที่ 5173 (ถ้า 5173 เต็ม มันจะเลื่อนไป 5174 เอง)
+    strictPort: false,
+  },
+
   build: {
     chunkSizeWarningLimit: 3000,
     commonjsOptions: {

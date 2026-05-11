@@ -3,22 +3,28 @@
     "rules": "firestore.rules"
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "storage.rules",
+    "host": "0.0.0.0", 
+    "port": 9199
   },
   "emulators": {
     "auth": {
+      "host": "0.0.0.0",
       "port": 9099
     },
     "firestore": {
+      "host": "0.0.0.0",
       "port": 8081
     },
     "storage": {
+      "host": "0.0.0.0",
       "port": 9199
     },
     "ui": {
+      "host": "0.0.0.0",
+      "port": 4001,
       "enabled": true
     },
     "singleProjectMode": true
-    
   }
 }
