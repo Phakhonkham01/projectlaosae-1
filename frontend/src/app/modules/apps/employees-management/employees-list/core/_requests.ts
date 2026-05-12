@@ -57,7 +57,7 @@ export const updateUser = async (id: string, data: Partial<User>): Promise<void>
   })
 }
 
-// Delete
+// Delete - ลบจาก Firestore เท่านั้น Cloud Function จะลบจาก Authentication อัตโนมัติ
 export const deleteUser = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, COLLECTION, id))
 }

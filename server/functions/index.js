@@ -8,25 +8,47 @@
  */
 
 const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
+const {onDocumentDeleted} = require("firebase-functions/v2/firestore");
 const logger = require("firebase-functions/logger");
+const admin = require("firebase-admin");
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
+admin.initializeApp();
+
 setGlobalOptions({ maxInstances: 10 });
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+// When a user document is deleted from Firestore, also delete from Authentication
+exports.deleteUserFromAuth = onDocumentDeleted("Users/{userId}", async (event) => {
+  const userId = event.params.userId;
+  const userDoc = event.data;
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+  if (!userDoc) {
+    logger.warn("User document is empty");
+    return;
+  }
+
+  try {
+    const userData = userDoc.data();
+    const userEmail = userData?.email;
+
+    if (!userEmail) {
+      logger.warn(`No email found for user ${userId}`);
+      return;
+    }
+
+    // Find user in Authentication by email and delete
+    try {
+      const userRecord = await admin.auth().getUserByEmail(userEmail);
+      await admin.auth().deleteUser(userRecord.uid);
+      logger.info(`Deleted user from Auth: ${userRecord.uid} (${userEmail})`);
+    } catch (authError) {
+      if (authError.code === "auth/user-not-found") {
+        logger.info(`User not found in Auth: ${userEmail}`);
+      } else {
+        throw authError;
+      }
+    }
+  } catch (error) {
+    logger.error("Error deleting user from Auth:", error);
+    throw error;
+  }
+});
