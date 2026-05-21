@@ -6,8 +6,8 @@ firebase emulators:start --import=./firebase-export-1773394176095qUQO0V --export
 
 ------------------------
 
-netstat -ano | findstr :8081 
 
+netstat -ano | findstr :8081 
 ///ເຄຍແຄັສ
 
 -------------------------

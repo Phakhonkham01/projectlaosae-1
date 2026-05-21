@@ -16,8 +16,8 @@ const PrivateRoutes = () => {
   const WidgetsPage = lazy(() => import('../modules/widgets/WidgetsPage'))
   const ChatPage = lazy(() => import('../modules/apps/chat/ChatPage'))
   const UsersPage = lazy(() => import('../modules/apps/user-management/UsersPage'))
-  const EventsPage = lazy(() => import('../modules/apps/event/EventsPage'))
-  const HolidaysPage = lazy(() => import('../modules/apps/holiday/HolidaysPage'))
+  // const EventsPage = lazy(() => import('../modules/apps/event/EventsPage'))
+  // const HolidaysPage = lazy(() => import('../modules/apps/holiday/HolidaysPage'))
   const RequestsPage = lazy(() => import('../modules/apps/request/RequestPage'))
   const UserRequired = lazy(() => import('../modules/apps/user-required/UserRequired'))
   const ShipsPage = lazy(() => import('../modules/apps/create-ships/ShipsPage'))
@@ -77,14 +77,14 @@ const PrivateRoutes = () => {
             </SuspensedView>
           }
         />
-        <Route
+        {/* <Route
           path='apps/event/*'
           element={
             <SuspensedView>
               <EventsPage />
             </SuspensedView>
           }
-        />
+        /> */}
         <Route
           path='apps/user-required/*'
           element={
@@ -101,14 +101,14 @@ const PrivateRoutes = () => {
             </SuspensedView>
           }
         />
-        <Route
+        {/* <Route
           path='apps/holiday/*'
           element={
             <SuspensedView>
               <HolidaysPage />
             </SuspensedView>
           }
-        />
+        /> */}
         <Route
           path='crafted/widgets/*'
           element={

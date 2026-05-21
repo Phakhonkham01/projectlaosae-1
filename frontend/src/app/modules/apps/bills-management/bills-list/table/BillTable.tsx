@@ -57,7 +57,7 @@ const SUMMARY_ITEM_BASE_STYLE = {
   borderRadius: '12px',
   border: '1px solid #80ffbd',
   backgroundColor: '#006666',
-  minHeight: '88px',
+  minHeight: '50px',
 } as const
 
 const BillSummaryCard = ({
@@ -75,41 +75,41 @@ const BillSummaryCard = ({
   isActive: boolean
   onClick: () => void
 }) => {
-  const accentStyle = isActive ? {border: '1px solid #6c7c', boxShadow: '0 0 0 2px #6c7c inset'} : {}
+  const accentStyle = isActive ? {border: '1px solid #FFFD3D', boxShadow: '0 0 0 2px #FFFD3D inset'} : {}
 
   return (
-    <div className='col-12 col-md-6 col-xl-3'>
+    <div className='col-xl-3'>
       <button
         type='button'
-        className='p-4 h-100 w-100 text-start'
+        className='p-2 h-100 w-100 text-start'
         onClick={onClick}
         style={{...SUMMARY_ITEM_BASE_STYLE, ...accentStyle, cursor: 'pointer', outline: 'none'}}
       >
-        <div className='d-flex align-items-start justify-content-between mb-3'>
+        <div className='d-flex align-items-start justify-content-between mb-2'>
           <div>
             <div
               className='fw-semibold text-uppercase'
-              style={{fontSize: '11px', letterSpacing: '0.12em', color: '#9fb0c9'}}
+              style={{fontSize: '10px', letterSpacing: '0.12em', color: '#FFFFFF'}}
             >
               {title}
             </div>
-            <div className='fw-bold mt-1' style={{fontSize: '24px', color: '#ffffff'}}>
+            <div className='fw-bold mt-1' style={{fontSize: '20px', color: '#ffffff'}}>
               {count}
             </div>
           </div>
           {pendingCount > 0 && (
-            <span className='badge badge-danger' style={{minWidth: '28px'}}>
+            <span className='badge badge-danger' style={{minWidth: '28px', fontSize: '0.75rem'}}>
               {pendingCount}
             </span>
           )}
         </div>
         <div className='d-flex justify-content-between align-items-end'>
-          <div style={{color: '#c3d0e5', fontSize: '12px'}}>ບິນ</div>
+          <div style={{color: '#c3d0e5', fontSize: '11px'}}>ບິນ</div>
           <div className='text-end'>
-            <div className='fw-bold' style={{fontSize: '14px', color: '#f8fbff'}}>
+            <div className='fw-bold' style={{fontSize: '13px', color: '#f8fbff'}}>
               {formatCurrency(total)}
             </div>
-            <div style={{color: '#93a4bf', fontSize: '11px'}}>ຍອດລວມ</div>
+            <div style={{color: '#93a4bf', fontSize: '10px'}}>ຍອດລວມ</div>
           </div>
         </div>
       </button>
@@ -274,10 +274,10 @@ const ShipTable = () => {
   const activeEmptyText = `ບໍ່ພົບ${paymentMethodMeta[activeTab].title}ຕາມຕົວກອງນີ້`
 
   return (
-    <KTCardBody className='py-4'>
-      <div className='card border-0 mb-8' style={SUMMARY_PANEL_STYLE}>
-        <div className='card-body py-5 px-5 px-md-7'>
-          <div className='row g-4'>
+    <KTCardBody className='py-3'>
+      <div className='card border-0 mb-4' style={SUMMARY_PANEL_STYLE}>
+        <div className='card-body py-3 px-3 px-md-4'>
+          <div className='row g-3'>
             {methodSummaries.map((summary) => (
               <BillSummaryCard
                 key={summary.method}

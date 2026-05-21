@@ -26,10 +26,10 @@ const UsersListPagination = () => {
       return
     }
 
-    updateState({page, items_per_page: pagination.items_per_page || 10})
+    updateState({page, items_per_page: pagination.items_per_page || 8})
   }
 
-  const PAGINATION_PAGES_COUNT = 5
+  const PAGINATION_PAGES_COUNT = 20
   const sliceLinks = (pagination?: PaginationState) => {
     if (!pagination?.links?.length) {
       return []
