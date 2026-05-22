@@ -13,6 +13,8 @@ const bookingStatusStyles: Record<string, {bg: string; color: string}> = {
   payment_failed: {bg: '#ede9fe', color: '#8b5cf6'},
   'payment failed': {bg: '#ede9fe', color: '#8b5cf6'},
   under_review_again: {bg: '#e0f2fe', color: '#0284c7'},
+  re_submitted: {bg: '#e0f2fe', color: '#0284c7'},
+  slip_submitted: {bg: '#fff8e1', color: '#f59e0b'},
 }
 
 const bookingStatusLabels: Record<string, string> = {
@@ -25,6 +27,8 @@ const bookingStatusLabels: Record<string, string> = {
   payment_failed: 'ຊຳລະບໍ່ສຳເລັດ',
   'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
   under_review_again: 'ກວດສອບອີກຄັ້ງ',
+  
+  slip_submitted: 'ລໍຖ້າ',
 }
 
 const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
@@ -36,6 +40,8 @@ const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
   rejected: {bg: '#fce8e8', color: '#ef4444'},
   'payment failed': {bg: '#ede9fe', color: '#8b5cf6'},
   under_review_again: {bg: '#e0f2fe', color: '#0284c7'},
+  re_submitted: {bg: '#e0f2fe', color: '#0284c7'},
+  slip_submitted: {bg: '#fff8e1', color: '#f59e0b'},
 }
 
 const paymentStatusLabels: Record<string, string> = {
@@ -47,6 +53,8 @@ const paymentStatusLabels: Record<string, string> = {
   rejected: 'ປະຕິເສດ',
   'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
   under_review_again: 'ກວດສອບອີກຄັ້ງ',
+  
+  slip_submitted: 'ລໍຖ້າ',
 }
 
 const paymentMethodLabels: Record<string, string> = {
@@ -76,6 +84,14 @@ const getBookingTimeRange = (startTime?: string, hours?: number) => {
   return `${startTime} - ${endTime}`
 }
 
+const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+const getDisplayStatus = (value?: string) => {
+  const normalized = normalizeStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment failed'
+  return normalized
+}
+
 const BookingDateCell = ({booking}: {booking: HistoryBooking}) => (
   <div className='d-flex flex-column'>
     <span className='text-gray-800 fw-bold'>{booking.booking_date}</span>
@@ -84,7 +100,7 @@ const BookingDateCell = ({booking}: {booking: HistoryBooking}) => (
 )
 
 const BookingStatusCell = ({status}: {status: string}) => {
-  const normalized = status?.toLowerCase?.() ?? ''
+  const normalized = getDisplayStatus(status)
   const style = bookingStatusStyles[normalized] ?? {bg: '#f1f5f9', color: '#64748b'}
 
   return (
@@ -109,7 +125,7 @@ const BookingStatusCell = ({status}: {status: string}) => {
 }
 
 const PaymentCell = ({booking}: {booking: HistoryBooking}) => {
-  const normalized = booking.payment_status?.toLowerCase?.() ?? ''
+  const normalized = getDisplayStatus(booking.payment_status)
   const style = paymentStatusStyles[normalized] ?? {bg: '#f1f5f9', color: '#64748b'}
 
   return (

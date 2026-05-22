@@ -21,11 +21,20 @@ interface HistoryBooking {
   num_people: number
   payment_method: string
   payment_status: string
+  reject_reason?: string
   ship_id: string
   ship_name: string
   ship_price_per_hour: number
   slip_url: string
-  status: 'pending' | 'approved' | 'rejected' | 'payment failed' | 'under_review_again'
+  status:
+    | 'pending'
+    | 'approved'
+    | 'rejected'
+    | 'payment failed'
+    | 'payment_failed'
+    | 'slip_submitted'
+    | 're_submitted'
+    | 'under_review_again'
   total_food_price: number
   total_ship_price: number
   user_email: string

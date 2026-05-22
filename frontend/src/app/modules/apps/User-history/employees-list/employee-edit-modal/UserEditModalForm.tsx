@@ -22,6 +22,8 @@ const statusMap: Record<string, {label: string; cls: string}> = {
   failed: {label: 'ບໍ່ສຳເລັດ', cls: 'badge-light-danger'},
   refunded: {label: 'ຄືນເງິນແລ້ວ', cls: 'badge-light-info'},
   'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', cls: 'badge-light-danger'},
+  slip_submitted: {label: 'ລໍຖ້າ', cls: 'badge-light-warning'},
+  
   under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', cls: 'badge-light-info'},
 }
 
@@ -34,7 +36,9 @@ const paymentMethodLabels: Record<string, string> = {
 
 const Badge = ({value}: {value?: string}) => {
   if (!value) return <span className='text-muted'>-</span>
-  const meta = statusMap[value.toLowerCase()] ?? {label: value, cls: 'badge-light-secondary'}
+  const normalized = value.toLowerCase().trim().replace(/[\s-]+/g, '_')
+  const key = normalized === 'slip_submitted' ? 'pending' : normalized === 'payment_failed' ? 'payment failed' : normalized
+  const meta = statusMap[key] ?? {label: value, cls: 'badge-light-secondary'}
   return <span className={`badge ${meta.cls} fw-bold fs-8 px-3 py-2 text-capitalize`}>{meta.label}</span>
 }
 
@@ -128,7 +132,7 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
   }
 
   const fmt = (n?: number) => (n != null ? `${n.toLocaleString()} LAK` : '-')
-  const normalizedPaymentStatus = booking?.payment_status?.toLowerCase?.().replace(/ /g, '_')
+  const normalizedPaymentStatus = booking?.payment_status?.toLowerCase?.().trim().replace(/[\s-]+/g, '_')
 
   const handleRepaySlipUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -308,6 +312,15 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
           </div>
         </div>
 
+
+        {normalizedPaymentStatus === 'rejected' && booking?.reject_reason && (
+          <div className='card card-flush border border-dashed border-danger'>
+            <div className='card-body py-5 px-6'>
+              <SectionTitle icon='ki-information-5' title='ເຫດຜົນການປະຕິເສດ' />
+              <div className='text-danger fw-semibold fs-7'>{booking.reject_reason}</div>
+            </div>
+          </div>
+        )}
 
         {normalizedPaymentStatus === 'payment_failed' && (
           <div className='card card-flush border border-dashed border-danger'>

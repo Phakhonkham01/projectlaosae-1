@@ -20,19 +20,24 @@ type StatusTab = 'all' | PaymentStatus
 
 const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
 
+const getDisplayStatus = (value?: string) => {
+  const normalized = normalizePaymentStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment failed'
+  return normalized
+}
+
 const getStatusMeta = (paymentStatus: string | undefined) => {
-  const normalized = normalizePaymentStatus(paymentStatus)
-  const key = normalized === 'payment_failed' ? 'payment failed' : normalized
+  const key = getDisplayStatus(paymentStatus)
   return PAYMENT_STATUS_META[key as PaymentStatus] || defaultStatusMeta
 }
 
 const statusTabs: {label: string; value: StatusTab}[] = [
   {label: 'ທັງໝົດ', value: 'all'},
   {label: PAYMENT_STATUS_META.pending.label, value: 'pending'},
-  {label: PAYMENT_STATUS_META.slip_submitted.label, value: 'slip_submitted'},
   {label: PAYMENT_STATUS_META.approved.label, value: 'approved'},
   {label: PAYMENT_STATUS_META.rejected.label, value: 'rejected'},
-  {label: PAYMENT_STATUS_META.re_submitted.label, value: 're_submitted'},
+  // {label: PAYMENT_STATUS_META.re_submitted.label, value: 're_submitted'},
   {label: PAYMENT_STATUS_META['payment failed'].label, value: 'payment failed'},
   {label: PAYMENT_STATUS_META.under_review_again.label, value: 'under_review_again'},
 ]
@@ -238,7 +243,7 @@ const ShipTable = () => {
     () =>
       activeStatus === 'all'
         ? methodBills
-        : methodBills.filter((bill) => normalizePaymentStatus(bill.payment_status) === normalizePaymentStatus(activeStatus)),
+        : methodBills.filter((bill) => getDisplayStatus(bill.payment_status) === getDisplayStatus(activeStatus)),
     [methodBills, activeStatus]
   )
 
@@ -248,7 +253,7 @@ const ShipTable = () => {
         acc[tab.value] =
           tab.value === 'all'
             ? methodBills.length
-            : methodBills.filter((bill) => normalizePaymentStatus(bill.payment_status) === normalizePaymentStatus(tab.value)).length
+            : methodBills.filter((bill) => getDisplayStatus(bill.payment_status) === getDisplayStatus(tab.value)).length
         return acc
       }, {} as Record<StatusTab, number>),
     [methodBills]
@@ -262,7 +267,7 @@ const ShipTable = () => {
           method,
           count: methodItems.length,
           total: methodItems.reduce((sum, bill) => sum + (bill.grand_total || 0), 0),
-          pendingCount: methodItems.filter((bill) => normalizePaymentStatus(bill.payment_status) === 'pending').length,
+          pendingCount: methodItems.filter((bill) => getDisplayStatus(bill.payment_status) === 'pending').length,
         }
       }),
     [billsByMethod]

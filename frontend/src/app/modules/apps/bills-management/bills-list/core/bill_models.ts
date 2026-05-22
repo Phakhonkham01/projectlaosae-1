@@ -65,10 +65,9 @@ export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'transfer', 'cas
 
 export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
   'pending',
-  'slip_submitted',
   'approved',
   'rejected',
-  're_submitted',
+  // 're_submitted',
   'payment failed',
   'under_review_again',
 ]
@@ -78,7 +77,7 @@ export const PAYMENT_STATUS_META: Record<
   {label: string; badgeClass: string}
 > = {
   pending: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
-  slip_submitted: {label: 'ສົ່ງສະລິບແລ້ວ', badgeClass: 'badge-light-info'},
+  slip_submitted: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
   approved: {label: 'ອະນຸມັດແລ້ວ', badgeClass: 'badge-light-success'},
   rejected: {label: 'ປະຕິເສດ', badgeClass: 'badge-light-danger'},
   re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', badgeClass: 'badge-light-info'},

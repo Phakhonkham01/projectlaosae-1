@@ -9,13 +9,14 @@ import {CustomHeaderColumn} from './columns/CustomHeaderColumn'
 import {CustomRow} from './columns/CustomRow'
 import {HistoryBookingColumns} from './columns/_columns'
 
-type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 'payment_failed' | 'under_review_again'
+type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 're_submitted' | 'payment_failed' | 'under_review_again'
 
 const tabs: {label: string; value: StatusTab; color: string}[] = [
   {label: 'ທັງໝົດ', value: 'all', color: '#64748b'},
   {label: 'ລໍຖ້າ', value: 'pending', color: '#f59e0b'},
   {label: 'ອະນຸມັດ', value: 'approved', color: '#10b981'},
   {label: 'ປະຕິເສດ', value: 'rejected', color: '#ef4444'},
+  
   {label: 'ຊຳລະບໍ່ສຳເລັດ', value: 'payment_failed', color: '#8b5cf6'},
   {label: 'ກວດສອບອີກຄັ້ງ', value: 'under_review_again', color: '#0ea5e9'},
 ]
@@ -31,6 +32,23 @@ const getCurrentUserId = (): string | null => {
 }
 
 const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+const getDisplayStatus = (value?: string) => {
+  const normalized = normalizeStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment_failed'
+  return normalized
+}
+
+const itemMatchesStatus = (item: HistoryBooking, status: StatusTab) => {
+  if (status === 'all') {
+    return true
+  }
+
+  const bookingStatus = getDisplayStatus(item.status)
+  const paymentStatus = getDisplayStatus(item.payment_status)
+
+  return bookingStatus === status || paymentStatus === status
+}
 
 const HistoryTable = () => {
   const allData = useQueryResponseData()
@@ -43,7 +61,7 @@ const HistoryTable = () => {
 
     return allData
       .filter((item) => item.user_id === currentUserId)
-      .filter((item) => activeTab === 'all' || normalizeStatus(item.payment_status) === activeTab)
+      .filter((item) => itemMatchesStatus(item, activeTab))
   }, [allData, activeTab])
 
   const columns = useMemo(() => HistoryBookingColumns, [])
@@ -61,7 +79,7 @@ const HistoryTable = () => {
       acc[tab.value] =
         tab.value === 'all'
           ? userItems.length
-          : userItems.filter((item) => normalizeStatus(item.payment_status) === tab.value).length
+          : userItems.filter((item) => itemMatchesStatus(item, tab.value)).length
       return acc
     }, {} as Record<StatusTab, number>)
   }, [allData])

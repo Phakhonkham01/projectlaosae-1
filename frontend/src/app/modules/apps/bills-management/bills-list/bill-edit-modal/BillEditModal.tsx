@@ -16,6 +16,13 @@ const paymentMethodLabels: Record<string, string> = {
 }
 
 const getPaymentMethodLabel = (method?: string) => paymentMethodLabels[method || ''] || method || '-'
+const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+const getDisplayPaymentStatus = (value?: string) => {
+  const normalized = normalizePaymentStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment failed'
+  return normalized
+}
 
 const BookingShipEditModal = () => {
   const {itemIdForUpdate, setItemIdForUpdate} = useListView()
@@ -37,7 +44,7 @@ const BookingShipEditModal = () => {
   }, [])
 
   useEffect(() => {
-    const currentStatus = bill?.payment_status
+    const currentStatus = getDisplayPaymentStatus(bill?.payment_status)
     const safeStatus =
       currentStatus && currentStatus in PAYMENT_STATUS_META ? currentStatus : defaultPaymentStatus
     setPaymentStatus(safeStatus)
@@ -91,7 +98,9 @@ const BookingShipEditModal = () => {
     return null
   }
 
-  const paymentStatusMeta = PAYMENT_STATUS_META[bill.payment_status] ?? defaultPaymentStatusMeta
+  const paymentStatusMeta =
+    PAYMENT_STATUS_META[getDisplayPaymentStatus(bill.payment_status) as keyof typeof PAYMENT_STATUS_META] ??
+    defaultPaymentStatusMeta
 
   return (
     <>

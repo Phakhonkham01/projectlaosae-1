@@ -28,6 +28,8 @@ type PaymentStatus =
   | 'payment failed'
   | 'under_review_again'
 
+type DisplayPaymentStatus = Exclude<PaymentStatus, 'slip_submitted'>
+
 interface Bill {
   id: string
   ship_id: string
@@ -58,10 +60,29 @@ const STATUS_META: Record<
   pending: {label: 'ລໍຖ້າ', badge: 'badge-light-warning', icon: 'time'},
   approved: {label: 'ອະນຸມັດແລ້ວ', badge: 'badge-light-success', icon: 'check-circle'},
   rejected: {label: 'ປະຕິເສດແລ້ວ', badge: 'badge-light-danger', icon: 'cross-circle'},
-  slip_submitted: {label: 'ສົ່ງສະລິບແລ້ວ', badge: 'badge-light-info', icon: 'time'},
+  slip_submitted: {label: 'ລໍຖ້າ', badge: 'badge-light-warning', icon: 'time'},
   re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', badge: 'badge-light-info', icon: 'time'},
   'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', badge: 'badge-light-danger', icon: 'cross-circle'},
   under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', badge: 'badge-light-primary', icon: 'time'},
+}
+
+const DISPLAY_STATUS_OPTIONS: DisplayPaymentStatus[] = [
+  'pending',
+  'approved',
+  'rejected',
+  're_submitted',
+  'payment failed',
+  'under_review_again',
+]
+
+const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+const getDisplayPaymentStatus = (value?: string): DisplayPaymentStatus => {
+  const normalized = normalizePaymentStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment failed'
+  return DISPLAY_STATUS_OPTIONS.includes(normalized as DisplayPaymentStatus)
+    ? (normalized as DisplayPaymentStatus)
+    : 'pending'
 }
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
@@ -85,7 +106,7 @@ const BillDetailModal: FC<{
   const [reUploadLoading, setReUploadLoading] = useState(false)
   const reUploadRef = useRef<HTMLInputElement>(null)
 
-  const meta = STATUS_META[bill.payment_status] ?? STATUS_META.pending
+  const meta = STATUS_META[getDisplayPaymentStatus(bill.payment_status)] ?? STATUS_META.pending
 
   const handleApprove = async () => {
     setActionLoading(true)
@@ -372,7 +393,7 @@ const BillManagement: FC = () => {
   const [bills, setBills] = useState<Bill[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
-  const [filterStatus, setFilterStatus] = useState<PaymentStatus | 'all'>('all')
+  const [filterStatus, setFilterStatus] = useState<DisplayPaymentStatus | 'all'>('all')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -410,7 +431,7 @@ const BillManagement: FC = () => {
   }, [currentUser])
 
   const filtered = bills.filter((b) => {
-    const matchStatus = filterStatus === 'all' || b.payment_status === filterStatus
+    const matchStatus = filterStatus === 'all' || getDisplayPaymentStatus(b.payment_status) === filterStatus
     const q = search.toLowerCase()
     const matchSearch =
       !q ||
@@ -441,10 +462,10 @@ const BillManagement: FC = () => {
           <select
             className='form-select form-select-solid w-160px'
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as PaymentStatus | 'all')}
+            onChange={(e) => setFilterStatus(e.target.value as DisplayPaymentStatus | 'all')}
           >
             <option value='all'>ທຸກສະຖານະ</option>
-            {(Object.keys(STATUS_META) as PaymentStatus[]).map((s) => (
+            {DISPLAY_STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {STATUS_META[s].label}
               </option>
@@ -480,7 +501,7 @@ const BillManagement: FC = () => {
               </thead>
               <tbody>
                 {filtered.map((b) => {
-                  const meta = STATUS_META[b.payment_status] ?? STATUS_META.pending
+                  const meta = STATUS_META[getDisplayPaymentStatus(b.payment_status)] ?? STATUS_META.pending
                   return (
                     <tr key={b.id}>
                       <td>

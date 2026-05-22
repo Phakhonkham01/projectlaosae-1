@@ -36,6 +36,14 @@ type QueryResponseContextProps = {
 
 const QueryResponseContext = createContext<QueryResponseContextProps | undefined>(undefined)
 
+const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+const getDisplayStatus = (value?: string) => {
+  const normalized = normalizeStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment_failed'
+  return normalized
+}
+
 const QueryResponseProvider: FC<WithChildren> = ({ children }) => {
   const { state } = useQueryRequest()
   const [query, setQuery] = useState(stringifyRequestQuery(state))
@@ -56,10 +64,10 @@ const QueryResponseProvider: FC<WithChildren> = ({ children }) => {
       if (state.filter) {
         const filter = state.filter as Record<string, string>
         if (filter.status) {
-          items = items.filter(item => item.status === filter.status)
+          items = items.filter(item => getDisplayStatus(item.status) === getDisplayStatus(filter.status))
         }
         if (filter.payment_status) {
-          items = items.filter(item => item.payment_status === filter.payment_status)
+          items = items.filter(item => getDisplayStatus(item.payment_status) === getDisplayStatus(filter.payment_status))
         }
         if (filter.payment_method) {
           items = items.filter(item => item.payment_method === filter.payment_method)

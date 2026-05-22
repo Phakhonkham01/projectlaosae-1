@@ -36,6 +36,12 @@ type QueryResponseContextProps = BaseQueryResponseContextProps<BillData> & {
 }
 
 const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
+const getDisplayPaymentStatus = (value?: string) => {
+  const normalized = normalizePaymentStatus(value)
+  if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 'payment_failed') return 'payment failed'
+  return normalized
+}
 
 const QueryResponseContext = createContext<QueryResponseContextProps | undefined>(undefined)
 
@@ -84,9 +90,9 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
       }
 
       if (filter.paymentStatus) {
-        const selectedStatus = normalizePaymentStatus(filter.paymentStatus)
+        const selectedStatus = getDisplayPaymentStatus(filter.paymentStatus)
         filteredBills = filteredBills.filter(
-          (bill) => normalizePaymentStatus(bill.payment_status) === selectedStatus
+          (bill) => getDisplayPaymentStatus(bill.payment_status) === selectedStatus
         )
       }
 
