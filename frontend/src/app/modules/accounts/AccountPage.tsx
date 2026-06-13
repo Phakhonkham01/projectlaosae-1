@@ -54,5 +54,5 @@ const AccountPage: React.FC = () => {
     </Routes>
   )
 }
-
+    
 export default AccountPage
