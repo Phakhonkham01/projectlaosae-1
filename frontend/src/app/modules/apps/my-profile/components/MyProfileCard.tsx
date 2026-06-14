@@ -1,11 +1,12 @@
 import { FC, useState, useRef, useEffect } from 'react'
 import * as Yup from 'yup'
 import Swal from 'sweetalert2'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, updateDoc, where, writeBatch } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 import { db, storage, auth } from '../../../../../../../firebase/useFirebase'
 import { KTIcon } from '../../../../../_metronic/helpers'
+import { useAuth } from '../../../auth/core/Auth'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ProfileData {
@@ -21,6 +22,23 @@ interface ProfileData {
 }
 
 type EditableField = 'name' | 'lastname' | 'phone_number' | null
+
+const syncBookingUserName = async (userId: string, userName: string) => {
+  const batch = writeBatch(db)
+  let updates = 0
+
+  for (const collectionName of ['bill', 'history_booking']) {
+    const snap = await getDocs(query(collection(db, collectionName), where('user_id', '==', userId)))
+    snap.docs.forEach((bookingDoc) => {
+      batch.update(bookingDoc.ref, { user_name: userName })
+      updates += 1
+    })
+  }
+
+  if (updates > 0) {
+    await batch.commit()
+  }
+}
 
 // ─── Inline editable field component ─────────────────────────────────────────
 interface InlineFieldProps {
@@ -164,6 +182,7 @@ const PwInput: FC<PwInputProps> = ({ label, value, onChange, placeholder, requir
 
 // ─── Main component ───────────────────────────────────────────────────────────
 const MyProfileCard: FC = () => {
+  const {auth: authData, saveAuth, setCurrentUser} = useAuth()
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeEdit, setActiveEdit] = useState<EditableField>(null)
@@ -221,9 +240,38 @@ const MyProfileCard: FC = () => {
     try {
       const payload = { [field]: value, updatedAt: new Date().toISOString() }
       await updateDoc(doc(db, 'Users', profile._id), payload)
-      setProfile((p) => p ? { ...p, [field]: value } : p)
+      const updatedProfile = { ...profile, [field]: value }
+      const updatedUserName = `${updatedProfile.name || ''} ${updatedProfile.lastname || ''}`.trim()
+
+      if (field === 'name' || field === 'lastname') {
+        await syncBookingUserName(profile._id, updatedUserName)
+      }
+
+      setProfile(updatedProfile)
       const raw = localStorage.getItem('user')
-      if (raw) localStorage.setItem('user', JSON.stringify({ ...JSON.parse(raw), [field]: value }))
+      if (raw) {
+        const storedUser = JSON.parse(raw)
+        const updatedUser = {
+          ...storedUser,
+          [field]: value,
+          user_name: updatedUserName,
+        }
+
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        setCurrentUser((current) => ({
+          ...(current || storedUser),
+          [field]: value,
+          user_name: updatedUserName,
+        }))
+      }
+
+      if (authData) {
+        saveAuth({
+          ...authData,
+          user_name: updatedUserName,
+        })
+      }
+
       setActiveEdit(null)
       Swal.fire({ icon: 'success', title: 'ບັນທຶກສຳເລັດ', timer: 1200, showConfirmButton: false })
     } catch {
