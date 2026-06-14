@@ -4,57 +4,37 @@ import {EmployeesActionsCell} from './EmployeesActionsCell'
 import {EmployeesListHeader} from '../../components/header/EmployeesListHeader'
 
 const bookingStatusStyles: Record<string, {bg: string; color: string}> = {
-  pending: {bg: '#fff8e1', color: '#f59e0b'},
   confirmed: {bg: '#e8f5e9', color: '#10b981'},
   cancelled: {bg: '#fce8e8', color: '#ef4444'},
   completed: {bg: '#ede9fe', color: '#8b5cf6'},
   approved: {bg: '#e8f5e9', color: '#10b981'},
   rejected: {bg: '#fce8e8', color: '#ef4444'},
-  payment_failed: {bg: '#ede9fe', color: '#8b5cf6'},
-  'payment failed': {bg: '#ede9fe', color: '#8b5cf6'},
-  under_review_again: {bg: '#e0f2fe', color: '#0284c7'},
   re_submitted: {bg: '#e0f2fe', color: '#0284c7'},
-  slip_submitted: {bg: '#fff8e1', color: '#f59e0b'},
 }
 
 const bookingStatusLabels: Record<string, string> = {
-  pending: 'ລໍຖ້າ',
   confirmed: 'ຢືນຢັນແລ້ວ',
   cancelled: 'ຍົກເລີກ',
   completed: 'ສຳເລັດ',
   approved: 'ອະນຸມັດ',
   rejected: 'ປະຕິເສດ',
-  payment_failed: 'ຊຳລະບໍ່ສຳເລັດ',
-  'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
-  under_review_again: 'ກວດສອບອີກຄັ້ງ',
-  
-  slip_submitted: 'ລໍຖ້າ',
+  re_submitted: 'ສົ່ງກວດອີກຄັ້ງ',
 }
 
 const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
-  pending: {bg: '#fff8e1', color: '#f59e0b'},
   paid: {bg: '#e8f5e9', color: '#10b981'},
-  failed: {bg: '#fce8e8', color: '#ef4444'},
   refunded: {bg: '#ede9fe', color: '#8b5cf6'},
   approved: {bg: '#e8f5e9', color: '#10b981'},
   rejected: {bg: '#fce8e8', color: '#ef4444'},
-  'payment failed': {bg: '#ede9fe', color: '#8b5cf6'},
-  under_review_again: {bg: '#e0f2fe', color: '#0284c7'},
   re_submitted: {bg: '#e0f2fe', color: '#0284c7'},
-  slip_submitted: {bg: '#fff8e1', color: '#f59e0b'},
 }
 
 const paymentStatusLabels: Record<string, string> = {
-  pending: 'ລໍຖ້າ',
   paid: 'ຊຳລະແລ້ວ',
-  failed: 'ບໍ່ສຳເລັດ',
   refunded: 'ຄືນເງິນແລ້ວ',
   approved: 'ອະນຸມັດ',
   rejected: 'ປະຕິເສດ',
-  'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
-  under_review_again: 'ກວດສອບອີກຄັ້ງ',
-  
-  slip_submitted: 'ລໍຖ້າ',
+  re_submitted: 'ສົ່ງກວດອີກຄັ້ງ',
 }
 
 const paymentMethodLabels: Record<string, string> = {

@@ -1,4 +1,4 @@
-export type PaymentMethod = 'cash' | 'transfer' | 'cash+transfer' | 'bcel'
+export type PaymentMethod = 'cash' | 'cash+transfer' | 'bcel'
 
 export type PaymentStatus =
   | 'pending'
@@ -61,26 +61,18 @@ export type BillFilter = {
   dateYear?: number
 }
 
-export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'transfer', 'cash+transfer', 'bcel']
+export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'cash+transfer', 'bcel']
 
 export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
-  'pending',
   'approved',
   'rejected',
-  // 're_submitted',
-  'payment failed',
-  'under_review_again',
+  're_submitted',
 ]
 
-export const PAYMENT_STATUS_META: Record<
-  PaymentStatus,
-  {label: string; badgeClass: string}
+export const PAYMENT_STATUS_META: Partial<
+  Record<PaymentStatus, {label: string; badgeClass: string}>
 > = {
-  pending: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
-  slip_submitted: {label: 'ລໍຖ້າ', badgeClass: 'badge-light-warning'},
   approved: {label: 'ອະນຸມັດແລ້ວ', badgeClass: 'badge-light-success'},
   rejected: {label: 'ປະຕິເສດ', badgeClass: 'badge-light-danger'},
   re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', badgeClass: 'badge-light-info'},
-  'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', badgeClass: 'badge-light-danger'},
-  under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', badgeClass: 'badge-light-primary'},
 }

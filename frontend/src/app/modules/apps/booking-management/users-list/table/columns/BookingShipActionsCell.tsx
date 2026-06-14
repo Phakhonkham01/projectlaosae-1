@@ -1,26 +1,23 @@
 import { FC, useEffect } from 'react'
-import { useMutation, useQueryClient } from 'react-query'
 import { MenuComponent } from '../../../../../../../_metronic/assets/ts/components'
-import { ID, KTIcon, QUERIES } from '../../../../../../../_metronic/helpers'
+import { ID } from '../../../../../../../_metronic/helpers'
 import { useListView } from '../../core/ListViewProvider'
-import { useQueryResponse } from '../../core/QueryResponseProvider'
-import { deleteShip } from '../../core/ship_requests' // Changed to single delete
-import Swal from 'sweetalert2'
 
 type Props = {
   id: ID
+  disabled?: boolean
 }
 
-const BookingShipActionsCell: FC<Props> = ({ id }) => {
+const BookingShipActionsCell: FC<Props> = ({ id, disabled = false }) => {
   const { setItemIdForUpdate } = useListView()
-  const { query } = useQueryResponse()
-  const queryClient = useQueryClient()
 
   useEffect(() => {
     MenuComponent.reinitialization()
   }, [])
 
-  const openEditModal = () => {
+  const openEditModal = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (disabled) return
     setItemIdForUpdate(id)
   }
 
@@ -28,15 +25,16 @@ const BookingShipActionsCell: FC<Props> = ({ id }) => {
     <>
       <a
         href='#'
-        className='btn btn-light btn-active-light-primary btn-sm'
-        data-kt-menu-trigger='click'
-        data-kt-menu-placement='bottom-end'
+        className={`btn btn-sm ${
+          disabled
+            ? 'btn-light text-muted disabled'
+            : 'btn-light btn-active-light-primary'
+        }`}
+        aria-disabled={disabled}
+        style={disabled ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
         onClick={openEditModal}
       >
-        ຈອງດຽວນີ້
-        {/* <KTIcon iconName='down' className='fs-5 m-0' /> */}
-      
-      
+        {disabled ? 'ຈອງເຕັມແລ້ວ' : 'ຈອງດຽວນີ້'}
       </a>
       {/* begin::Menu */}
       <div

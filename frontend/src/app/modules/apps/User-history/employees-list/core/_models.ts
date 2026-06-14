@@ -40,6 +40,11 @@ interface HistoryBooking {
   user_email: string
   user_id: string
   user_name: string
+  customer_name?: string
+  customer_phone?: string
+  booked_by_name?: string
+  booked_by_email?: string
+  booked_by_role?: string
 }
 
 export type { HistoryBooking, FoodItem }

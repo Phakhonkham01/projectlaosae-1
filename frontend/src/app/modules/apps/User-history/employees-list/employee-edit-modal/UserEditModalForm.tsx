@@ -1,357 +1,354 @@
-import {FC, useRef, useState, type ChangeEvent, type ReactNode} from 'react'
-import Swal from 'sweetalert2'
-import {getDownloadURL, ref, uploadBytes} from 'firebase/storage'
+import {FC, useEffect, useState, type ReactNode} from 'react'
 import {useListView} from '../core/ListViewProvider'
-import {useQueryResponse} from '../core/QueryResponseProvider'
 import {HistoryBooking} from '../core/_models'
 import {EmployeesListLoading} from '../components/loading/EmployeesListLoading'
-import {updatePaymentStatus} from '../core/_requests'
-import {storage} from '../../../../../../../../firebase/useFirebase'
+
+const readCurrentRole = (): string => {
+  try {
+    const raw = localStorage.getItem('user')
+    if (!raw) return ''
+    const parsed = JSON.parse(raw)
+    return (parsed?.role ?? '').toString().toLowerCase()
+  } catch {
+    return ''
+  }
+}
 
 type Props = {
   isLoading: boolean
   booking?: HistoryBooking
 }
 
-const statusMap: Record<string, {label: string; cls: string}> = {
-  pending: {label: 'ລໍຖ້າ', cls: 'badge-light-warning'},
-  confirmed: {label: 'ຢືນຢັນແລ້ວ', cls: 'badge-light-success'},
-  cancelled: {label: 'ຍົກເລີກແລ້ວ', cls: 'badge-light-danger'},
-  completed: {label: 'ສຳເລັດແລ້ວ', cls: 'badge-light-primary'},
-  paid: {label: 'ຊຳລະແລ້ວ', cls: 'badge-light-success'},
-  failed: {label: 'ບໍ່ສຳເລັດ', cls: 'badge-light-danger'},
-  refunded: {label: 'ຄືນເງິນແລ້ວ', cls: 'badge-light-info'},
-  'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', cls: 'badge-light-danger'},
-  slip_submitted: {label: 'ລໍຖ້າ', cls: 'badge-light-warning'},
-  
-  under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', cls: 'badge-light-info'},
+// ─── Status meta (only the statuses we still show) ──────────────────────────
+const statusMap: Record<string, {label: string; cls: string; icon: string}> = {
+  approved: {label: 'ອະນຸມັດ', cls: 'badge-light-success', icon: '✅'},
+  confirmed: {label: 'ຢືນຢັນແລ້ວ', cls: 'badge-light-success', icon: '✅'},
+  completed: {label: 'ສຳເລັດແລ້ວ', cls: 'badge-light-primary', icon: '✅'},
+  paid: {label: 'ຊຳລະແລ້ວ', cls: 'badge-light-success', icon: '💸'},
+  rejected: {label: 'ປະຕິເສດແລ້ວ', cls: 'badge-light-danger', icon: '⛔'},
+  cancelled: {label: 'ຍົກເລີກແລ້ວ', cls: 'badge-light-danger', icon: '⛔'},
+  re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', cls: 'badge-light-info', icon: '🔁'},
+  refunded: {label: 'ຄືນເງິນແລ້ວ', cls: 'badge-light-info', icon: '↩️'},
 }
 
 const paymentMethodLabels: Record<string, string> = {
   cash: 'ເງິນສົດ',
-  transfer: 'ໂອນເງິນ',
+  bcel: 'BCEL QR',
+  'cash+transfer': 'ເງິນສົດ + ໂອນ (BCEL)',
   credit_card: 'ບັດເຄຣດິດ',
   promptpay: 'ພຣອມເພ',
 }
 
-const Badge = ({value}: {value?: string}) => {
-  if (!value) return <span className='text-muted'>-</span>
-  const normalized = value.toLowerCase().trim().replace(/[\s-]+/g, '_')
-  const key = normalized === 'slip_submitted' ? 'pending' : normalized === 'payment_failed' ? 'payment failed' : normalized
-  const meta = statusMap[key] ?? {label: value, cls: 'badge-light-secondary'}
-  return <span className={`badge ${meta.cls} fw-bold fs-8 px-3 py-2 text-capitalize`}>{meta.label}</span>
+const methodIcon: Record<string, string> = {
+  cash: '💵',
+  bcel: '🏦',
+  'cash+transfer': '💵🏦',
+  credit_card: '💳',
+  promptpay: '📱',
 }
 
-const SectionTitle = ({icon, title}: {icon: string; title: string}) => (
-  <div className='d-flex align-items-center mb-5'>
-    <span className='bullet bullet-vertical h-30px me-3' style={{background: 'var(--bs-primary)'}} />
-    <i className={`ki-duotone ${icon} fs-2 text-primary me-2`}>
-      <span className='path1' />
-      <span className='path2' />
-    </i>
-    <h6 className='fw-bolder text-gray-800 mb-0 fs-6'>{title}</h6>
-  </div>
-)
+const normalizeStatus = (value?: string) =>
+  value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
 
-const InfoRow = ({label, children}: {label: string; children: ReactNode}) => (
-  <div className='row mb-4 align-items-center'>
-    <div className='col-5'>
-      <span className='text-muted fw-semibold fs-7'>{label}</span>
-    </div>
-    <div className='col-7 text-end'>
-      <span className='text-gray-800 fw-bold fs-7'>{children}</span>
-    </div>
-  </div>
-)
+const Badge = ({value}: {value?: string}) => {
+  if (!value) return <span className='text-muted'>-</span>
+  const key = normalizeStatus(value)
+  const meta = statusMap[key]
+  if (!meta) {
+    return <span className='badge badge-light-secondary fw-bold fs-8 px-3 py-2'>{value}</span>
+  }
+  return (
+    <span className={`badge ${meta.cls} fw-bold fs-7 px-3 py-2`}>
+      <span className='me-1'>{meta.icon}</span>
+      {meta.label}
+    </span>
+  )
+}
 
-const SlipLightbox = ({url, onClose}: {url: string; onClose: () => void}) => (
-  <div
-    onClick={onClose}
-    className='position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center'
-    style={{zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)'}}
-  >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className='card shadow-lg'
-      style={{maxWidth: 300, width: '90%', borderRadius: 16, overflow: 'hidden'}}
-    >
-      <div className='card-header border-0 d-flex align-items-center justify-content-between py-4 px-6'>
-        <span className='fw-bolder text-gray-800 fs-6'>
-          <i className='ki-duotone ki-bill fs-3 text-primary me-2'>
-            <span className='path1' />
-            <span className='path2' />
-          </i>
-          ສະລິບການຊຳລະ
-        </span>
-        <button onClick={onClose} className='btn btn-sm btn-icon btn-light btn-active-light-primary'>
-          <i className='ki-duotone ki-cross fs-4'>
-            <span className='path1' />
-            <span className='path2' />
-          </i>
-        </button>
-      </div>
-      <div className='card-body p-0'>
-        <img src={url} alt='slip' className='w-100' style={{maxHeight: 600, objectFit: 'contain'}} />
-      </div>
-    </div>
-  </div>
-)
+const formatDateDMY = (iso?: string) => {
+  if (!iso) return '-'
+  const [y, m, d] = iso.split('-')
+  if (!y || !m || !d) return iso
+  return `${d}/${m}/${y}`
+}
 
 const getBookingTimeRange = (startTime?: string, hours?: number) => {
   if (!startTime) return '-'
-
   const [hourText, minuteText = '0'] = startTime.split(':')
   const startHour = Number(hourText)
   const startMinute = Number(minuteText)
-
   if (!Number.isFinite(startHour) || !Number.isFinite(startMinute) || !hours) {
     return startTime
   }
-
   const startTotalMinutes = startHour * 60 + startMinute
   const endTotalMinutes = Math.round(startTotalMinutes + hours * 60)
   const endHour = Math.floor(endTotalMinutes / 60) % 24
   const endMinute = endTotalMinutes % 60
   const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
-
-  return `${startTime} - ${endTime}`
+  return `${startTime} → ${endTime}`
 }
+
+const fmt = (n?: number) => (n != null ? `${n.toLocaleString()} LAK` : '-')
+
+// ─── Layout primitives ──────────────────────────────────────────────────────
+const Field = ({label, children}: {label: string; children: ReactNode}) => (
+  <div className='d-flex justify-content-between align-items-center py-2'>
+    <span className='text-muted fs-7'>{label}</span>
+    <span className='text-gray-900 fw-bold fs-7 text-end'>{children}</span>
+  </div>
+)
+
+const SectionCard = ({
+  icon,
+  title,
+  children,
+  accent = 'primary',
+}: {
+  icon: string
+  title: string
+  children: ReactNode
+  accent?: 'primary' | 'success' | 'info' | 'warning'
+}) => (
+  <div className='card border border-gray-200 shadow-sm mb-4'>
+    <div
+      className={`card-header bg-light-${accent} border-0 py-3 px-5 d-flex align-items-center`}
+      style={{minHeight: 48}}
+    >
+      <span className='fs-3 me-3'>{icon}</span>
+      <h4 className={`fw-bolder text-${accent} mb-0 fs-6`}>{title}</h4>
+    </div>
+    <div className='card-body py-4 px-5'>{children}</div>
+  </div>
+)
 
 const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
   const {setItemIdForUpdate} = useListView()
-  const {refetch} = useQueryResponse()
   const [showSlip, setShowSlip] = useState(false)
-  const [isRepayLoading, setIsRepayLoading] = useState(false)
-  const repayInputRef = useRef<HTMLInputElement>(null)
+  const [currentRole, setCurrentRole] = useState<string>('')
 
-  const methodIcon: Record<string, string> = {
-    cash: '💵',
-    transfer: '🏦',
-    credit_card: '💳',
-    promptpay: '📱',
+  useEffect(() => {
+    setCurrentRole(readCurrentRole())
+  }, [])
+
+  if (!booking) {
+    return (
+      <div className='py-15 text-center text-muted'>
+        ບໍ່ພົບຂໍ້ມູນການຈອງ
+        {isLoading && <EmployeesListLoading />}
+      </div>
+    )
   }
 
-  const fmt = (n?: number) => (n != null ? `${n.toLocaleString()} LAK` : '-')
-  const normalizedPaymentStatus = booking?.payment_status?.toLowerCase?.().trim().replace(/[\s-]+/g, '_')
-
-  const handleRepaySlipUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !booking) return
-
-    if (!file.type.startsWith('image/')) {
-      Swal.fire({icon: 'error', title: 'ໄຟລ໌ບໍ່ຖືກຕ້ອງ', text: 'ກະລຸນາເລືອກໄຟລ໌ຮູບພາບເທົ່ານັ້ນ.'})
-      return
-    }
-
-    setIsRepayLoading(true)
-    try {
-      const storageRef = ref(storage, `slips/${booking.id}_${Date.now()}_${file.name}`)
-      await uploadBytes(storageRef, file)
-      const slipUrl = await getDownloadURL(storageRef)
-
-      await updatePaymentStatus(booking.id, 'under_review_again', slipUrl)
-      await refetch()
-
-      Swal.fire({
-        icon: 'success',
-        title: 'ສົ່ງແລ້ວ',
-        text: 'ບິນຂອງທ່ານຖືກສົ່ງໃຫ້ກວດສອບອີກຄັ້ງແລ້ວ.',
-        timer: 1800,
-        showConfirmButton: false,
-      })
-      setItemIdForUpdate(undefined)
-    } catch (error) {
-      console.error(error)
-      Swal.fire({
-        icon: 'error',
-        title: 'ອັບໂຫຼດບໍ່ສຳເລັດ',
-        text: 'ບໍ່ສາມາດສົ່ງສະລິບການຊຳລະໄດ້. ກະລຸນາລອງໃໝ່.',
-      })
-    } finally {
-      setIsRepayLoading(false)
-      if (repayInputRef.current) repayInputRef.current.value = ''
-    }
-  }
+  const totalHours = booking.num_hours ?? 0
+  const isStaffView = currentRole === 'employee' || currentRole === 'owner'
+  const bookedBy = booking.booked_by_name?.trim() || ''
+  const bookedByRole = booking.booked_by_role?.trim() || ''
+  const bookedByEmail = booking.booked_by_email?.trim() || ''
+  const isStaffBooking = Boolean(bookedBy)
+  const customerName =
+    booking.customer_name?.trim() || (!isStaffBooking ? booking.user_name : '') || '-'
+  const customerPhone = booking.customer_phone?.trim() || ''
+  const customerEmail = !isStaffBooking ? booking.user_email ?? '-' : ''
+  const statusKey = normalizeStatus(booking.status)
+  const heroAccent =
+    statusKey === 'rejected' || statusKey === 'cancelled'
+      ? 'danger'
+      : statusKey === 'approved' || statusKey === 'completed' || statusKey === 'confirmed'
+      ? 'success'
+      : 'primary'
 
   return (
     <>
-      <div className='d-flex flex-column gap-7'>
-        <div className='card card-flush border border-dashed border-gray-300'>
-          <div className='card-body py-5 px-6'>
-            <SectionTitle icon='ki-profile-circle' title='ລູກຄ້າ' />
-            <div className='d-flex align-items-center gap-4'>
-              <div className='symbol symbol-50px symbol-circle'>
-                <span
-                  className='symbol-label fw-bolder text-white fs-4'
-                  style={{background: 'linear-gradient(135deg, #009ef7, #0095e8)'}}
-                >
-                  {booking?.user_name?.charAt(0).toUpperCase() ?? '?'}
-                </span>
-              </div>
+      <div className='d-flex flex-column gap-4'>
+        {/* ── Hero / Receipt summary ── */}
+        <div
+          className={`card border-0 shadow-sm`}
+          style={{
+            background: `linear-gradient(135deg, var(--bs-light-${heroAccent}), #ffffff)`,
+            borderLeft: `6px solid var(--bs-${heroAccent})`,
+          }}
+        >
+          <div className='card-body p-5'>
+            <div className='d-flex justify-content-between align-items-start flex-wrap gap-3'>
               <div>
-                <div className='fw-bolder text-gray-800 fs-6'>{booking?.user_name ?? '-'}</div>
-                <div className='text-muted fs-7'>{booking?.user_email ?? '-'}</div>
+                <div className='text-muted fs-8 text-uppercase mb-1' style={{letterSpacing: '0.12em'}}>
+                  Booking #{booking.id?.slice(0, 8).toUpperCase()}
+                </div>
+                <h2 className='fw-bolder text-gray-900 mb-1'>{booking.ship_name || '-'}</h2>
+                <div className='text-muted fs-7'>
+                  📅 {formatDateDMY(booking.booking_date)} · 🕒{' '}
+                  {getBookingTimeRange(booking.booking_time, totalHours)}
+                </div>
+                {isStaffView && isStaffBooking && (
+                  <div className='mt-2 fs-7'>
+                    <span className='text-muted me-1'>ລູກຄ້າ:</span>
+                    <span className='fw-bold text-gray-900'>{customerName}</span>
+                    {customerPhone && (
+                      <span className='ms-2 text-gray-700'>· 📞 {customerPhone}</span>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className='ms-auto'>
-                <span className='badge badge-light-primary fw-semibold fs-8 px-3 py-2' style={{fontFamily: 'monospace'}}>
-                  #{booking?.id?.slice(0, 10)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className='row g-5'>
-          <div className='col-12 col-md-6'>
-            <div className='card card-flush border border-dashed border-gray-300 h-100'>
-              <div className='card-body py-5 px-6'>
-                <SectionTitle icon='ki-calendar' title='ຂໍ້ມູນການຈອງ' />
-                <InfoRow label='ວັນທີ'>{booking?.booking_date ?? '-'}</InfoRow>
-                <InfoRow label='ເວລາ'>{getBookingTimeRange(booking?.booking_time, booking?.num_hours)}</InfoRow>
-                <InfoRow label='ເຮືອ'>{booking?.ship_name ?? '-'}</InfoRow>
-                <InfoRow label='ລາຄາ / ຊົ່ວໂມງ'>{fmt(booking?.ship_price_per_hour)}</InfoRow>
-                <InfoRow label='ຈຳນວນຊົ່ວໂມງ'>{booking?.num_hours ?? '-'}</InfoRow>
-                <InfoRow label='ຈຳນວນຄົນ'>{booking?.num_people ?? '-'}</InfoRow>
-                <InfoRow label='ສະຖານະ'>
-                  <Badge value={booking?.status} />
-                </InfoRow>
-              </div>
-            </div>
-          </div>
-
-          <div className='col-12 col-md-6'>
-            <div className='card card-flush border border-dashed border-gray-300 h-100'>
-              <div className='card-body py-5 px-6'>
-                <SectionTitle icon='ki-dollar' title='ການຊຳລະ' />
-                <InfoRow label='ວິທີ'>
-                  {booking?.payment_method ? (
-                    <>
-                      {methodIcon[booking.payment_method] ?? '💳'}{' '}
-                      <span className='text-capitalize'>
-                        {paymentMethodLabels[booking.payment_method] ?? booking.payment_method.replace('_', ' ')}
-                      </span>
-                    </>
-                  ) : (
-                    '-'
-                  )}
-                </InfoRow>
-                <InfoRow label='ສະຖານະການຊຳລະ'>
-                  <Badge value={booking?.payment_status} />
-                </InfoRow>
-
-                <div className='separator separator-dashed my-4' />
-
-                <InfoRow label='ລວມຄ່າເຮືອ'>{fmt(booking?.total_ship_price)}</InfoRow>
-                <InfoRow label='ລວມຄ່າອາຫານ'>{fmt(booking?.total_food_price)}</InfoRow>
-
-                <div className='d-flex align-items-center justify-content-between bg-light-primary rounded px-4 py-3 mt-3'>
-                  <span className='text-primary fw-bolder fs-7'>ລວມທັງໝົດ</span>
-                  <span className='text-primary fw-bolder fs-5'>{fmt(booking?.grand_total)}</span>
+              <div className='text-end'>
+                <Badge value={booking.status} />
+                <div className='mt-2'>
+                  <div className='text-muted fs-8'>ລວມທັງໝົດ</div>
+                  <div className={`fw-bolder fs-2x text-${heroAccent}`}>{fmt(booking.grand_total)}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {booking?.foods && booking.foods.length > 0 && (
-          <div className='card card-flush border border-dashed border-gray-300'>
-            <div className='card-body py-5 px-6'>
-              <SectionTitle icon='ki-basket' title={`ອາຫານ (${booking.foods.length} ລາຍການ)`} />
-              <div className='d-flex flex-column gap-3'>
-                {booking.foods.map((food, i) => (
-                  <div key={i} className='d-flex align-items-center gap-4 bg-light rounded px-4 py-3'>
-                    {food.image && (
-                      <img
-                        src={food.image}
-                        alt={food.name}
-                        className='rounded'
-                        style={{width: 40, height: 40, objectFit: 'cover', flexShrink: 0}}
-                      />
-                    )}
-                    <div className='flex-grow-1'>
-                      <div className='fw-bold text-gray-800 fs-7'>{food.name}</div>
-                      <div className='text-muted fs-8'>x{food.quantity}</div>
-                    </div>
-                    <span className='badge badge-light-primary fw-bold fs-8'>{fmt(food.price * food.quantity)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ── Two-column body ── */}
+        <div className='row g-4'>
+          {/* Customer + Booking */}
+          <div className='col-12 col-lg-6'>
+            <SectionCard icon='👤' title='ຂໍ້ມູນລູກຄ້າ' accent='primary'>
+              <Field label='ຊື່ລູກຄ້າ'>{customerName}</Field>
+              {customerPhone ? (
+                <Field label='ເບີໂທລູກຄ້າ'>
+                  <a href={`tel:${customerPhone}`} className='text-decoration-none'>
+                    📞 {customerPhone}
+                  </a>
+                </Field>
+              ) : isStaffBooking ? (
+                <Field label='ເບີໂທລູກຄ້າ'>
+                  <span className='text-muted'>ບໍ່ໄດ້ບັນທຶກ</span>
+                </Field>
+              ) : null}
+              {customerEmail && <Field label='ອີເມວ'>{customerEmail}</Field>}
+            </SectionCard>
 
-        <div className='card card-flush border border-dashed border-gray-300'>
-          <div className='card-body py-5 px-6'>
-            <SectionTitle icon='ki-bill' title='ສະລິບການຊຳລະ' />
-            {booking?.slip_url ? (
-              <div
-                className='rounded overflow-hidden cursor-pointer position-relative mx-auto'
-                style={{
-                  width: 300,
-                  maxWidth: '100%',
-                  height: 300,
-                  border: '2px solid var(--bs-gray-200)',
-                  transition: 'border-color .2s',
-                  background: 'var(--bs-gray-100)',
-                }}
-                onClick={() => setShowSlip(true)}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--bs-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--bs-gray-200)')}
-              >
-                <img src={booking.slip_url} alt='slip' className='w-100 h-100' style={{objectFit: 'contain'}} />
-              </div>
-            ) : (
-              <div className='d-flex flex-column align-items-center justify-content-center bg-light rounded py-8 gap-2'>
-                <i className='ki-duotone ki-bill fs-2x text-gray-400'>
-                  <span className='path1' />
-                  <span className='path2' />
-                </i>
-                <span className='text-muted fs-7 fw-semibold'>ບໍ່ມີການອັບໂຫລດສະລິບ</span>
-              </div>
+            {/* Staff-only booked-by card */}
+            {isStaffView && isStaffBooking && (
+              <SectionCard icon='🧑‍💼' title='ຈອງໂດຍພະນັກງານ' accent='warning'>
+                <Field label='ຊື່ພະນັກງານ'>{bookedBy || '-'}</Field>
+                {bookedByRole && (
+                  <Field label='ບົດບາດ'>
+                    <span className='badge badge-light-warning fw-bold text-uppercase'>
+                      {bookedByRole}
+                    </span>
+                  </Field>
+                )}
+                {bookedByEmail && <Field label='ອີເມວ'>{bookedByEmail}</Field>}
+              </SectionCard>
             )}
+
+            <SectionCard icon='⛵' title='ການຈອງ' accent='info'>
+              <Field label='ເຮືອ'>{booking.ship_name || '-'}</Field>
+              <Field label='ວັນທີ'>{formatDateDMY(booking.booking_date)}</Field>
+              <Field label='ເວລາ'>{getBookingTimeRange(booking.booking_time, totalHours)}</Field>
+              <Field label='ຈຳນວນຊົ່ວໂມງ'>{totalHours ? `${totalHours} ຊົ່ວໂມງ` : '-'}</Field>
+              <Field label='ຈຳນວນຄົນ'>
+                {booking.num_people != null ? `${booking.num_people} ຄົນ` : '-'}
+              </Field>
+              <Field label='ລາຄາ/ຊົ່ວໂມງ'>{fmt(booking.ship_price_per_hour)}</Field>
+            </SectionCard>
+          </div>
+
+          {/* Payment */}
+          <div className='col-12 col-lg-6'>
+            <SectionCard icon='💳' title='ການຊຳລະ' accent='success'>
+              <Field label='ວິທີ'>
+                <span className='me-2'>{methodIcon[booking.payment_method] ?? '💳'}</span>
+                {paymentMethodLabels[booking.payment_method] ?? booking.payment_method ?? '-'}
+              </Field>
+              <Field label='ສະຖານະການຊຳລະ'>
+                <Badge value={booking.payment_status} />
+              </Field>
+
+              <div className='separator separator-dashed my-3' />
+
+              <Field label='ຄ່າເຮືອ'>{fmt(booking.total_ship_price)}</Field>
+              <Field label='ຄ່າອາຫານ'>{fmt(booking.total_food_price)}</Field>
+
+              <div
+                className='d-flex justify-content-between align-items-center rounded mt-3 px-4 py-3'
+                style={{background: 'var(--bs-light-success)'}}
+              >
+                <span className='text-success fw-bolder fs-6'>ລວມທັງໝົດ</span>
+                <span className='text-success fw-bolder fs-3'>{fmt(booking.grand_total)}</span>
+              </div>
+            </SectionCard>
           </div>
         </div>
 
+        {/* ── Food list ── */}
+        {booking.foods && booking.foods.length > 0 && (
+          <SectionCard icon='🍽️' title={`ອາຫານ ແລະ ເຄື່ອງດື່ມ (${booking.foods.length})`} accent='warning'>
+            <div className='d-flex flex-column gap-2'>
+              {booking.foods.map((food, i) => (
+                <div
+                  key={i}
+                  className='d-flex align-items-center gap-3 rounded px-3 py-2'
+                  style={{background: 'var(--bs-gray-100)'}}
+                >
+                  {food.image ? (
+                    <img
+                      src={food.image}
+                      alt={food.name}
+                      className='rounded flex-shrink-0'
+                      style={{width: 44, height: 44, objectFit: 'cover'}}
+                    />
+                  ) : (
+                    <div
+                      className='rounded d-flex align-items-center justify-content-center flex-shrink-0'
+                      style={{width: 44, height: 44, background: 'var(--bs-gray-200)'}}
+                    >
+                      🍽️
+                    </div>
+                  )}
+                  <div className='flex-grow-1'>
+                    <div className='fw-bold text-gray-900 fs-7'>{food.name}</div>
+                    <div className='text-muted fs-8'>{fmt(food.price)} × {food.quantity}</div>
+                  </div>
+                  <span className='fw-bolder text-primary fs-7'>
+                    {fmt(food.price * food.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
 
-        {normalizedPaymentStatus === 'rejected' && booking?.reject_reason && (
-          <div className='card card-flush border border-dashed border-danger'>
-            <div className='card-body py-5 px-6'>
-              <SectionTitle icon='ki-information-5' title='ເຫດຜົນການປະຕິເສດ' />
+        {/* ── Reject reason ── */}
+        {statusKey === 'rejected' && booking.reject_reason && (
+          <div
+            className='card border-0 shadow-sm'
+            style={{borderLeft: '6px solid var(--bs-danger)', background: 'var(--bs-light-danger)'}}
+          >
+            <div className='card-body p-4'>
+              <div className='d-flex align-items-center gap-2 mb-2'>
+                <span className='fs-3'>⚠️</span>
+                <h5 className='fw-bolder text-danger mb-0'>ເຫດຜົນການປະຕິເສດ</h5>
+              </div>
               <div className='text-danger fw-semibold fs-7'>{booking.reject_reason}</div>
             </div>
           </div>
         )}
 
-        {normalizedPaymentStatus === 'payment_failed' && (
-          <div className='card card-flush border border-dashed border-danger'>
-            <div className='card-body py-5 px-6'>
-              <SectionTitle icon='ki-pencil' title='ຊຳລະອີກຄັ້ງ / ແກ້ໄຂບິນ' />
-              <div className='text-muted fs-7 mb-4'>
-                ການຊຳລະບໍ່ສຳເລັດ. ອັບໂຫຼດສະລິບໃໝ່ເພື່ອສົ່ງບິນນີ້ໃຫ້ກວດສອບອີກຄັ້ງ.
-              </div>
-              <input
-                type='file'
-                accept='image/*'
-                className='d-none'
-                ref={repayInputRef}
-                onChange={handleRepaySlipUpload}
-                disabled={isRepayLoading}
+        {/* ── Slip preview (read-only — only if exists) ── */}
+        {booking.slip_url && (
+          <SectionCard icon='🧾' title='ສະລິບການຊຳລະ' accent='info'>
+            <div className='text-center'>
+              <img
+                src={booking.slip_url}
+                alt='slip'
+                className='rounded border'
+                style={{maxWidth: 240, maxHeight: 320, objectFit: 'contain', cursor: 'zoom-in'}}
+                onClick={() => setShowSlip(true)}
               />
-              <button
-                type='button'
-                className='btn btn-light-danger'
-                onClick={() => repayInputRef.current?.click()}
-                disabled={isRepayLoading}
-              >
-                {isRepayLoading ? 'ກຳລັງອັບໂຫຼດ...' : 'ຊຳລະອີກຄັ້ງ'}
-              </button>
+              <div className='text-muted fs-8 mt-2'>ກົດທີ່ຮູບເພື່ອຂະຫຍາຍ</div>
             </div>
-          </div>
+          </SectionCard>
         )}
+
+        {/* ── Footer actions ── */}
         <div className='d-flex justify-content-end pt-2'>
           <button
             type='button'
-            className='btn btn-light btn-active-light-primary fw-bold px-8'
+            className='btn btn-primary fw-bold px-8'
             onClick={() => setItemIdForUpdate(undefined)}
           >
             ປິດ
@@ -360,7 +357,22 @@ const HistoryDetailModalForm: FC<Props> = ({booking, isLoading}) => {
       </div>
 
       {isLoading && <EmployeesListLoading />}
-      {showSlip && booking?.slip_url && <SlipLightbox url={booking.slip_url} onClose={() => setShowSlip(false)} />}
+
+      {showSlip && booking.slip_url && (
+        <div
+          className='position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center'
+          style={{zIndex: 9999, background: 'rgba(0,0,0,0.8)'}}
+          onClick={() => setShowSlip(false)}
+        >
+          <img
+            src={booking.slip_url}
+            alt='slip-full'
+            className='rounded shadow-lg'
+            style={{maxWidth: '90%', maxHeight: '90%', objectFit: 'contain'}}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   )
 }

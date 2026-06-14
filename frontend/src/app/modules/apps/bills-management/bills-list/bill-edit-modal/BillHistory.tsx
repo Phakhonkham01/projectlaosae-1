@@ -43,7 +43,7 @@ interface Bill {
   foods: FoodItem[]
   total_food_price: number
   grand_total: number
-  payment_method: 'cash' | 'transfer' | 'cash+transfer' | 'bcel'
+  payment_method: 'cash' | 'cash+transfer' | 'bcel'
   slip_url: string
   payment_status: PaymentStatus
   user_id: string
@@ -53,26 +53,20 @@ interface Bill {
   createdAt: string
 }
 
-const STATUS_META: Record<
-  PaymentStatus,
-  {label: string; badge: string; icon: string}
+const STATUS_META: Partial<
+  Record<PaymentStatus, {label: string; badge: string; icon: string}>
 > = {
-  pending: {label: 'ລໍຖ້າ', badge: 'badge-light-warning', icon: 'time'},
   approved: {label: 'ອະນຸມັດແລ້ວ', badge: 'badge-light-success', icon: 'check-circle'},
   rejected: {label: 'ປະຕິເສດແລ້ວ', badge: 'badge-light-danger', icon: 'cross-circle'},
-  slip_submitted: {label: 'ລໍຖ້າ', badge: 'badge-light-warning', icon: 'time'},
   re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', badge: 'badge-light-info', icon: 'time'},
-  'payment failed': {label: 'ຊຳລະບໍ່ສຳເລັດ', badge: 'badge-light-danger', icon: 'cross-circle'},
-  under_review_again: {label: 'ກວດສອບອີກຄັ້ງ', badge: 'badge-light-primary', icon: 'time'},
 }
 
+const STATUS_META_FALLBACK = {label: '-', badge: 'badge-light', icon: 'minus'}
+
 const DISPLAY_STATUS_OPTIONS: DisplayPaymentStatus[] = [
-  'pending',
   'approved',
   'rejected',
   're_submitted',
-  'payment failed',
-  'under_review_again',
 ]
 
 const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
@@ -106,7 +100,7 @@ const BillDetailModal: FC<{
   const [reUploadLoading, setReUploadLoading] = useState(false)
   const reUploadRef = useRef<HTMLInputElement>(null)
 
-  const meta = STATUS_META[getDisplayPaymentStatus(bill.payment_status)] ?? STATUS_META.pending
+  const meta = STATUS_META[getDisplayPaymentStatus(bill.payment_status)] ?? STATUS_META_FALLBACK
 
   const handleApprove = async () => {
     setActionLoading(true)
@@ -283,23 +277,6 @@ const BillDetailModal: FC<{
                   </span>
                 </div>
 
-                {bill.payment_method === 'transfer' && bill.slip_url && (
-                  <div>
-                    <div className='text-muted fs-7 mb-2'>ສະລິບການໂອນ</div>
-                    <a href={bill.slip_url} target='_blank' rel='noreferrer'>
-                      <img
-                        src={bill.slip_url}
-                        alt='ສະລິບ'
-                        className='rounded border'
-                        style={{maxWidth: 200, maxHeight: 280, objectFit: 'contain'}}
-                      />
-                    </a>
-                  </div>
-                )}
-
-                {bill.payment_method === 'transfer' && !bill.slip_url && (
-                  <div className='text-danger fs-7'>ຍັງບໍ່ໄດ້ອັບໂຫລດສະລິບ</div>
-                )}
               </div>
             </div>
 
@@ -467,7 +444,7 @@ const BillManagement: FC = () => {
             <option value='all'>ທຸກສະຖານະ</option>
             {DISPLAY_STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
-                {STATUS_META[s].label}
+                {STATUS_META[s]?.label ?? s}
               </option>
             ))}
           </select>
@@ -501,7 +478,7 @@ const BillManagement: FC = () => {
               </thead>
               <tbody>
                 {filtered.map((b) => {
-                  const meta = STATUS_META[getDisplayPaymentStatus(b.payment_status)] ?? STATUS_META.pending
+                  const meta = STATUS_META[getDisplayPaymentStatus(b.payment_status)] ?? STATUS_META_FALLBACK
                   return (
                     <tr key={b.id}>
                       <td>
@@ -521,7 +498,7 @@ const BillManagement: FC = () => {
                       <td className='fw-bold text-primary'>{fmt(b.grand_total)}</td>
                       <td>
                         <span
-                          className={`badge ${b.payment_method === 'transfer' || b.payment_method === 'bcel' ? 'badge-light-info' : 'badge-light-warning'}`}
+                          className={`badge ${b.payment_method === 'bcel' ? 'badge-light-info' : 'badge-light-warning'}`}
                         >
                           {getPaymentMethodLabel(b.payment_method)}
                         </span>

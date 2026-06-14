@@ -5,34 +5,40 @@ import {PAYMENT_METHOD_OPTIONS} from '../../core/bill_models'
 import {useQueryRequest} from '../../core/QueryRequestProvider'
 import {useQueryResponse} from '../../core/QueryResponseProvider'
 
-type DateRange = 'day' | 'month' | 'year'
+type DateMode = 'all' | 'day' | 'month' | 'year' | 'range'
 
 const paymentMethodLabels: Record<string, string> = {
   cash: 'ເງິນສົດ',
-  transfer: 'ໂອນເງິນ',
   'cash+transfer': 'ເງິນສົດ + ໂອນ',
   bcel: 'BCEL QR',
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+const pad2 = (n: number) => n.toString().padStart(2, '0')
+const toLocalDate = (date: Date) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+const toMonthInput = (date: Date) => `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`
 
 const UsersListFilter = () => {
   const {updateState} = useQueryRequest()
   const {isLoading} = useQueryResponse()
   const today = new Date()
-  const [activeRange, setActiveRange] = useState<DateRange>('month')
-  const [dayValue, setDayValue] = useState(today.getDate())
-  const [monthValue, setMonthValue] = useState(today.getMonth() + 1)
+
+  const [dateMode, setDateMode] = useState<DateMode>('month')
+  const [dayDate, setDayDate] = useState(toLocalDate(today))
+  const [monthDate, setMonthDate] = useState(toMonthInput(today))
   const [yearValue, setYearValue] = useState(today.getFullYear())
+  const [rangeFrom, setRangeFrom] = useState('')
+  const [rangeTo, setRangeTo] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('')
 
   useEffect(() => {
     MenuComponent.reinitialization()
+    const [yyyy, mm] = monthDate.split('-')
     updateState({
       filter: {
         dateRange: 'month',
-        dateMonth: monthValue,
-        dateYear: yearValue,
+        dateMonth: Number(mm),
+        dateYear: Number(yyyy),
       },
       ...initialQueryState,
     })
@@ -40,133 +46,237 @@ const UsersListFilter = () => {
   }, [])
 
   const applyFilter = (
-    range: DateRange = activeRange,
-    method = paymentMethod,
-    day = dayValue,
-    month = monthValue,
-    year = yearValue
+    mode: DateMode,
+    method: string,
+    day: string,
+    month: string,
+    year: number,
+    from: string,
+    to: string
   ) => {
-    updateState({
-      filter: {
-        dateRange: range,
-        dateDay: range === 'day' ? day : undefined,
-        dateMonth: range === 'day' || range === 'month' ? month : undefined,
-        dateYear: year,
-        paymentMethod: method || undefined,
-      },
-      ...initialQueryState,
-    })
+    if (mode === 'all') {
+      updateState({
+        filter: {paymentMethod: method || undefined},
+        ...initialQueryState,
+      })
+      return
+    }
+
+    if (mode === 'range') {
+      updateState({
+        filter: {
+          bookingDateFrom: from || undefined,
+          bookingDateTo: to || undefined,
+          paymentMethod: method || undefined,
+        },
+        ...initialQueryState,
+      })
+      return
+    }
+
+    if (mode === 'day') {
+      const [yy, mm, dd] = day.split('-').map(Number)
+      updateState({
+        filter: {
+          dateRange: 'day',
+          dateDay: dd,
+          dateMonth: mm,
+          dateYear: yy,
+          paymentMethod: method || undefined,
+        },
+        ...initialQueryState,
+      })
+      return
+    }
+
+    if (mode === 'month') {
+      const [yy, mm] = month.split('-').map(Number)
+      updateState({
+        filter: {
+          dateRange: 'month',
+          dateMonth: mm,
+          dateYear: yy,
+          paymentMethod: method || undefined,
+        },
+        ...initialQueryState,
+      })
+      return
+    }
+
+    if (mode === 'year') {
+      updateState({
+        filter: {
+          dateRange: 'year',
+          dateYear: year,
+          paymentMethod: method || undefined,
+        },
+        ...initialQueryState,
+      })
+    }
+  }
+
+  const apply = (overrides: Partial<{
+    mode: DateMode
+    method: string
+    day: string
+    month: string
+    year: number
+    from: string
+    to: string
+  }> = {}) => {
+    applyFilter(
+      overrides.mode ?? dateMode,
+      overrides.method ?? paymentMethod,
+      overrides.day ?? dayDate,
+      overrides.month ?? monthDate,
+      overrides.year ?? yearValue,
+      overrides.from ?? rangeFrom,
+      overrides.to ?? rangeTo
+    )
   }
 
   const resetData = () => {
     const now = new Date()
-    const nextDay = now.getDate()
-    const nextMonth = now.getMonth() + 1
-    const nextYear = now.getFullYear()
-
-    setActiveRange('month')
-    setDayValue(nextDay)
-    setMonthValue(nextMonth)
-    setYearValue(nextYear)
+    setDateMode('month')
+    setDayDate(toLocalDate(now))
+    setMonthDate(toMonthInput(now))
+    setYearValue(now.getFullYear())
+    setRangeFrom('')
+    setRangeTo('')
     setPaymentMethod('')
     updateState({filter: undefined, ...initialQueryState})
   }
 
-  const selectRange = (range: DateRange) => {
-    setActiveRange(range)
-    applyFilter(range)
+  const setQuickToday = () => {
+    const t = toLocalDate(new Date())
+    setDateMode('day')
+    setDayDate(t)
+    apply({mode: 'day', day: t})
   }
 
-  const updateDay = (value: number) => {
-    const next = clamp(value, 1, 31)
-    setDayValue(next)
-    setActiveRange('day')
-    applyFilter('day', paymentMethod, next, monthValue, yearValue)
+  const setQuickThisMonth = () => {
+    const m = toMonthInput(new Date())
+    setDateMode('month')
+    setMonthDate(m)
+    apply({mode: 'month', month: m})
   }
 
-  const updateMonth = (value: number) => {
-    const next = clamp(value, 1, 12)
-    setMonthValue(next)
-    setActiveRange('month')
-    applyFilter('month', paymentMethod, dayValue, next, yearValue)
+  const setQuickThisYear = () => {
+    const y = new Date().getFullYear()
+    setDateMode('year')
+    setYearValue(y)
+    apply({mode: 'year', year: y})
   }
 
-  const updateYear = (value: number) => {
-    const next = Math.max(1900, value)
-    setYearValue(next)
-    setActiveRange('year')
-    applyFilter('year', paymentMethod, dayValue, monthValue, next)
+  const setQuickAll = () => {
+    setDateMode('all')
+    apply({mode: 'all'})
   }
 
-  const stepButtonClass = 'btn btn-light btn-sm px-3'
-  const inputClass = 'form-control form-control-sm text-center mw-75px'
+  const modeButton = (mode: DateMode, label: string) => (
+    <button
+      type='button'
+      className={`btn btn-sm ${dateMode === mode ? 'btn-primary text-white' : 'btn-light'}`}
+      onClick={() => {
+        setDateMode(mode)
+        apply({mode})
+      }}
+    >
+      {label}
+    </button>
+  )
 
   return (
     <>
       <div className='d-flex align-items-center flex-wrap gap-2 mb-3'>
-        <button
-          type='button'
-          className={`btn btn-sm ${activeRange === 'day' ? 'btn-primary text-white' : 'btn-light'}`}
-          onClick={() => selectRange('day')}
-        >
-          ວັນ
-        </button>
-        <button type='button' className={stepButtonClass} onClick={() => updateDay(dayValue - 1)}>
-          -
-        </button>
-        <input
-          type='number'
-          min={1}
-          max={31}
-          className={inputClass}
-          value={dayValue}
-          onChange={(e) => updateDay(Number(e.target.value) || 1)}
-        />
-        <button type='button' className={stepButtonClass} onClick={() => updateDay(dayValue + 1)}>
-          +
-        </button>
+        {/* Mode tabs */}
+        <div className='btn-group btn-group-sm' role='group'>
+          {modeButton('day', 'ວັນ')}
+          {modeButton('month', 'ເດືອນ')}
+          {modeButton('year', 'ປີ')}
+          {modeButton('range', 'ຊ່ວງ')}
+          {modeButton('all', 'ທັງໝົດ')}
+        </div>
 
-        <button
-          type='button'
-          className={`btn btn-sm ms-2 ${activeRange === 'month' ? 'btn-primary text-white' : 'btn-light'}`}
-          onClick={() => selectRange('month')}
-        >
-          ເດືອນ
-        </button>
-        <button type='button' className={stepButtonClass} onClick={() => updateMonth(monthValue - 1)}>
-          -
-        </button>
-        <input
-          type='number'
-          min={1}
-          max={12}
-          className={inputClass}
-          value={monthValue}
-          onChange={(e) => updateMonth(Number(e.target.value) || 1)}
-        />
-        <button type='button' className={stepButtonClass} onClick={() => updateMonth(monthValue + 1)}>
-          +
-        </button>
+        {/* Selected mode input */}
+        {dateMode === 'day' && (
+          <input
+            type='date'
+            className='form-control form-control-sm ms-2'
+            style={{width: 170}}
+            value={dayDate}
+            onChange={(e) => {
+              setDayDate(e.target.value)
+              if (e.target.value) apply({mode: 'day', day: e.target.value})
+            }}
+          />
+        )}
+        {dateMode === 'month' && (
+          <input
+            type='month'
+            className='form-control form-control-sm ms-2'
+            style={{width: 160}}
+            value={monthDate}
+            onChange={(e) => {
+              setMonthDate(e.target.value)
+              if (e.target.value) apply({mode: 'month', month: e.target.value})
+            }}
+          />
+        )}
+        {dateMode === 'year' && (
+          <input
+            type='number'
+            min={1900}
+            max={2100}
+            className='form-control form-control-sm ms-2 text-center'
+            style={{width: 110}}
+            value={yearValue}
+            onChange={(e) => {
+              const next = Number(e.target.value) || today.getFullYear()
+              setYearValue(next)
+              apply({mode: 'year', year: next})
+            }}
+          />
+        )}
+        {dateMode === 'range' && (
+          <div className='d-flex align-items-center gap-1 ms-2'>
+            <input
+              type='date'
+              className='form-control form-control-sm'
+              style={{width: 165}}
+              value={rangeFrom}
+              onChange={(e) => {
+                setRangeFrom(e.target.value)
+                apply({mode: 'range', from: e.target.value})
+              }}
+            />
+            <span className='text-muted px-1'>→</span>
+            <input
+              type='date'
+              className='form-control form-control-sm'
+              style={{width: 165}}
+              value={rangeTo}
+              onChange={(e) => {
+                setRangeTo(e.target.value)
+                apply({mode: 'range', to: e.target.value})
+              }}
+            />
+          </div>
+        )}
 
-        <button
-          type='button'
-          className={`btn btn-sm ms-2 ${activeRange === 'year' ? 'btn-primary text-white' : 'btn-light'}`}
-          onClick={() => selectRange('year')}
-        >
-          ປີ
+        {/* Quick actions */}
+        <div className='vr mx-2 d-none d-md-block' />
+        <button type='button' className='btn btn-sm btn-light-primary' onClick={setQuickToday}>
+          ມື້ນີ້
         </button>
-        <button type='button' className={stepButtonClass} onClick={() => updateYear(yearValue - 1)}>
-          -
+        <button type='button' className='btn btn-sm btn-light-primary' onClick={setQuickThisMonth}>
+          ເດືອນນີ້
         </button>
-        <input
-          type='number'
-          min={1900}
-          className={inputClass}
-          value={yearValue}
-          onChange={(e) => updateYear(Number(e.target.value) || today.getFullYear())}
-        />
-        <button type='button' className={stepButtonClass} onClick={() => updateYear(yearValue + 1)}>
-          +
+        <button type='button' className='btn btn-sm btn-light-primary' onClick={setQuickThisYear}>
+          ປີນີ້
+        </button>
+        <button type='button' className='btn btn-sm btn-light' onClick={setQuickAll}>
+          ທັງໝົດ
         </button>
       </div>
 
@@ -185,7 +295,7 @@ const UsersListFilter = () => {
               value={paymentMethod}
               onChange={(e) => {
                 setPaymentMethod(e.target.value)
-                applyFilter(activeRange, e.target.value)
+                apply({method: e.target.value})
               }}
             >
               <option value=''>ທຸກວິທີ</option>

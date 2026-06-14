@@ -4,9 +4,8 @@ import { useQueryResponse } from '../core/QueryResponseProvider'
 import { ShipData } from '../core/ship_models'
 import { KTIcon } from '../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
-import { collection, addDoc, doc, getDoc, getDocs } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../../../../../../../../firebase/useFirebase'
+import { collection, addDoc, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore'
+import { db } from '../../../../../../../../firebase/useFirebase'
 import { io } from 'socket.io-client'
 import QRCode from 'qrcode'
 
@@ -35,6 +34,11 @@ interface Product {
   category_id: string
 }
 
+interface Category {
+  category_id: string
+  name: string
+}
+
 interface SelectedFood {
   product_id: string
   name: string
@@ -54,10 +58,15 @@ interface SavedBill {
   foods: SelectedFood[]
   total_food_price: number
   grand_total: number
-  payment_method: 'cash' | 'transfer' | 'cash+transfer' | 'bcel'
+  payment_method: 'cash' | 'cash+transfer' | 'bcel'
   payment_status: 'pending' | 'slip_submitted' | 'approved'
   user_name: string
   user_email: string
+  customer_name?: string
+  customer_phone?: string
+  booked_by_name?: string
+  booked_by_email?: string
+  booked_by_role?: string
 }
 
 type BookingPaymentStatus = SavedBill['payment_status']
@@ -88,6 +97,13 @@ const pad2 = (value: number) => value.toString().padStart(2, '0')
 
 const getLocalDateString = (date: Date) =>
   `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+
+const formatDateDMY = (iso: string) => {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-')
+  if (!y || !m || !d) return iso
+  return `${d}/${m}/${y}`
+}
 
 const timeStringToMinutes = (value: string) => {
   const [hours, minutes] = value.split(':').map(Number)
@@ -141,10 +157,10 @@ const downloadReceiptPng = (bill: SavedBill) => {
   ctx.fillText(`Receipt ID: ${bill.id.slice(0, 8).toUpperCase()}`, 90, 142)
   ctx.fillText(
     `Payment: ${
-      bill.payment_method === 'transfer'
-        ? 'Transfer'
-        : bill.payment_method === 'bcel'
+      bill.payment_method === 'bcel'
         ? 'BCEL QR'
+        : bill.payment_method === 'cash+transfer'
+        ? 'Cash + BCEL'
         : 'Cash'
     }`,
     730,
@@ -165,10 +181,10 @@ const downloadReceiptPng = (bill: SavedBill) => {
   drawRow('Customer', bill.user_name || '-')
   drawRow('Email', bill.user_email || '-')
   drawRow('Ship', bill.ship_name || '-')
-  drawRow('Booking Date', `${bill.booking_date} ${bill.booking_time}`.trim())
+  drawRow('Booking Date', `${formatDateDMY(bill.booking_date)} ${bill.booking_time}`.trim())
   drawRow('People', `${bill.num_people} people`)
   drawRow('Hours', `${bill.num_hours} hour(s)`)
-  drawRow('Status', bill.payment_status === 'slip_submitted' ? 'Paid by transfer' : 'Booked')
+  drawRow('Status', bill.payment_status === 'approved' ? 'Paid' : 'Booked')
 
   y += 12
   ctx.beginPath()
@@ -242,7 +258,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   const [shipData, setShipData] = useState<ShipData | null>(null)
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [customerNameInput, setCustomerNameInput] = useState('')
+  const [customerPhoneInput, setCustomerPhoneInput] = useState('')
   const [currentTime, setCurrentTime] = useState(() => new Date())
   const customerName = currentUser?.user_name ?? user?.user_name
   const customerEmail = currentUser?.user_email ?? user?.user_email
@@ -273,21 +292,18 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
   // ─── Step 2 state ──────────────────────────────────────────────────────────
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([])
+  const [activeFoodCategory, setActiveFoodCategory] = useState<string>('')
 
   // ─── Step 4 state ──────────────────────────────────────────────────────────
   const isStaff = customerRole === 'employee' || customerRole === 'owner'
   const [paymentMethod, setPaymentMethod] = useState<
-    'cash' | 'transfer' | 'cash+transfer' | 'bcel'
-  >('cash')
+    'cash' | 'cash+transfer' | 'bcel'
+  >('bcel')
   const [cashAmount, setCashAmount] = useState<number>(0)
   const [transferAmount, setTransferAmount] = useState<number>(0)
-  const [slipUrl, setSlipUrl] = useState('')
-  const [slipUploading, setSlipUploading] = useState(false)
-  const slipInputRef = useRef<HTMLInputElement>(null)
   const [savedBill, setSavedBill] = useState<SavedBill | null>(null)
 
   // ─── BCEL state ────────────────────────────────────────────────────────────
-  const BCEL_COUNTDOWN_SECONDS = 90
   const [bcelQrDataUrl, setBcelQrDataUrl] = useState<string>('')
   const [bcelStatus, setBcelStatus] = useState<
     'idle' | 'loading' | 'waiting' | 'paid' | 'error'
@@ -327,6 +343,15 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       .then((snap) => {
         const data = snap.docs.map((d) => ({ product_id: d.id, ...d.data() } as Product))
         setProducts(data.filter((p) => p.availability))
+      })
+      .catch(console.error)
+  }, [])
+
+  // ─── Load categories ───────────────────────────────────────────────────────
+  useEffect(() => {
+    getDocs(collection(db, 'categories'))
+      .then((snap) => {
+        setCategories(snap.docs.map((d) => ({ category_id: d.id, ...d.data() } as Category)))
       })
       .catch(console.error)
   }, [])
@@ -378,8 +403,9 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       earliestTodayBookingMinutes > SAME_DAY_LAST_BOOKING_MINUTES)
 
   // ─── BCEL computed ─────────────────────────────────────────────────────────
-  const bcelAmountUsd = Math.min(Math.round(grandTotal / LAK_PER_USD), BCEL_MAX_USD)
-  const bcelAmountCapped = grandTotal / LAK_PER_USD > BCEL_MAX_USD
+  const bcelTargetLak = paymentMethod === 'cash+transfer' ? transferAmount : grandTotal
+  const bcelAmountUsd = Math.min(Math.round(bcelTargetLak / LAK_PER_USD), BCEL_MAX_USD)
+  const bcelAmountCapped = bcelTargetLak / LAK_PER_USD > BCEL_MAX_USD
 
   // ─── Download receipt ──────────────────────────────────────────────────────
   const handleDownloadSavedBill = () => {
@@ -415,30 +441,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     if (!bookingTime || maxBookableHours < 1) return
     if (numHours > maxBookableHours) setNumHours(maxBookableHours)
   }, [bookingTime, maxBookableHours, numHours])
-
-  // ─── Upload transfer slip ──────────────────────────────────────────────────
-  const handleSlipUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      Swal.fire({ icon: 'error', title: 'ຜິດພາດ', text: 'ກະລຸນາອັບໂຫຼດໄຟລ໌ຮູບພາບ' })
-      return
-    }
-    setSlipUploading(true)
-    try {
-      const storageRef = ref(storage, `slips/${Date.now()}_${file.name}`)
-      await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(storageRef)
-      setSlipUrl(url)
-      Swal.fire({ icon: 'success', title: 'ອັບໂຫຼດສະລິບແລ້ວ', timer: 1200, showConfirmButton: false })
-    } catch (err) {
-      console.error(err)
-      Swal.fire({ icon: 'error', title: 'ອັບໂຫຼດບໍ່ສຳເລັດ', text: 'ກະລຸນາລອງໃໝ່' })
-    } finally {
-      setSlipUploading(false)
-      if (slipInputRef.current) slipInputRef.current.value = ''
-    }
-  }
 
   // ─── BCEL QR Pay ───────────────────────────────────────────────────────────
   const handleBcelPay = async () => {
@@ -555,6 +557,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         errs.time = `For today, booking time must be ${minutesToTimeString(SAME_DAY_LAST_BOOKING_MINUTES)} or earlier`
       }
     }
+    if (isStaff) {
+      if (!customerNameInput.trim()) errs.customer_name = 'ກະລຸນາໃສ່ຊື່ລູກຄ້າ'
+      if (!customerPhoneInput.trim()) errs.customer_phone = 'ກະລຸນາໃສ່ເບີໂທລູກຄ້າ'
+    }
     if (numPeople < 1) errs.people = 'ຕ້ອງມີຢ່າງໜ້ອຍ 1 ຄົນ'
     if (shipData && numPeople > shipData.capacity)
       errs.people = `ເກີນຄວາມຈຸຂອງເຮືອ (ສູງສຸດ ${shipData.capacity})`
@@ -599,10 +605,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   // ─── Navigation ────────────────────────────────────────────────────────────
   const nextStep = () => {
     if (currentStep === 1 && !validateStep1()) return
-    if (currentStep === 4 && paymentMethod === 'transfer' && !slipUrl && !isStaff) {
-      Swal.fire({ icon: 'warning', title: 'ຍັງບໍ່ໄດ້ອັບໂຫຼດສະລິບ', text: 'ກະລຸນາອັບໂຫຼດສະລິບໂອນເງິນກ່ອນຢືນຢັນ' })
-      return
-    }
     if (currentStep === 4 && isStaff && paymentMethod === 'cash+transfer') {
       if (cashAmount < 0 || transferAmount < 0) {
         Swal.fire({ icon: 'warning', title: 'ຜິດພາດ', text: 'ຈຳນວນເງິນຕ້ອງບໍ່ຕ່ຳກວ່າ 0' })
@@ -629,11 +631,9 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
     try {
       const paymentStatus: BookingPaymentStatus = isStaff
         ? 'approved'
-        : paymentMethod === 'cash'
-        ? 'pending'
         : paymentMethod === 'bcel'
         ? 'approved'
-        : 'slip_submitted'
+        : 'pending'
 
       const bookingPayload = {
         ship_id: itemIdForUpdate,
@@ -648,7 +648,6 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         total_food_price: totalFoodPrice,
         grand_total: grandTotal,
         payment_method: paymentMethod,
-        slip_url: paymentMethod === 'transfer' ? slipUrl : '',
         payment_status: paymentStatus,
         cash_amount:
           paymentMethod === 'cash+transfer'
@@ -657,22 +656,40 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             ? grandTotal
             : 0,
         transfer_amount:
-          paymentMethod === 'cash+transfer'
-            ? transferAmount
-            : paymentMethod === 'transfer'
-            ? grandTotal
+          paymentMethod === 'cash+transfer' ? transferAmount : 0,
+        bcel_amount_usd:
+          paymentMethod === 'bcel' || paymentMethod === 'cash+transfer'
+            ? bcelAmountUsd
             : 0,
-        bcel_amount_usd: paymentMethod === 'bcel' ? bcelAmountUsd : 0,
         // ─── Customer info ───
         user_id: currentUser?._id ?? '',
-        user_name: currentUser?.user_name ?? '',
+        user_name: isStaff ? customerNameInput.trim() : currentUser?.user_name ?? '',
         user_email: currentUser?.user_email ?? '',
+        customer_name: isStaff ? customerNameInput.trim() : '',
+        customer_phone: isStaff ? customerPhoneInput.trim() : '',
+        booked_by_name: isStaff ? currentUser?.user_name ?? '' : '',
+        booked_by_email: isStaff ? currentUser?.user_email ?? '' : '',
+        booked_by_role: isStaff ? currentUser?.role ?? '' : '',
         status: isStaff || paymentMethod === 'bcel' ? 'approved' : 'pending',
         createdAt: new Date().toISOString(),
       }
 
       const billRef = await addDoc(collection(db, 'bill'), bookingPayload)
       await addDoc(collection(db, 'history_booking'), bookingPayload)
+
+      // ─── Decrement ship quantity on successful payment ───
+      const paymentSucceeded =
+        paymentStatus === 'approved' || paymentMethod === 'bcel' || isStaff
+      if (paymentSucceeded && itemIdForUpdate && (shipData?.quantity ?? 0) > 0) {
+        try {
+          await updateDoc(doc(db, 'ships', itemIdForUpdate), {
+            quantity: increment(-1),
+            updatedAt: new Date().toISOString(),
+          })
+        } catch (err) {
+          console.error('Failed to decrement ship quantity:', err)
+        }
+      }
 
       Swal.fire({
         icon: 'success',
@@ -697,6 +714,11 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         payment_status: bookingPayload.payment_status,
         user_name: bookingPayload.user_name,
         user_email: bookingPayload.user_email,
+        customer_name: bookingPayload.customer_name,
+        customer_phone: bookingPayload.customer_phone,
+        booked_by_name: bookingPayload.booked_by_name,
+        booked_by_email: bookingPayload.booked_by_email,
+        booked_by_role: bookingPayload.booked_by_role,
       })
       refetch()
     } catch (error) {
@@ -710,14 +732,14 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   // Keep ref always pointing to latest handleSave (fixes stale closure in socket)
   handleSaveRef.current = handleSave
 
-  // ─── Auto-save when BCEL confirms payment ──────────────────────────────────
+  // ─── Auto-save when BCEL confirms payment (pure BCEL only) ─────────────────
   useEffect(() => {
-    if (bcelStatus === 'paid') {
+    if (bcelStatus === 'paid' && paymentMethod === 'bcel') {
       handleSaveRef.current()
     }
-  }, [bcelStatus])
+  }, [bcelStatus, paymentMethod])
 
-  // ─── Reset BCEL QR if grand total changes while QR is showing ─────────────
+  // ─── Reset BCEL QR if target amount changes while QR is showing ─────────────
   useEffect(() => {
     if (bcelStatus === 'waiting') {
       bcelSocketRef.current?.disconnect()
@@ -728,7 +750,130 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
       setBcelCountdown(90)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [grandTotal])
+  }, [bcelTargetLak])
+
+  // ─── BCEL panel renderer (reused by 'bcel' and 'cash+transfer') ────────────
+  const renderBcelPanel = (title: string) => (
+    <div className='text-center'>
+      <div className='p-4 rounded bg-light-primary mb-5'>
+        <div className='fs-6 fw-bold mb-1'>🏦 {title}</div>
+        <div className='text-muted fs-7 mt-1'>
+          ຍອດ:{' '}
+          <strong className='text-primary'>{bcelTargetLak.toLocaleString()} LAK</strong>{' '}
+          ≈ <strong className='text-success'>{bcelAmountUsd} USD</strong>
+          {bcelAmountCapped && (
+            <span className='text-warning ms-1'>(ຈຳກັດ {BCEL_MAX_USD} USD test key)</span>
+          )}
+        </div>
+        <div className='text-muted fs-8 mt-1'>
+          ອັດຕາແລກປ່ຽນ: 1 USD = {LAK_PER_USD.toLocaleString()} LAK
+        </div>
+      </div>
+
+      {bcelStatus === 'idle' && (
+        <button
+          type='button'
+          className='btn btn-primary btn-lg'
+          onClick={handleBcelPay}
+          disabled={bcelTargetLak < LAK_PER_USD}
+        >
+          <KTIcon iconName='scan-barcode' className='fs-3 me-2' />
+          ສ້າງ QR ເພື່ອຊຳລະ
+        </button>
+      )}
+
+      {bcelStatus === 'loading' && (
+        <div className='py-6'>
+          <span className='spinner-border text-primary mb-3' />
+          <div className='text-muted fs-7 mt-2'>ກຳລັງສ້າງ QR Code...</div>
+        </div>
+      )}
+
+      {bcelStatus === 'waiting' && bcelQrDataUrl && (
+        <div>
+          <img
+            src={bcelQrDataUrl}
+            alt='BCEL QR Code'
+            className='rounded border border-2 border-primary mb-3'
+            style={{ width: 240, height: 240 }}
+          />
+          <div className='d-flex flex-column align-items-center mb-4'>
+            <div
+              className='position-relative d-flex align-items-center justify-content-center mb-2'
+              style={{ width: 72, height: 72 }}
+            >
+              <svg
+                width='72'
+                height='72'
+                style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}
+              >
+                <circle cx='36' cy='36' r='30' fill='none' stroke='#e9ecef' strokeWidth='6' />
+                <circle
+                  cx='36'
+                  cy='36'
+                  r='30'
+                  fill='none'
+                  stroke={bcelCountdown > 30 ? '#0d6efd' : bcelCountdown > 10 ? '#ffc107' : '#dc3545'}
+                  strokeWidth='6'
+                  strokeDasharray={`${2 * Math.PI * 30}`}
+                  strokeDashoffset={`${2 * Math.PI * 30 * (1 - bcelCountdown / 90)}`}
+                  style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
+                />
+              </svg>
+              <span
+                className='fw-bolder fs-5'
+                style={{
+                  color: bcelCountdown > 30 ? '#0d6efd' : bcelCountdown > 10 ? '#ffc107' : '#dc3545',
+                }}
+              >
+                {`${Math.floor(bcelCountdown / 60)}:${String(bcelCountdown % 60).padStart(2, '0')}`}
+              </span>
+            </div>
+            <div className='d-flex align-items-center gap-2 text-warning fw-bold fs-7'>
+              <span className='spinner-border spinner-border-sm' />
+              ລໍຖ້າການຊຳລະ...
+            </div>
+            <div className='text-muted fs-8 mt-1'>
+              QR ໝົດອາຍຸໃນ {`${Math.floor(bcelCountdown / 60)}:${String(bcelCountdown % 60).padStart(2, '0')}`} ນາທີ
+            </div>
+          </div>
+          <button type='button' className='btn btn-sm btn-light' onClick={resetBcel}>
+            ສ້າງ QR ໃໝ່
+          </button>
+        </div>
+      )}
+
+      {bcelStatus === 'paid' && (
+        <div className='py-4'>
+          <div className='text-success fw-bolder fs-3 mb-3'>
+            <KTIcon iconName='check-circle' className='fs-1 text-success me-2' />
+            ຊຳລະສຳເລັດ!
+          </div>
+          <div className='badge badge-light-success fs-6 px-4 py-2 mb-3'>
+            ✅ BCEL ຢືນຢັນການຊຳລະແລ້ວ
+          </div>
+          {paymentMethod === 'bcel' ? (
+            <div className='d-flex align-items-center justify-content-center gap-2 text-muted fs-7 mt-2'>
+              <span className='spinner-border spinner-border-sm text-primary' />
+              ກຳລັງບັນທຶກການຈອງ...
+            </div>
+          ) : (
+            <div className='text-muted fs-7 mt-2'>ກົດ ຢືນຢັນການຈອງ ເພື່ອບັນທຶກ.</div>
+          )}
+        </div>
+      )}
+
+      {bcelStatus === 'error' && (
+        <div className='alert alert-danger py-3 text-start'>
+          <div className='fw-bold mb-1'>ເກີດຂໍ້ຜິດພາດ</div>
+          <div className='fs-7'>{bcelErrorMsg}</div>
+          <button type='button' className='btn btn-sm btn-light-danger mt-2' onClick={resetBcel}>
+            ລອງໃໝ່
+          </button>
+        </div>
+      )}
+    </div>
+  )
 
   // ─── Loading skeleton ──────────────────────────────────────────────────────
   if (loading && !shipData) {
@@ -787,14 +932,15 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 </div>
                 <div className='text-end'>
                   <div className='badge badge-light-success fs-7 mb-2'>
-                    {savedBill.payment_method === 'transfer'
-                      ? 'Transfer Paid'
-                      : savedBill.payment_method === 'bcel'
+                    {savedBill.payment_method === 'bcel'
                       ? 'BCEL QR Paid'
+                      : savedBill.payment_method === 'cash+transfer'
+                      ? 'Cash + BCEL Paid'
                       : 'Booked'}
                   </div>
                   <div className='text-muted fs-8'>
-                    {savedBill.payment_method === 'transfer' || savedBill.payment_method === 'bcel'
+                    {savedBill.payment_method === 'bcel' ||
+                    savedBill.payment_method === 'cash+transfer'
                       ? 'ຊຳລະແລ້ວ'
                       : 'ລໍຊຳລະຫນ້າງານ'}
                   </div>
@@ -804,14 +950,24 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               <div className='row g-8 mb-8'>
                 <div className='col-md-6'>
                   <div className='text-muted fs-8 text-uppercase mb-2'>Customer</div>
-                  <div className='fw-bold fs-5'>{savedBill.user_name || '-'}</div>
-                  <div className='text-gray-600'>{savedBill.user_email || '-'}</div>
+                  <div className='fw-bold fs-5'>
+                    {savedBill.customer_name || savedBill.user_name || '-'}
+                  </div>
+                  <div className='text-gray-600'>
+                    {savedBill.customer_phone || savedBill.user_email || '-'}
+                  </div>
+                  {savedBill.booked_by_name && (
+                    <div className='text-muted fs-8 mt-2'>
+                      ຈອງໂດຍ: <strong>{savedBill.booked_by_name}</strong>
+                      {savedBill.booked_by_role ? ` (${savedBill.booked_by_role})` : ''}
+                    </div>
+                  )}
                 </div>
                 <div className='col-md-6'>
                   <div className='text-muted fs-8 text-uppercase mb-2'>Trip</div>
                   <div className='fw-bold fs-5'>{savedBill.ship_name}</div>
                   <div className='text-gray-600'>
-                    {savedBill.booking_date} {savedBill.booking_time}
+                    {formatDateDMY(savedBill.booking_date)} {savedBill.booking_time}
                   </div>
                   <div className='text-muted fs-8 mt-1'>
                     {savedBill.num_people} ຄົນ • {savedBill.num_hours} ຊົ່ວໂມງ
@@ -968,6 +1124,48 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 {isUserLoading ? 'ກຳລັງໂຫຼດ...' : customerRole ?? '-'}
               </span>
             </div>
+
+            {/* Staff: enter customer info */}
+            {isStaff && (
+              <div className='p-4 rounded bg-light-warning mb-5 border-start border-4 border-warning'>
+                <div className='fw-bold fs-6 mb-3 text-warning'>
+                  ຂໍ້ມູນລູກຄ້າ (ພະນັກງານ/ເຈົ້າຂອງຈອງໃຫ້)
+                </div>
+                <div className='row g-3'>
+                  <div className='col-md-6'>
+                    <label className='required fw-bold fs-7 mb-2'>ຊື່ລູກຄ້າ</label>
+                    <input
+                      type='text'
+                      className={`form-control form-control-solid ${errors.customer_name ? 'is-invalid' : ''}`}
+                      value={customerNameInput}
+                      onChange={(e) => {
+                        setCustomerNameInput(e.target.value)
+                        setErrors((p) => { const n = { ...p }; delete n.customer_name; return n })
+                      }}
+                      placeholder='ຊື່ລູກຄ້າ'
+                    />
+                    {errors.customer_name && <div className='invalid-feedback d-block'>{errors.customer_name}</div>}
+                  </div>
+                  <div className='col-md-6'>
+                    <label className='required fw-bold fs-7 mb-2'>ເບີໂທລູກຄ້າ</label>
+                    <input
+                      type='tel'
+                      className={`form-control form-control-solid ${errors.customer_phone ? 'is-invalid' : ''}`}
+                      value={customerPhoneInput}
+                      onChange={(e) => {
+                        setCustomerPhoneInput(e.target.value)
+                        setErrors((p) => { const n = { ...p }; delete n.customer_phone; return n })
+                      }}
+                      placeholder='020 xxxxxxxx'
+                    />
+                    {errors.customer_phone && <div className='invalid-feedback d-block'>{errors.customer_phone}</div>}
+                  </div>
+                </div>
+                <div className='text-muted fs-8 mt-2'>
+                  ບິນຈະບັນທຶກຊື່/ເບີຂອງພະນັກງານທີ່ຈອງໃຫ້: <strong>{customerName ?? '-'}</strong>
+                </div>
+              </div>
+            )}
 
             {/* Ship info banner */}
             <div className='d-flex align-items-center p-4 rounded bg-light-primary mb-6'>
@@ -1146,56 +1344,103 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 ບໍ່ມີສິນຄ້າ
               </div>
             ) : (
-              <div className='row g-3'>
-                {products.map((product) => {
-                  const qty = getFoodQty(product.product_id)
-                  return (
-                    <div key={product.product_id} className='col-6 col-xl-4'>
-                      <div className={`card h-100 ${qty > 0 ? 'border border-primary' : ''}`}>
-                        <div className='card-body p-3 d-flex flex-column'>
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className='rounded mb-2 w-100'
-                              style={{ height: 75, objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <div
-                              className='rounded mb-2 bg-light d-flex align-items-center justify-content-center'
-                              style={{ height: 75 }}
-                            >
-                              <i className='bi bi-image text-muted fs-3' />
+              (() => {
+                const tabs = categories
+                  .map((c) => ({
+                    id: c.category_id,
+                    name: c.name,
+                    count: products.filter((p) => p.category_id === c.category_id).length,
+                  }))
+                  .filter((t) => t.count > 0)
+                const usedIds = new Set(categories.map((c) => c.category_id))
+                const uncatCount = products.filter((p) => !usedIds.has(p.category_id)).length
+                if (uncatCount > 0) {
+                  tabs.push({ id: '__uncat__', name: 'ອື່ນໆ', count: uncatCount })
+                }
+                const activeId =
+                  activeFoodCategory && tabs.some((t) => t.id === activeFoodCategory)
+                    ? activeFoodCategory
+                    : tabs[0]?.id ?? ''
+                const visibleProducts = products.filter((p) =>
+                  activeId === '__uncat__' ? !usedIds.has(p.category_id) : p.category_id === activeId
+                )
+                return (
+                  <div>
+                    {/* Category Tabs */}
+                    <ul className='nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 flex-nowrap overflow-auto'>
+                      {tabs.map((t) => (
+                        <li key={t.id} className='nav-item'>
+                          <button
+                            type='button'
+                            className={`nav-link fw-bold ${activeId === t.id ? 'active text-primary' : 'text-muted'}`}
+                            onClick={() => setActiveFoodCategory(t.id)}
+                            style={{ whiteSpace: 'nowrap' }}
+                          >
+                            {t.name}
+                            <span className='badge badge-light-primary ms-2'>{t.count}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* Product Grid for active tab */}
+                    {visibleProducts.length === 0 ? (
+                      <div className='text-center text-muted py-8'>ບໍ່ມີສິນຄ້າໃນໝວດນີ້</div>
+                    ) : (
+                      <div className='row g-3'>
+                        {visibleProducts.map((product) => {
+                          const qty = getFoodQty(product.product_id)
+                          return (
+                            <div key={product.product_id} className='col-6 col-xl-4'>
+                              <div className={`card h-100 ${qty > 0 ? 'border border-primary' : ''}`}>
+                                <div className='card-body p-3 d-flex flex-column'>
+                                  {product.image ? (
+                                    <img
+                                      src={product.image}
+                                      alt={product.name}
+                                      className='rounded mb-2 w-100'
+                                      style={{ height: 75, objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <div
+                                      className='rounded mb-2 bg-light d-flex align-items-center justify-content-center'
+                                      style={{ height: 75 }}
+                                    >
+                                      <i className='bi bi-image text-muted fs-3' />
+                                    </div>
+                                  )}
+                                  <div className='fw-bold fs-7 mb-1 flex-grow-1'>{product.name}</div>
+                                  <div className='text-primary fw-semibold fs-8 mb-2'>
+                                    {product.price.toLocaleString()} LAK
+                                  </div>
+                                  <div className='d-flex align-items-center justify-content-between'>
+                                    <button
+                                      type='button'
+                                      className='btn btn-sm btn-icon btn-light-danger w-25px h-25px'
+                                      onClick={() => handleFoodQuantity(product, Math.max(0, qty - 1))}
+                                      disabled={qty === 0}
+                                    >
+                                      −
+                                    </button>
+                                    <span className='fw-bolder mx-2'>{qty}</span>
+                                    <button
+                                      type='button'
+                                      className='btn btn-sm btn-icon btn-light-primary w-25px h-25px'
+                                      onClick={() => handleFoodQuantity(product, qty + 1)}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          )}
-                          <div className='fw-bold fs-7 mb-1 flex-grow-1'>{product.name}</div>
-                          <div className='text-primary fw-semibold fs-8 mb-2'>
-                            {product.price.toLocaleString()} LAK
-                          </div>
-                          <div className='d-flex align-items-center justify-content-between'>
-                            <button
-                              type='button'
-                              className='btn btn-sm btn-icon btn-light-danger w-25px h-25px'
-                              onClick={() => handleFoodQuantity(product, Math.max(0, qty - 1))}
-                              disabled={qty === 0}
-                            >
-                              −
-                            </button>
-                            <span className='fw-bolder mx-2'>{qty}</span>
-                            <button
-                              type='button'
-                              className='btn btn-sm btn-icon btn-light-primary w-25px h-25px'
-                              onClick={() => handleFoodQuantity(product, qty + 1)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
+                          )
+                        })}
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
+                    )}
+                  </div>
+                )
+              })()
             )}
 
             {selectedFoods.length > 0 && (
@@ -1223,14 +1468,37 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             <div className='card bg-light mb-4'>
               <div className='card-body py-4 px-5'>
                 <div className='fw-bold text-dark mb-3'>ຜູ້ຈອງ</div>
-                <div className='d-flex justify-content-between mb-2'>
-                  <span className='text-muted'>ຊື່</span>
-                  <span className='fw-semibold'>{currentUser?.user_name ?? '-'}</span>
-                </div>
-                <div className='d-flex justify-content-between'>
-                  <span className='text-muted'>ອີເມວ</span>
-                  <span className='fw-semibold'>{currentUser?.user_email ?? '-'}</span>
-                </div>
+                {isStaff ? (
+                  <>
+                    <div className='d-flex justify-content-between mb-2'>
+                      <span className='text-muted'>ຊື່ລູກຄ້າ</span>
+                      <span className='fw-semibold'>{customerNameInput || '-'}</span>
+                    </div>
+                    <div className='d-flex justify-content-between mb-2'>
+                      <span className='text-muted'>ເບີໂທລູກຄ້າ</span>
+                      <span className='fw-semibold'>{customerPhoneInput || '-'}</span>
+                    </div>
+                    <div className='d-flex justify-content-between mb-2 border-top pt-2 mt-2'>
+                      <span className='text-muted'>ພະນັກງານທີ່ຈອງ</span>
+                      <span className='fw-semibold'>{currentUser?.user_name ?? '-'}</span>
+                    </div>
+                    <div className='d-flex justify-content-between'>
+                      <span className='text-muted'>ອີເມວພະນັກງານ</span>
+                      <span className='fw-semibold'>{currentUser?.user_email ?? '-'}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className='d-flex justify-content-between mb-2'>
+                      <span className='text-muted'>ຊື່</span>
+                      <span className='fw-semibold'>{currentUser?.user_name ?? '-'}</span>
+                    </div>
+                    <div className='d-flex justify-content-between'>
+                      <span className='text-muted'>ອີເມວ</span>
+                      <span className='fw-semibold'>{currentUser?.user_email ?? '-'}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1240,7 +1508,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 {(
                   [
                     ['ເຮືອ', shipData?.ship_name],
-                    ['ວັນທີ', bookingDate],
+                    ['ວັນທີ', formatDateDMY(bookingDate)],
                     ['ເວລາ', bookingTime],
                     ['ຈຳນວນຄົນ', `${numPeople} ຄົນ`],
                     ['ໄລຍະເວລາ', `${numHours} ຊົ່ວໂມງ`],
@@ -1304,8 +1572,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             <div className='d-flex gap-3 mb-6' style={{ flexWrap: 'wrap' }}>
               {(
                 isStaff
-                  ? (['cash', 'transfer', 'cash+transfer', 'bcel'] as const)
-                  : (['transfer', 'bcel'] as const)
+                  ? (['cash', 'cash+transfer', 'bcel'] as const)
+                  : (['bcel'] as const)
               ).map((method) => (
                 <div
                   key={method}
@@ -1325,20 +1593,16 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   <div className='fs-1 mb-2'>
                     {method === 'cash'
                       ? '💵'
-                      : method === 'transfer'
-                      ? '📱'
                       : method === 'bcel'
                       ? '🏦'
-                      : '💵📱'}
+                      : '💵🏦'}
                   </div>
                   <div className='fw-bold fs-7'>
                     {method === 'cash'
                       ? 'ເງິນສົດ'
-                      : method === 'transfer'
-                      ? 'ໂອນເງິນ'
                       : method === 'bcel'
                       ? 'BCEL QR'
-                      : 'ເງິນສົດ + ໂອນ'}
+                      : 'ເງິນສົດ + ໂອນ (BCEL)'}
                   </div>
                 </div>
               ))}
@@ -1369,106 +1633,12 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               </div>
             )}
 
-            {/* ── Transfer + QR + Slip ── */}
-            {paymentMethod === 'transfer' && (
-              <div>
-                <div className='text-center mb-6'>
-                  <div className='fw-bold fs-6 mb-3'>ຂັ້ນຕອນ 1: ສະແກນ QR Code ເພື່ອຊຳລະ</div>
-                  <div
-                    className='d-inline-flex align-items-center justify-content-center border border-2 border-dashed border-primary rounded p-4'
-                    style={{ minWidth: 200, minHeight: 200 }}
-                  >
-                    <img
-                      src='/path/to/your/qr-code.png'
-                      alt='QR Code'
-                      style={{ maxWidth: 170, maxHeight: 170 }}
-                      onError={(e) => {
-                        const el = e.target as HTMLImageElement
-                        el.style.display = 'none'
-                        el.parentElement!.innerHTML =
-                          '<span class="text-muted fs-7">ວາງຮູບ QR<br/>ໄວ້ບ່ອນນີ້</span>'
-                      }}
-                    />
-                  </div>
-                  <div className='text-muted fs-7 mt-2'>
-                    ຈຳນວນເງິນ:{' '}
-                    <strong className='text-primary'>
-                      {grandTotal.toLocaleString()} LAK
-                    </strong>
-                  </div>
-                </div>
-
-                <div className='separator separator-dashed mb-5' />
-                {!isStaff && (
-                  <div className='fw-bold fs-6 mb-3 text-center'>
-                    ຂັ້ນຕອນ 2: ອັບໂຫຼດສະລິບໂອນເງິນ
-                  </div>
-                )}
-
-                <input
-                  type='file'
-                  ref={slipInputRef}
-                  accept='image/*'
-                  className='d-none'
-                  onChange={handleSlipUpload}
-                  disabled={slipUploading}
-                />
-
-                {slipUrl ? (
-                  <div className='text-center'>
-                    <div className='position-relative d-inline-block mb-3'>
-                      <img
-                        src={slipUrl}
-                        alt='ສະລິບໂອນເງິນ'
-                        className='rounded border border-success'
-                        style={{ maxWidth: 200, maxHeight: 280, objectFit: 'contain' }}
-                      />
-                      <button
-                        type='button'
-                        className='btn btn-sm btn-icon btn-light-danger position-absolute top-0 end-0'
-                        onClick={() => setSlipUrl('')}
-                        title='ລຶບສະລິບ'
-                      >
-                        <KTIcon iconName='cross' className='fs-4' />
-                      </button>
-                    </div>
-                    <div className='text-success fw-bold d-flex align-items-center justify-content-center gap-2'>
-                      <KTIcon iconName='check-circle' className='fs-3 text-success' />
-                      ອັບໂຫຼດສະລິບແລ້ວ ພ້ອມຢືນຢັນ
-                    </div>
-                  </div>
-                ) : (
-                  <div className='text-center'>
-                    <button
-                      type='button'
-                      className='btn btn-light-primary'
-                      onClick={() => slipInputRef.current?.click()}
-                      disabled={slipUploading}
-                    >
-                      {slipUploading ? (
-                        <>
-                          <span className='spinner-border spinner-border-sm me-2' />
-                          ກຳລັງອັບໂຫຼດ...
-                        </>
-                      ) : (
-                        <>
-                          <KTIcon iconName='folder-up' className='fs-3 me-2' />
-                          {isStaff ? 'ອັບໂຫຼດສະລິບ (ທາງເລືອກ)' : 'ອັບໂຫຼດສະລິບ'}
-                        </>
-                      )}
-                    </button>
-                    <div className='text-muted fs-8 mt-2'>JPG / PNG · max 5 MB</div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Cash + Transfer (staff only) ── */}
+            {/* ── Cash + Transfer (staff only, transfer via BCEL QR) ── */}
             {paymentMethod === 'cash+transfer' && isStaff && (
               <div>
                 <div className='p-5 rounded border border-primary mb-4'>
                   <div className='fw-bold fs-6 mb-4 text-primary text-center'>
-                    💵📱 ຊຳລະແບບ (ເງິນສົດ + ໂອນ)
+                    💵🏦 ຊຳລະແບບ (ເງິນສົດ + ໂອນຜ່ານ BCEL)
                   </div>
                   <div className='text-center mb-4'>
                     <span className='badge badge-light-primary fs-6 px-4 py-2'>
@@ -1493,7 +1663,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       />
                     </div>
                     <div className='col-6'>
-                      <label className='fw-bold fs-7 mb-2 d-block'>📱 ໂອນ (LAK)</label>
+                      <label className='fw-bold fs-7 mb-2 d-block'>🏦 ໂອນຜ່ານ BCEL (LAK)</label>
                       <input
                         type='number'
                         className='form-control form-control-solid'
@@ -1530,172 +1700,25 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                   </div>
                 </div>
 
-                <input
-                  type='file'
-                  ref={slipInputRef}
-                  accept='image/*'
-                  className='d-none'
-                  onChange={handleSlipUpload}
-                  disabled={slipUploading}
-                />
-                <div className='text-center'>
-                  {slipUrl ? (
-                    <div className='position-relative d-inline-block mb-2'>
-                      <img
-                        src={slipUrl}
-                        alt='ສະລິບ'
-                        className='rounded border border-success'
-                        style={{ maxWidth: 180, maxHeight: 240, objectFit: 'contain' }}
-                      />
-                      <button
-                        type='button'
-                        className='btn btn-sm btn-icon btn-light-danger position-absolute top-0 end-0'
-                        onClick={() => setSlipUrl('')}
-                      >
-                        <KTIcon iconName='cross' className='fs-4' />
-                      </button>
+                {/* BCEL QR for the transfer portion */}
+                {transferAmount > 0 && cashAmount + transferAmount === grandTotal && (
+                  <div className='p-4 rounded border border-2 border-dashed border-primary'>
+                    <div className='fw-bold fs-7 mb-3 text-center text-primary'>
+                      ສ້າງ BCEL QR ສຳຫຼັບສ່ວນທີ່ໂອນ
                     </div>
-                  ) : (
-                    <button
-                      type='button'
-                      className='btn btn-light-info btn-sm'
-                      onClick={() => slipInputRef.current?.click()}
-                      disabled={slipUploading}
-                    >
-                      <KTIcon iconName='folder-up' className='fs-4 me-1' />
-                      ອັບໂຫຼດສະລິບ (ທາງເລືອກ)
-                    </button>
-                  )}
-                  <div className='text-muted fs-8 mt-1'>JPG / PNG</div>
-                </div>
+                    {renderBcelPanel(`ໂອນຜ່ານ BCEL ສ່ວນທີ່ເຫຼືອ`)}
+                  </div>
+                )}
+                {transferAmount > 0 && cashAmount + transferAmount !== grandTotal && (
+                  <div className='alert alert-warning py-2 fs-7 text-center'>
+                    ປ້ອນຈຳນວນເງິນສົດ + ໂອນໃຫ້ຄົບກ່ອນສ້າງ QR
+                  </div>
+                )}
               </div>
             )}
 
             {/* ── BCEL QR Pay ── */}
-            {paymentMethod === 'bcel' && (
-              <div className='text-center'>
-                {/* Amount info */}
-                <div className='p-4 rounded bg-light-primary mb-5'>
-                  <div className='fs-6 fw-bold mb-1'>🏦 ຊຳລະຜ່ານ BCEL QR (phajay)</div>
-                  <div className='text-muted fs-7 mt-1'>
-                    ຍອດ:{' '}
-                    <strong className='text-primary'>{grandTotal.toLocaleString()} LAK</strong>
-                    {' '}≈{' '}
-                    <strong className='text-success'>{bcelAmountUsd} USD</strong>
-                    {bcelAmountCapped && (
-                      <span className='text-warning ms-1'>(ຈຳກັດ {BCEL_MAX_USD} USD test key)</span>
-                    )}
-                  </div>
-                  <div className='text-muted fs-8 mt-1'>
-                    ອັດຕາແລກປ່ຽນ: 1 USD = {LAK_PER_USD.toLocaleString()} LAK
-                  </div>
-                </div>
-
-                {/* idle */}
-                {bcelStatus === 'idle' && (
-                  <button
-                    type='button'
-                    className='btn btn-primary btn-lg'
-                    onClick={handleBcelPay}
-                    disabled={grandTotal < LAK_PER_USD}
-                  >
-                    <KTIcon iconName='scan-barcode' className='fs-3 me-2' />
-                    ສ້າງ QR ເພື່ອຊຳລະ
-                  </button>
-                )}
-
-                {/* loading */}
-                {bcelStatus === 'loading' && (
-                  <div className='py-6'>
-                    <span className='spinner-border text-primary mb-3' />
-                    <div className='text-muted fs-7 mt-2'>ກຳລັງສ້າງ QR Code...</div>
-                  </div>
-                )}
-
-                {/* waiting — show QR + countdown */}
-                {bcelStatus === 'waiting' && bcelQrDataUrl && (
-                  <div>
-                    <img
-                      src={bcelQrDataUrl}
-                      alt='BCEL QR Code'
-                      className='rounded border border-2 border-primary mb-3'
-                      style={{ width: 240, height: 240 }}
-                    />
-
-                    {/* Countdown ring */}
-                    <div className='d-flex flex-column align-items-center mb-4'>
-                      <div
-                        className='position-relative d-flex align-items-center justify-content-center mb-2'
-                        style={{ width: 72, height: 72 }}
-                      >
-                        <svg width='72' height='72' style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
-                          <circle cx='36' cy='36' r='30' fill='none' stroke='#e9ecef' strokeWidth='6' />
-                          <circle
-                            cx='36' cy='36' r='30' fill='none'
-                            stroke={bcelCountdown > 30 ? '#0d6efd' : bcelCountdown > 10 ? '#ffc107' : '#dc3545'}
-                            strokeWidth='6'
-                            strokeDasharray={`${2 * Math.PI * 30}`}
-                            strokeDashoffset={`${2 * Math.PI * 30 * (1 - bcelCountdown / 90)}`}
-                            style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
-                          />
-                        </svg>
-                        <span
-                          className='fw-bolder fs-5'
-                          style={{ color: bcelCountdown > 30 ? '#0d6efd' : bcelCountdown > 10 ? '#ffc107' : '#dc3545' }}
-                        >
-                          {`${Math.floor(bcelCountdown / 60)}:${String(bcelCountdown % 60).padStart(2, '0')}`}
-                        </span>
-                      </div>
-                      <div className='d-flex align-items-center gap-2 text-warning fw-bold fs-7'>
-                        <span className='spinner-border spinner-border-sm' />
-                        ລໍຖ້າການຊຳລະ...
-                      </div>
-                      <div className='text-muted fs-8 mt-1'>QR ໝົດອາຍຸໃນ {`${Math.floor(bcelCountdown / 60)}:${String(bcelCountdown % 60).padStart(2, '0')}`} ນາທີ</div>
-                    </div>
-
-                    <button
-                      type='button'
-                      className='btn btn-sm btn-light'
-                      onClick={resetBcel}
-                    >
-                      ສ້າງ QR ໃໝ່
-                    </button>
-                  </div>
-                )}
-
-                {/* paid */}
-                {bcelStatus === 'paid' && (
-                  <div className='py-4'>
-                    <div className='text-success fw-bolder fs-3 mb-3'>
-                      <KTIcon iconName='check-circle' className='fs-1 text-success me-2' />
-                      ຊຳລະສຳເລັດ!
-                    </div>
-                    <div className='badge badge-light-success fs-6 px-4 py-2 mb-3'>
-                      ✅ BCEL ຢືນຢັນການຊຳລະແລ້ວ
-                    </div>
-                    <div className='d-flex align-items-center justify-content-center gap-2 text-muted fs-7 mt-2'>
-                      <span className='spinner-border spinner-border-sm text-primary' />
-                      ກຳລັງບັນທຶກການຈອງ...
-                    </div>
-                  </div>
-                )}
-
-                {/* error */}
-                {bcelStatus === 'error' && (
-                  <div className='alert alert-danger py-3 text-start'>
-                    <div className='fw-bold mb-1'>ເກີດຂໍ້ຜິດພາດ</div>
-                    <div className='fs-7'>{bcelErrorMsg}</div>
-                    <button
-                      type='button'
-                      className='btn btn-sm btn-light-danger mt-2'
-                      onClick={resetBcel}
-                    >
-                      ລອງໃໝ່
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            {paymentMethod === 'bcel' && renderBcelPanel('ຊຳລະຜ່ານ BCEL QR (phajay)')}
           </div>
         )}
       </div>
@@ -1728,10 +1751,13 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             onClick={handleSave}
             disabled={
               loading ||
-              (!isStaff && paymentMethod === 'transfer' && !slipUrl) ||
               (isStaff &&
                 paymentMethod === 'cash+transfer' &&
                 cashAmount + transferAmount !== grandTotal) ||
+              (isStaff &&
+                paymentMethod === 'cash+transfer' &&
+                transferAmount > 0 &&
+                bcelStatus !== 'paid') ||
               (paymentMethod === 'bcel' && bcelStatus !== 'paid')
             }
           >

@@ -7,10 +7,10 @@ import {updateBillStatus} from '../core/bill_requests'
 import {useQueryResponse, useQueryResponseData} from '../core/QueryResponseProvider'
 
 const defaultPaymentStatus = PAYMENT_STATUS_OPTIONS[0]
-const defaultPaymentStatusMeta = PAYMENT_STATUS_META[defaultPaymentStatus]
+const defaultPaymentStatusMeta =
+  PAYMENT_STATUS_META[defaultPaymentStatus] ?? {label: '-', badgeClass: 'badge-light'}
 const paymentMethodLabels: Record<string, string> = {
   cash: 'ເງິນສົດ',
-  transfer: 'ໂອນເງິນ',
   'cash+transfer': 'ເງິນສົດ + ໂອນ',
   bcel: 'BCEL QR',
 }
@@ -265,7 +265,7 @@ const BookingShipEditModal = () => {
                         >
                           {PAYMENT_STATUS_OPTIONS.map((status) => (
                             <option key={status} value={status}>
-                              {PAYMENT_STATUS_META[status].label}
+                              {PAYMENT_STATUS_META[status]?.label ?? status}
                             </option>
                           ))}
                         </select>
@@ -286,25 +286,6 @@ const BookingShipEditModal = () => {
                     </div>
                   </div>
 
-                  {bill.payment_method === 'transfer' && bill.slip_url && (
-                    <div className='card border border-gray-200'>
-                      <div className='card-header border-0 pt-6'>
-                        <div className='card-title'>
-                          <h3 className='fw-bold m-0'>ສະລິບການໂອນ</h3>
-                        </div>
-                      </div>
-                      <div className='card-body pt-0'>
-                        <a href={bill.slip_url} target='_blank' rel='noreferrer'>
-                          <img
-                            src={bill.slip_url}
-                            alt='ສະລິບການໂອນ'
-                            className='rounded border w-100'
-                            style={{maxHeight: 360, objectFit: 'contain'}}
-                          />
-                        </a>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

@@ -27,6 +27,7 @@ const PrivateRoutes = () => {
   const EmployeePage = lazy(()=> import('../modules/apps/employees-management/EmployeesPage'))
   const HistoryPage = lazy(()=> import('../modules/apps/User-history/UserHistoryPage'))
   const MyProfilePage = lazy(() => import('../modules/apps/my-profile/MyProfilePage'))
+  const RevenueReportPage = lazy(() => import('../modules/apps/revenue-report/RevenueReportPage'))
   return (
     <Routes>
       <Route element={<MasterLayout />}>
@@ -66,6 +67,14 @@ const PrivateRoutes = () => {
           element={
             <SuspensedView>
               <BookingShipsPage />
+            </SuspensedView>
+          }
+        />
+        <Route
+          path='apps/revenue-report/*'
+          element={
+            <SuspensedView>
+              <RevenueReportPage />
             </SuspensedView>
           }
         />

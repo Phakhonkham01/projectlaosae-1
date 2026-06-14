@@ -9,16 +9,13 @@ import {CustomHeaderColumn} from './columns/CustomHeaderColumn'
 import {CustomRow} from './columns/CustomRow'
 import {HistoryBookingColumns} from './columns/_columns'
 
-type StatusTab = 'all' | 'pending' | 'approved' | 'rejected' | 're_submitted' | 'payment_failed' | 'under_review_again'
+type StatusTab = 'all' | 'approved' | 'rejected' | 're_submitted'
 
 const tabs: {label: string; value: StatusTab; color: string}[] = [
   {label: 'ທັງໝົດ', value: 'all', color: '#64748b'},
-  {label: 'ລໍຖ້າ', value: 'pending', color: '#f59e0b'},
   {label: 'ອະນຸມັດ', value: 'approved', color: '#10b981'},
   {label: 'ປະຕິເສດ', value: 'rejected', color: '#ef4444'},
-  
-  {label: 'ຊຳລະບໍ່ສຳເລັດ', value: 'payment_failed', color: '#8b5cf6'},
-  {label: 'ກວດສອບອີກຄັ້ງ', value: 'under_review_again', color: '#0ea5e9'},
+  {label: 'ສົ່ງກວດອີກຄັ້ງ', value: 're_submitted', color: '#0ea5e9'},
 ]
 const getCurrentUserId = (): string | null => {
   try {

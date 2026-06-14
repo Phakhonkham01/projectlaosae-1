@@ -13,7 +13,7 @@ import {UsersListLoading} from '../components/loading/UsersListLoading'
 import {UsersListPagination} from '../components/pagination/UsersListPagination'
 
 const formatCurrency = (amount: number) => `${amount.toLocaleString()} LAK`
-const defaultStatusMeta = PAYMENT_STATUS_META.pending
+const defaultStatusMeta = {label: '-', badgeClass: 'badge-light'}
 
 type PaymentMethodTab = PaymentMethod
 type StatusTab = 'all' | PaymentStatus
@@ -34,17 +34,13 @@ const getStatusMeta = (paymentStatus: string | undefined) => {
 
 const statusTabs: {label: string; value: StatusTab}[] = [
   {label: 'ທັງໝົດ', value: 'all'},
-  {label: PAYMENT_STATUS_META.pending.label, value: 'pending'},
-  {label: PAYMENT_STATUS_META.approved.label, value: 'approved'},
-  {label: PAYMENT_STATUS_META.rejected.label, value: 'rejected'},
-  // {label: PAYMENT_STATUS_META.re_submitted.label, value: 're_submitted'},
-  {label: PAYMENT_STATUS_META['payment failed'].label, value: 'payment failed'},
-  {label: PAYMENT_STATUS_META.under_review_again.label, value: 'under_review_again'},
+  {label: PAYMENT_STATUS_META.approved!.label, value: 'approved'},
+  {label: PAYMENT_STATUS_META.rejected!.label, value: 'rejected'},
+  {label: PAYMENT_STATUS_META.re_submitted!.label, value: 're_submitted'},
 ]
 
 const paymentMethodMeta: Record<PaymentMethod, {title: string; shortLabel: string}> = {
   cash: {title: 'ບິນເງິນສົດ', shortLabel: 'ເງິນສົດ'},
-  transfer: {title: 'ບິນໂອນເງິນ', shortLabel: 'ໂອນເງິນ'},
   'cash+transfer': {title: 'ບິນເງິນສົດ + ໂອນ', shortLabel: 'ເງິນສົດ + ໂອນ'},
   bcel: {title: 'ບິນ BCEL QR', shortLabel: 'BCEL QR'},
 }

@@ -18,14 +18,7 @@ import {useAuth} from '../../modules/auth'
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ArcElement, Tooltip, Legend)
 
 type DashboardRole = 'customer' | 'employee' | 'owner' | 'admin' | 'user'
-type PaymentStatus =
-  | 'pending'
-  | 'slip_submitted'
-  | 'approved'
-  | 'rejected'
-  | 're_submitted'
-  | 'payment failed'
-  | 'under_review_again'
+type PaymentStatus = 'pending' | 'approved' | 'rejected' | 're_submitted'
 
 interface AppUser {
   id: string
@@ -66,6 +59,10 @@ interface BookingItem {
   user_email?: string
   user_id?: string
   user_name?: string
+  customer_name?: string
+  customer_phone?: string
+  booked_by_name?: string
+  booked_by_role?: string
 }
 
 interface CategoryItem {
@@ -140,23 +137,20 @@ const getBookingDate = (booking: BookingItem) => parseDateValue(booking.createdA
 
 const isActive = (status?: string) => ['active', 'available', 'work day'].includes((status || '').toLowerCase())
 
-const pendingStatuses = ['pending', 'slip_submitted', 're_submitted', 'under_review_again']
+const pendingStatuses = ['pending', 're_submitted']
+const paidStatuses = ['approved']
 
 const paymentStatusLabels: Record<string, string> = {
-  pending: 'ລໍຖ້າ',
-  slip_submitted: 'ສົ່ງສະລິບແລ້ວ',
-  approved: 'ອະນຸມັດແລ້ວ',
+  pending: 'ລໍຖ້າຊຳລະ',
+  approved: 'ຊຳລະແລ້ວ',
   rejected: 'ປະຕິເສດ',
-  re_submitted: 'ສົ່ງຄືນໃໝ່',
-  'payment failed': 'ຊຳລະບໍ່ສຳເລັດ',
-  under_review_again: 'ກວດສອບອີກຄັ້ງ',
+  re_submitted: 'ສົ່ງກວດອີກຄັ້ງ',
 }
 
 const paymentMethodLabels: Record<string, string> = {
   cash: 'ເງິນສົດ',
-  transfer: 'ໂອນເງິນ',
-  'cash+transfer': 'ເງິນສົດ + ໂອນ',
-  bcel: 'BCEL',
+  'cash+transfer': 'ເງິນສົດ + ໂອນ (BCEL)',
+  bcel: 'BCEL QR',
 }
 
 const roleLabels: Record<DashboardRole, string> = {
@@ -180,7 +174,8 @@ const getPaymentMethodLabel = (method?: string) => {
 const getPaymentBadgeStyle = (status?: string): React.CSSProperties => {
   const current = (status || 'pending').toLowerCase()
   if (current === 'approved') return {background: '#e6f9f4', color: '#00876b'}
-  if (current === 'rejected' || current === 'payment failed') return {background: '#fdeaea', color: '#c0392b'}
+  if (current === 'rejected') return {background: '#fdeaea', color: '#c0392b'}
+  if (current === 're_submitted') return {background: '#e0f2fe', color: '#0284c7'}
   return {background: '#fef6e0', color: '#b56a00'}
 }
 
@@ -379,12 +374,25 @@ const Dashboard = () => {
 
     const totalRevenue = approvedHistory.reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
     const monthlyRevenue = monthlyApproved.reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
+    const todayRevenue = approvedHistory
+      .filter((booking) => booking.booking_date === todayIso)
+      .reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
+
+    // Revenue by payment method (approved only)
+    const revenueByMethod = approvedHistory.reduce<Record<string, number>>((acc, booking) => {
+      const k = (booking.payment_method || 'unknown').toLowerCase()
+      acc[k] = (acc[k] || 0) + (booking.grand_total || 0)
+      return acc
+    }, {})
+
     const pendingPayments = bills.filter((booking) => pendingStatuses.includes((booking.payment_status || '').toLowerCase()))
     const todayBookings = allBookings.filter((booking) => booking.booking_date === todayIso)
     const totalCustomers = users.filter((user) => normalizeRole(user.role) === 'customer').length
     const activeUsers = users.filter((user) => isActive(user.status)).length
     const availableProducts = products.filter((product) => product.availability !== false).length
     const activeShips = ships.filter((ship) => isActive(ship.status)).length
+    const soldOutShips = ships.filter((ship) => (ship.quantity ?? 0) <= 0).length
+    const availableShips = ships.filter((ship) => (ship.quantity ?? 0) > 0).length
     const shipCapacity = ships.reduce((sum, ship) => sum + (ship.capacity || 0) * Math.max(ship.quantity || 1, 1), 0)
 
     const categoryLookup = categories.reduce<Record<string, string>>((acc, category) => {
@@ -430,7 +438,7 @@ const Dashboard = () => {
       .slice(0, 8)
 
     const customerRanking = historyBookings.reduce<Record<string, number>>((acc, booking) => {
-      const key = booking.user_name || booking.user_email || 'ລູກຄ້າ'
+      const key = booking.customer_name || booking.user_name || booking.user_email || 'ລູກຄ້າ'
       acc[key] = (acc[key] || 0) + (booking.grand_total || 0)
       return acc
     }, {})
@@ -448,12 +456,16 @@ const Dashboard = () => {
       myBills,
       totalRevenue,
       monthlyRevenue,
+      todayRevenue,
+      revenueByMethod,
       pendingPayments,
       todayBookings,
       totalCustomers,
       activeUsers,
       availableProducts,
       activeShips,
+      availableShips,
+      soldOutShips,
       shipCapacity,
       topFoods,
       categorySales,
@@ -615,10 +627,35 @@ const Dashboard = () => {
   const renderStaffDashboard = () => (
     <>
       <div style={kpiGridStyle}>
-        <KpiTile label='ລູກຄ້າ' value={dashboardData.totalCustomers} sub={`${dashboardData.activeUsers} ຜູ້ໃຊ້ active`} variant='teal' sparkPoints={[2, 5, 3, 7, 5, 9, 8]} />
-        <KpiTile label='ລໍຖ້າກວດສອບ' value={dashboardData.pendingPayments.length} sub='ບິນທີ່ຍັງບໍ່ຈົບ' variant='amber' sparkPoints={[6, 4, 7, 5, 8, 4, 6]} />
-        <KpiTile label='ລາຍຮັບເດືອນນີ້' value={formatCurrency(dashboardData.monthlyRevenue)} sub={`ລວມ ${formatCurrency(dashboardData.totalRevenue)}`} variant='dark' sparkPoints={[1, 4, 3, 6, 5, 8, 9]} />
-        <KpiTile label='ເຮືອ Active' value={dashboardData.activeShips} sub='ພ້ອມໃຫ້ບໍລິການ' variant='gauge' gaugeValue={dashboardData.activeShips} gaugeMax={Math.max(ships.length, 1)} />
+        <KpiTile
+          label='ລາຍຮັບເດືອນນີ້'
+          value={formatCurrency(dashboardData.monthlyRevenue)}
+          sub={`ມື້ນີ້: ${formatCurrency(dashboardData.todayRevenue)}`}
+          variant='teal'
+          sparkPoints={[1, 4, 3, 6, 5, 8, 9]}
+        />
+        <KpiTile
+          label='ລາຍຮັບລວມທັງໝົດ'
+          value={formatCurrency(dashboardData.totalRevenue)}
+          sub={`ບິນຊຳລະແລ້ວ ${historyBookings.filter((b) => paidStatuses.includes((b.payment_status || '').toLowerCase())).length} ບິນ`}
+          variant='dark'
+          sparkPoints={[1, 3, 2, 5, 4, 6, 5]}
+        />
+        <KpiTile
+          label='ລໍຖ້າຊຳລະ'
+          value={dashboardData.pendingPayments.length}
+          sub='ບິນຍັງບໍ່ສຳເລັດ'
+          variant='amber'
+          sparkPoints={[6, 4, 7, 5, 8, 4, 6]}
+        />
+        <KpiTile
+          label='ເຮືອພ້ອມໃຫ້ບໍລິການ'
+          value={`${dashboardData.availableShips}/${ships.length}`}
+          sub={dashboardData.soldOutShips > 0 ? `🚫 ຈອງເຕັມ ${dashboardData.soldOutShips} ລຳ` : 'ທຸກເຮືອພ້ອມ'}
+          variant='gauge'
+          gaugeValue={dashboardData.availableShips}
+          gaugeMax={Math.max(ships.length, 1)}
+        />
       </div>
 
       <div style={chartRowStyle}>
@@ -753,12 +790,35 @@ const Dashboard = () => {
         <div style={stackStyle}>
           <Card>
             <CardTitle>ສະຫຼຸບຂໍ້ມູນລະບົບ</CardTitle>
-            <MetricLine label='ສິນຄ້າທັງໝົດ' value={products.length} color={TEAL} />
-            <MetricLine label='ສິນຄ້າພ້ອມຂາຍ' value={dashboardData.availableProducts} color='#00876b' />
+            <MetricLine label='ລູກຄ້າທັງໝົດ' value={dashboardData.totalCustomers} color={TEAL} />
+            <MetricLine label='ສິນຄ້າພ້ອມຂາຍ' value={`${dashboardData.availableProducts}/${products.length}`} color='#00876b' />
             <MetricLine label='ໝວດສິນຄ້າ' value={categories.length} color={TEAL_DARK} />
-            <MetricLine label='ເຮືອທັງໝົດ' value={ships.length} color={AMBER} />
-            <MetricLine label='ຄວາມຈຸລວມ' value={`${dashboardData.shipCapacity} ຄົນ`} color={NAVY} />
+            <MetricLine label='ເຮືອພ້ອມໃຫ້ຈອງ' value={`${dashboardData.availableShips}/${ships.length}`} color={AMBER} />
+            <MetricLine label='ເຮືອຖືກຈອງໝົດ' value={dashboardData.soldOutShips} color='#c0392b' />
             <MetricLine label='ການຈອງມື້ນີ້' value={dashboardData.todayBookings.length} color='#e07b3a' />
+          </Card>
+
+          <Card>
+            <CardTitle>ລາຍຮັບຕາມວິທີຊຳລະ</CardTitle>
+            {Object.keys(dashboardData.revenueByMethod).length === 0 ? (
+              <EmptyState text='ຍັງບໍ່ມີຂໍ້ມູນ' compact />
+            ) : (
+              <>
+                {Object.entries(dashboardData.revenueByMethod)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([method, total]) => (
+                    <MetricLine
+                      key={method}
+                      label={getPaymentMethodLabel(method)}
+                      value={formatCurrency(total)}
+                      color={method === 'bcel' ? TEAL_DARK : method === 'cash' ? AMBER : TEAL}
+                    />
+                  ))}
+                <div style={{marginTop: 10, fontSize: 12, color: 'var(--dashboard-text-muted)'}}>
+                  💡 ເບິ່ງລາຍງານລະອຽດທີ່ <strong>ລາຍງານລາຍຮັບ</strong>
+                </div>
+              </>
+            )}
           </Card>
 
           <Card>
@@ -828,30 +888,46 @@ const Dashboard = () => {
   )
 }
 
-const BookingRow = ({booking}: {booking: BookingItem}) => (
-  <div style={listItemStyle}>
-    <div style={{display: 'flex', justifyContent: 'space-between', gap: 14}}>
-      <div style={{minWidth: 0}}>
-        <div style={{fontWeight: 800, color: NAVY, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
-          {booking.user_name || booking.user_email || 'ລູກຄ້າ'}
+const BookingRow = ({booking}: {booking: BookingItem}) => {
+  const customer = booking.customer_name || booking.user_name || booking.user_email || 'ລູກຄ້າ'
+  const customerSub = booking.customer_phone
+    ? `📞 ${booking.customer_phone}`
+    : booking.user_email && booking.user_email !== customer
+    ? booking.user_email
+    : ''
+
+  return (
+    <div style={listItemStyle}>
+      <div style={{display: 'flex', justifyContent: 'space-between', gap: 14}}>
+        <div style={{minWidth: 0}}>
+          <div style={{fontWeight: 800, color: NAVY, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+            {customer}
+          </div>
+          {customerSub && <div style={mutedTextStyle}>{customerSub}</div>}
+          <div style={mutedTextStyle}>
+            {booking.ship_name || '-'} · {formatDate(booking.booking_date)} · {booking.booking_time || '-'}
+          </div>
+          <div style={mutedTextStyle}>
+            {booking.foods?.length || 0} ລາຍການອາຫານ · {booking.num_people || 0} ຄົນ · {booking.num_hours || 0} ຊົ່ວໂມງ ·{' '}
+            {getPaymentMethodLabel(booking.payment_method)}
+          </div>
+          {booking.booked_by_name && (
+            <div style={{...mutedTextStyle, fontStyle: 'italic'}}>
+              ຈອງໂດຍ: {booking.booked_by_name}
+              {booking.booked_by_role ? ` (${booking.booked_by_role})` : ''}
+            </div>
+          )}
         </div>
-        <div style={mutedTextStyle}>
-          {booking.ship_name || '-'} · {formatDate(booking.booking_date)} · {booking.booking_time || '-'}
-        </div>
-        <div style={mutedTextStyle}>
-          {booking.foods?.length || 0} ລາຍການອາຫານ · {booking.num_people || 0} ຄົນ · {booking.num_hours || 0} ຊົ່ວໂມງ ·{' '}
-          {getPaymentMethodLabel(booking.payment_method)}
-        </div>
-      </div>
-      <div style={{textAlign: 'right', flexShrink: 0}}>
-        <div style={{fontWeight: 800, color: TEAL_DARK, fontSize: 16}}>{formatCurrency(booking.grand_total)}</div>
-        <div style={{marginTop: 7}}>
-          <StatusBadge status={booking.payment_status || booking.status} />
+        <div style={{textAlign: 'right', flexShrink: 0}}>
+          <div style={{fontWeight: 800, color: TEAL_DARK, fontSize: 16}}>{formatCurrency(booking.grand_total)}</div>
+          <div style={{marginTop: 7}}>
+            <StatusBadge status={booking.payment_status || booking.status} />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 const MetricLine = ({label, value, color = TEAL}: {label: string; value: React.ReactNode; color?: string}) => (
   <div style={metricLineStyle}>

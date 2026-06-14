@@ -75,6 +75,13 @@ export function AsideMenuMain() {
           />
 
           <AsideMenuItem
+            to='/apps/revenue-report/summary'
+            icon='chart-line-up'
+            title='ລາຍງານລາຍຮັບ'
+            fontIcon='bi-graph-up'
+          />
+
+          <AsideMenuItem
             to='/apps/employees-management'
             icon='people'
             title='ພະນັກງານ ( ຈັດການຂໍ້ມູນ )'
