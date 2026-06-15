@@ -3,10 +3,12 @@
 // กรุณาเพิ่มโค้ดตามต้องการimport {KTIcon} from '../../../../../../../_metronic/helpers'
 import { KTIcon } from '../../../../../../../_metronic/helpers'
 import {useListView} from '../../core/ListViewProvider'
+import {isViewOnlyUser} from '../../core/permissions'
 import {EmployeesListFilter} from './EmployeesListFilter'
 
 const EmployeesListToolbar = () => {
   const {setItemIdForUpdate} = useListView()
+  const viewOnly = isViewOnlyUser()
   const openAddUserModal = () => {
     setItemIdForUpdate(null)
   }
@@ -23,10 +25,13 @@ const EmployeesListToolbar = () => {
       {/* end::Export */}
 
       {/* begin::Add user */}
-      <button type='button' className='btn btn-primary' onClick={openAddUserModal}>
-        <KTIcon iconName='plus' className='fs-2' />
-        ເພີ່ມຜູ້ໃຊ້
-      </button>
+      {/* Employees have view-only access and cannot add new users */}
+      {!viewOnly && (
+        <button type='button' className='btn btn-primary' onClick={openAddUserModal}>
+          <KTIcon iconName='plus' className='fs-2' />
+          ເພີ່ມຜູ້ໃຊ້
+        </button>
+      )}
       {/* end::Add user */}
     </div>
   )

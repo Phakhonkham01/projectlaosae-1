@@ -6,9 +6,10 @@ import { useListView } from '../../core/ListViewProvider'
 type Props = {
   id: ID
   disabled?: boolean
+  disabledLabel?: string
 }
 
-const BookingShipActionsCell: FC<Props> = ({ id, disabled = false }) => {
+const BookingShipActionsCell: FC<Props> = ({ id, disabled = false, disabledLabel = 'ຈອງເຕັມແລ້ວ' }) => {
   const { setItemIdForUpdate } = useListView()
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const BookingShipActionsCell: FC<Props> = ({ id, disabled = false }) => {
         style={disabled ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
         onClick={openEditModal}
       >
-        {disabled ? 'ຈອງເຕັມແລ້ວ' : 'ຈອງດຽວນີ້'}
+        {disabled ? disabledLabel : 'ຈອງດຽວນີ້'}
       </a>
       {/* begin::Menu */}
       <div

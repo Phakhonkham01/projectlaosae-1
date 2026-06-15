@@ -320,6 +320,13 @@ const ShipEditModalForm: FC = () => {
     }
   }
 
+  // Select the "0" on focus so typing replaces it instead of appending
+  const handleNumberFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (parseFloat(e.target.value) === 0) {
+      e.target.select()
+    }
+  }
+
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -387,6 +394,7 @@ const ShipEditModalForm: FC = () => {
               placeholder="ປ້ອນຄວາມຈຸ"
               value={formData.capacity}
               onChange={handleChange}
+              onFocus={handleNumberFocus}
               min="0"
               step="1"
               disabled={loading || uploadingImage}
@@ -406,6 +414,7 @@ const ShipEditModalForm: FC = () => {
               placeholder="ປ້ອນລາຄາ"
               value={formData.price}
               onChange={handleChange}
+              onFocus={handleNumberFocus}
               min="0"
               step="0.01"
               disabled={loading || uploadingImage}
@@ -425,6 +434,7 @@ const ShipEditModalForm: FC = () => {
               placeholder="ປ້ອນຈຳນວນ"
               value={formData.quantity}
               onChange={handleChange}
+              onFocus={handleNumberFocus}
               min="0"
               step="1"
               disabled={loading || uploadingImage}

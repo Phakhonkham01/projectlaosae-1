@@ -135,6 +135,31 @@ const formatDate = (value?: string) => {
 
 const getBookingDate = (booking: BookingItem) => parseDateValue(booking.createdAt) || parseDateValue(booking.booking_date)
 
+// Each booking is stored in BOTH `bill` and `history_booking` with the same payload
+// (see BookingShipEditModalForm). The two copies have different doc ids, so we dedupe
+// on a stable content key to avoid double-counting revenue and booking totals.
+const getBookingKey = (booking: BookingItem) => {
+  const createdAt = getBookingDate(booking)
+  return [
+    booking.user_id || booking.user_email || '',
+    booking.ship_id || booking.ship_name || '',
+    booking.booking_date || '',
+    booking.booking_time || '',
+    booking.grand_total ?? '',
+    createdAt ? createdAt.getTime() : '',
+  ].join('|')
+}
+
+// Keeps a single copy per logical booking. `bill` is processed last so its (live)
+// payment_status wins when the same booking exists in both collections.
+const dedupeBookings = (history: BookingItem[], bills: BookingItem[]) => {
+  const map = new Map<string, BookingItem>()
+  for (const booking of [...history, ...bills]) {
+    map.set(getBookingKey(booking), booking)
+  }
+  return Array.from(map.values())
+}
+
 const isActive = (status?: string) => ['active', 'available', 'work day'].includes((status || '').toLowerCase())
 
 const pendingStatuses = ['pending', 're_submitted']
@@ -247,9 +272,10 @@ interface KpiTileProps {
   sparkPoints?: number[]
   gaugeValue?: number
   gaugeMax?: number
+  subLarge?: boolean
 }
 
-const KpiTile = ({label, value, sub, variant, sparkPoints, gaugeValue, gaugeMax = 100}: KpiTileProps) => {
+const KpiTile = ({label, value, sub, variant, sparkPoints, gaugeValue, gaugeMax = 100, subLarge}: KpiTileProps) => {
   const bg = {
     teal: TEAL,
     dark: TEAL_DARK,
@@ -271,7 +297,21 @@ const KpiTile = ({label, value, sub, variant, sparkPoints, gaugeValue, gaugeMax 
       ) : (
         <>
           <div style={{fontSize: 30, fontWeight: 800, color: bright ? '#fff' : NAVY, lineHeight: 1.1}}>{value}</div>
-          <div style={{fontSize: 12, color: bright ? 'rgba(255,255,255,.78)' : 'var(--dashboard-text-muted)'}}>{sub}</div>
+          <div
+            style={{
+              fontSize: subLarge ? 16 : 12,
+              fontWeight: subLarge ? 700 : 400,
+              color: bright
+                ? subLarge
+                  ? '#fff'
+                  : 'rgba(255,255,255,.78)'
+                : subLarge
+                ? 'var(--dashboard-text-soft)'
+                : 'var(--dashboard-text-muted)',
+            }}
+          >
+            {sub}
+          </div>
         </>
       )}
       {sparkPoints && <Sparkline points={sparkPoints} color={bright ? '#fff' : TEAL} />}
@@ -345,7 +385,7 @@ const Dashboard = () => {
   }, [])
 
   const dashboardData = useMemo(() => {
-    const allBookings = [...historyBookings, ...bills]
+    const allBookings = dedupeBookings(historyBookings, bills)
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const todayIso = now.toISOString().slice(0, 10)
@@ -449,6 +489,7 @@ const Dashboard = () => {
     const customerApprovedBookings = myHistory.filter((booking) => (booking.payment_status || '').toLowerCase() === 'approved').length
 
     return {
+      totalBookings: allBookings.length,
       sortedBills,
       sortedHistory,
       myBookings,
@@ -632,6 +673,7 @@ const Dashboard = () => {
           value={formatCurrency(dashboardData.monthlyRevenue)}
           sub={`ມື້ນີ້: ${formatCurrency(dashboardData.todayRevenue)}`}
           variant='teal'
+          subLarge
           sparkPoints={[1, 4, 3, 6, 5, 8, 9]}
         />
         <KpiTile
@@ -642,9 +684,9 @@ const Dashboard = () => {
           sparkPoints={[1, 3, 2, 5, 4, 6, 5]}
         />
         <KpiTile
-          label='ລໍຖ້າຊຳລະ'
-          value={dashboardData.pendingPayments.length}
-          sub='ບິນຍັງບໍ່ສຳເລັດ'
+          label='ລູກຄ້າທັງໝົດ'
+          value={dashboardData.totalCustomers}
+          sub='ຈຳນວນລູກຄ້າທັງໝົດ'
           variant='amber'
           sparkPoints={[6, 4, 7, 5, 8, 4, 6]}
         />
@@ -664,7 +706,7 @@ const Dashboard = () => {
             <div>
               <CardTitle>ລາຍຮັບຕາມເຮືອ</CardTitle>
               <div style={subtitleStyle}>
-                ລວມ {historyBookings.length + bills.length} ການຈອງ ຈາກ {dashboardData.topShips.length} ເຮືອ
+                ລວມ {dashboardData.totalBookings} ການຈອງ ຈາກ {dashboardData.topShips.length} ເຮືອ
               </div>
             </div>
             <div style={pillStyle}>{formatCurrency(dashboardData.totalRevenue)}</div>

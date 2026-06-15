@@ -11,9 +11,28 @@ interface ShipCardProps {
 
 const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
   const isSoldOut = (ship.quantity ?? 0) <= 0
+  const isInactive = ship.status === 'Inactive'
+  const isMaintenance = ship.status === 'Maintenance'
+
+  // A ship can't be booked when it's sold out OR its status is not "Active".
+  // Inactive / Maintenance ships reuse the same sold-out look (grayscale + overlay
+  // + disabled button) but with messaging that matches the reason.
+  const isUnavailable = isSoldOut || isInactive || isMaintenance
+
+  const overlayText = isSoldOut
+    ? '🚫 ເຮືອຖືກຈອງໝົດແລ້ວ'
+    : isMaintenance
+    ? '🔧 ກຳລັງບຳລຸງ'
+    : '🚫 ບໍ່ໃຊ້ງານ'
+
+  const actionLabel = isSoldOut
+    ? 'ຈອງເຕັມແລ້ວ'
+    : isMaintenance
+    ? 'ກຳລັງບຳລຸງ'
+    : 'ບໍ່ໃຊ້ງານ'
 
   return (
-    <div className={`card card-flush h-md-100 shadow-sm position-relative ${isSoldOut ? 'border border-secondary' : ''}`}>
+    <div className={`card card-flush h-md-100 shadow-sm position-relative ${isUnavailable ? 'border border-secondary' : ''}`}>
       {/* Card Header: Image */}
       <div
         className='card-header p-0 overflow-hidden position-relative'
@@ -25,15 +44,15 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
           className='w-100 object-fit-cover'
           style={{
             height: '200px',
-            opacity: isSoldOut ? 0.35 : 1,
-            filter: isSoldOut ? 'grayscale(100%)' : 'none',
+            opacity: isUnavailable ? 0.35 : 1,
+            filter: isUnavailable ? 'grayscale(100%)' : 'none',
             transition: 'opacity .2s, filter .2s',
           }}
           onError={(e) => {
             ;(e.target as HTMLImageElement).src = '/media/avatars/blank.png'
           }}
         />
-        {isSoldOut && (
+        {isUnavailable && (
           <div
             className='position-absolute top-50 start-50 translate-middle text-center w-100 px-3'
             style={{ pointerEvents: 'none' }}
@@ -42,7 +61,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
               className='badge bg-danger text-white fw-bolder fs-6 px-4 py-3 shadow-sm'
               style={{ letterSpacing: '0.04em' }}
             >
-              🚫 ເຮືອຖືກຈອງໝົດແລ້ວ
+              {overlayText}
             </span>
           </div>
         )}
@@ -93,7 +112,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
 
       {/* Card Footer: Actions */}
       <div className='card-footer d-flex justify-content-end py-3 px-5 border-top'>
-        <BookingShipActionsCell id={ship.id} disabled={isSoldOut} />
+        <BookingShipActionsCell id={ship.id} disabled={isUnavailable} disabledLabel={actionLabel} />
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useListView } from "../core/ListViewProvider";
 import { useQueryResponse } from "../core/QueryResponseProvider";
 import { createUser, updateUser } from "../core/_requests";
+import { isViewOnlyUser } from "../core/permissions";
 import { User } from "../core/_models";
 import { isNotEmpty, QUERIES } from "../../../../../../_metronic/helpers";
 import { useMutation, useQueryClient } from "react-query";
@@ -55,6 +56,8 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = isNotEmpty(user?._id);
+  // Employees have view-only access: every field is disabled and saving is hidden.
+  const readOnly = isViewOnlyUser();
 
   const invalidateUsers = () =>
     queryClient.invalidateQueries([`${QUERIES.USERS_LIST}-${query}`]);
@@ -173,6 +176,9 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   return (
     <>
       <form className="form" onSubmit={formik.handleSubmit} noValidate>
+
+        {/* A disabled fieldset makes every control inside read-only for employees */}
+        <fieldset disabled={readOnly} style={{ border: 0, margin: 0, padding: 0 }}>
 
         {/* Profile Image */}
         <div className="fv-row mb-7 text-center">
@@ -372,6 +378,8 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           ))}
         </div>
 
+        </fieldset>
+
         {/* Actions */}
         <div className="text-end pt-3">
           <button
@@ -380,20 +388,22 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
             onClick={() => setItemIdForUpdate(undefined)}
             disabled={isSubmitting}
           >
-            ຍົກເລີກ
+            {readOnly ? "ປິດ" : "ຍົກເລີກ"}
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSubmitting || isUserLoading || !formik.isValid}
-          >
-            {isSubmitting ? (
-              <>
-                {isUploading ? "ກຳລັງອັບໂຫຼດ..." : "ກະລຸນາລໍຖ້າ..."}
-                <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
-              </>
-            ) : isEditMode ? "ບັນທຶກ" : "ສ້າງ"}
-          </button>
+          {!readOnly && (
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting || isUserLoading || !formik.isValid}
+            >
+              {isSubmitting ? (
+                <>
+                  {isUploading ? "ກຳລັງອັບໂຫຼດ..." : "ກະລຸນາລໍຖ້າ..."}
+                  <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                </>
+              ) : isEditMode ? "ບັນທຶກ" : "ສ້າງ"}
+            </button>
+          )}
         </div>
       </form>
 

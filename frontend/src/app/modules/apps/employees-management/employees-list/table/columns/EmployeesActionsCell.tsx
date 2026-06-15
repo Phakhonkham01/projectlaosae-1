@@ -3,6 +3,7 @@ import {useMutation, useQueryClient} from 'react-query'
 import {useListView} from '../../core/ListViewProvider'
 import {useQueryResponse} from '../../core/QueryResponseProvider'
 import {deleteUser} from '../../core/_requests'
+import {isViewOnlyUser} from '../../core/permissions'
 import {KTIcon, QUERIES} from '../../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
 
@@ -24,6 +25,7 @@ const EmployeesActionsCell: FC<Props> = ({id}) => {
   const {query} = useQueryResponse()
   const queryClient = useQueryClient()
   const currentUser = getCurrentUser()
+  const viewOnly = isViewOnlyUser()
   const isOwnAccount = currentUser?._id === id
   const shouldBlockSelfDelete =
     currentUser?.role === 'employee' || (currentUser?.role === 'owner' && isOwnAccount)
@@ -56,6 +58,21 @@ const EmployeesActionsCell: FC<Props> = ({id}) => {
         deleteMutation.mutate()
       }
     })
+  }
+
+  // Employees can only view details — show an eye icon and hide the delete action.
+  if (viewOnly) {
+    return (
+      <div className='d-flex justify-content-end gap-2'>
+        <button
+          className='btn btn-icon btn-light-primary btn-sm'
+          onClick={() => setItemIdForUpdate(id)}
+          title='ເບິ່ງລາຍລະອຽດ'
+        >
+          <KTIcon iconName='eye' className='fs-3' />
+        </button>
+      </div>
+    )
   }
 
   return (
