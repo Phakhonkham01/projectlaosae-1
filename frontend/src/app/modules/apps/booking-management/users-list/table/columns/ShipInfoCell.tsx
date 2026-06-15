@@ -10,9 +10,9 @@ const ShipInfoCell: FC<Props> = ({ ship_name, status }) => {
     status === 'Active'
       ? 'ໃຊ້ງານ'
       : status === 'Inactive'
-      ? 'ບໍ່ໃຊ້ງານ'
+      ? 'ປິດໃຊ້ງານ'
       : status === 'Maintenance'
-      ? 'ກຳລັງບຳລຸງ'
+      ? 'ກຳລັງປັບປຸງເຮືອ'
       : status
 
   return (

@@ -34,31 +34,34 @@ const ProductsInShopTable = () => {
 
   return (
     <KTCardBody className='py-4'>
-      <div className='d-flex justify-content-end mb-5'>
-        <div className='btn-group' role='group'>
+      <div className='d-flex flex-wrap justify-content-between align-items-center mb-6 gap-3'>
+        <span className='badge badge-light-primary fs-7 fw-bold px-3 py-2'>
+          ມີສິນຄ້າ {data.length} ລາຍການ
+        </span>
+        <div className='btn-group btn-group-sm bg-light rounded p-1' role='group'>
           <button
             type='button'
-            className={`btn btn-sm ${viewMode === 'card' ? 'btn-primary' : 'btn-light'}`}
+            className={`btn btn-sm rounded ${viewMode === 'card' ? 'btn-primary' : 'btn-active-light-primary text-gray-700'}`}
             onClick={() => setViewMode('card')}
           >
-            <i className='ki-duotone ki-element-equal fs-4 m-0'>
+            <i className='ki-duotone ki-element-11 fs-5 m-0'>
               <span className='path1' />
               <span className='path2' />
               <span className='path3' />
               <span className='path4' />
             </i>
-            <span className='ms-1'>Card</span>
+            <span className='ms-1'>ບັດ</span>
           </button>
           <button
             type='button'
-            className={`btn btn-sm ${viewMode === 'table' ? 'btn-primary' : 'btn-light'}`}
+            className={`btn btn-sm rounded ${viewMode === 'table' ? 'btn-primary' : 'btn-active-light-primary text-gray-700'}`}
             onClick={() => setViewMode('table')}
           >
-            <i className='ki-duotone ki-row-horizontal fs-4 m-0'>
+            <i className='ki-duotone ki-row-horizontal fs-5 m-0'>
               <span className='path1' />
               <span className='path2' />
             </i>
-            <span className='ms-1'>Table</span>
+            <span className='ms-1'>ຕາຕະລາງ</span>
           </button>
         </div>
       </div>
@@ -76,7 +79,7 @@ const ProductsInShopTable = () => {
           <div className='table-responsive'>
             <table
               id='kt_table_products_in_shop'
-              className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer'
+              className='table align-middle table-row-dashed table-hover fs-6 gy-4 dataTable no-footer'
               {...getTableProps()}
             >
               <thead>
@@ -95,8 +98,14 @@ const ProductsInShopTable = () => {
                 ) : (
                   <tr>
                     <td colSpan={5}>
-                      <div className='d-flex text-center w-100 align-content-center justify-content-center'>
-                        No available products found
+                      <div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-10'>
+                        <i className='ki-duotone ki-basket fs-3x text-muted mb-3'>
+                          <span className='path1' />
+                          <span className='path2' />
+                          <span className='path3' />
+                          <span className='path4' />
+                        </i>
+                        <span className='text-muted fs-5'>ບໍ່ພົບສິນຄ້າທີ່ມີຂາຍ</span>
                       </div>
                     </td>
                   </tr>

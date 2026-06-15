@@ -4,7 +4,7 @@ import {ProductsInShopWrapper} from './products-list/ProductsInShop'
 
 const productsBreadcrumbs: Array<PageLink> = [
   {
-    title: 'Shop',
+    title: 'ຮ້ານຄ້າ',
     path: '/apps/products-in-shop/list',
     isSeparator: false,
     isActive: false,
@@ -25,7 +25,7 @@ const ProductsInShopPage = () => {
           path='list'
           element={
             <>
-              <PageTitle breadcrumbs={productsBreadcrumbs}>Products In Shop</PageTitle>
+              <PageTitle breadcrumbs={productsBreadcrumbs}>ສິນຄ້າ ແລະ ເຮືອ ໃນຮ້ານ</PageTitle>
               <ProductsInShopWrapper />
             </>
           }

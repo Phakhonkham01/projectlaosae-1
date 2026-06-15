@@ -5,54 +5,64 @@ type Props = {
   index: number
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  Active: 'ໃຊ້ງານ',
+  Maintenance: 'ສ້ອມແປງ',
+  Inactive: 'ບໍ່ໃຊ້ງານ',
+}
+
 const ShipsInShopCard = ({ship, index}: Props) => {
   const shipName = ship.ship_name || ship.name
   const statusClass =
     ship.status === 'Maintenance'
-      ? 'badge-light-warning'
+      ? 'badge-warning'
       : ship.status === 'Inactive'
-      ? 'badge-light-secondary'
-      : 'badge-light-success'
+      ? 'badge-secondary'
+      : 'badge-success'
+  const statusLabel = STATUS_LABELS[ship.status as string] || ship.status
 
   return (
-    <div className='card card-flush h-md-100 shadow-sm'>
-      <div
-        className='card-header p-0 overflow-hidden'
-        style={{borderRadius: '0.625rem 0.625rem 0 0', maxHeight: '200px'}}
-      >
+    <div className='card card-flush h-100 shadow-sm product-shop-card'>
+      <div className='card-header p-0 overflow-hidden position-relative product-shop-card__media'>
         <img
           src={ship.image_url || '/media/avatars/blank.png'}
           alt={shipName}
-          className='w-100 object-fit-cover'
-          style={{height: '200px'}}
+          className='w-100 object-fit-cover product-shop-card__img'
+          loading='lazy'
           onError={(e) => {
             ;(e.target as HTMLImageElement).src = '/media/avatars/blank.png'
           }}
         />
+        <span className={`badge position-absolute top-0 end-0 m-3 fw-bold shadow-sm ${statusClass}`}>
+          {statusLabel}
+        </span>
+        <span className='badge badge-circle badge-light position-absolute top-0 start-0 m-3 fw-bold text-gray-700 shadow-sm'>
+          {index + 1}
+        </span>
       </div>
 
-      <div className='card-body d-flex flex-column gap-3 pt-4 pb-4 px-5'>
-        <div className='d-flex justify-content-between align-items-center'>
-          <span className='badge badge-light-primary fw-bold fs-8'>#{index + 1}</span>
-          <span className={`badge fw-bolder ${statusClass}`}>{ship.status}</span>
-        </div>
-
+      <div className='card-body d-flex flex-column gap-3 pt-5 pb-5 px-5'>
         <div>
-          <span className='text-gray-900 fw-bold fs-5 d-block text-truncate'>{shipName}</span>
+          <span className='text-gray-900 fw-bold fs-4 d-block text-truncate' title={shipName}>
+            {shipName}
+          </span>
           <span className='text-muted fw-semibold fs-7 d-block mt-1'>
-            Capacity {ship.capacity?.toLocaleString() ?? '-'} people
+            ຄວາມຈຸ {ship.capacity?.toLocaleString() ?? '-'} ຄົນ
           </span>
         </div>
 
-        <div className='d-flex justify-content-between align-items-center flex-wrap gap-2'>
+        <div className='d-flex justify-content-between align-items-end flex-wrap gap-2 mt-auto pt-3 border-top border-gray-200'>
           <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Price</span>
-            <span className='text-primary fw-bold fs-6'>{ship.price?.toLocaleString()} LAK</span>
+            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ລາຄາ</span>
+            <span className='text-primary fw-bolder fs-3'>
+              {ship.price?.toLocaleString()}
+              <span className='fs-8 fw-semibold text-muted ms-1'>ກີບ</span>
+            </span>
           </div>
 
-          <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Available</span>
-            <span className='text-gray-700 fw-bold fs-6'>{ship.quantity ?? 0} units</span>
+          <div className='d-flex flex-column align-items-end'>
+            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ຄົງເຫຼືອ</span>
+            <span className='text-gray-700 fw-bold fs-6'>{ship.quantity ?? 0} ລຳ</span>
           </div>
         </div>
       </div>

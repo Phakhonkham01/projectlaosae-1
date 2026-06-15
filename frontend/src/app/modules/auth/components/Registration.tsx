@@ -236,7 +236,7 @@ export function Registration() {
       >
         <div className='text-center mb-8'>
           <h1 className='text-gray-900 fw-bolder mb-2'>ສ້າງບັນຊີ</h1>
-          <div className='text-gray-700 fw-semibold fs-6'>ລົງທະບຽນໄດ້ໄວ ແລະ ໃຊ້ງານງ່າຍ</div>
+          <div className='text-gray-700 fw-semibold fs-6'>ລົງທະບຽນ</div>
         </div>
 
         {formik.status && (

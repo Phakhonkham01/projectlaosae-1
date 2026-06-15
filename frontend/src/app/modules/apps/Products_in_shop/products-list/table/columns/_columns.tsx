@@ -3,27 +3,42 @@ import {Product} from '../../../../addFood/users-list/core/_models'
 import {useCategoryMap} from '../../../../addFood/users-list/table/columns/_columns'
 
 const ImageCell = ({src, name}: {src: string; name: string}) => (
-  <div className='symbol' style={{width: 120, height: 120}}>
+  <div className='symbol symbol-75px' style={{width: 75, height: 75}}>
     {src ? (
       <img
         src={src}
         alt={name}
-        className='object-fit-cover rounded'
-        style={{width: 120, height: 120}}
+        className='object-fit-cover rounded border border-gray-200'
+        style={{width: 75, height: 75}}
+        loading='lazy'
       />
     ) : (
-      <div className='symbol-label bg-light' style={{width: 120, height: 120}}>
+      <div
+        className='symbol-label bg-light rounded border border-gray-200'
+        style={{width: 75, height: 75}}
+      >
         <i className='bi bi-image text-muted fs-3' />
       </div>
     )}
   </div>
 )
 
-const PriceCell = ({price}: {price: number}) => <span>{price.toLocaleString()} LAK</span>
+const NameCell = ({name}: {name: string}) => (
+  <span className='text-gray-900 fw-bold fs-6 d-block text-truncate' style={{maxWidth: 260}} title={name}>
+    {name}
+  </span>
+)
+
+const PriceCell = ({price}: {price: number}) => (
+  <span className='text-primary fw-bolder fs-6'>
+    {price.toLocaleString()}
+    <span className='fs-8 fw-semibold text-muted ms-1'>ກີບ</span>
+  </span>
+)
 
 const AvailabilityCell = ({available}: {available: boolean}) => (
   <span className={`badge badge-light-${available ? 'success' : 'danger'}`}>
-    {available ? 'Available' : 'Unavailable'}
+    {available ? 'ມີຂາຍ' : 'ບໍ່ມີຂາຍ'}
   </span>
 )
 
@@ -45,21 +60,22 @@ const getProductsInShopColumns = (
   loadingMap: boolean
 ): ReadonlyArray<Column<Product>> => [
   {
-    Header: 'Image',
+    Header: 'ຮູບ',
     id: 'image',
     Cell: ({row}) => <ImageCell src={row.original.image} name={row.original.name} />,
   },
   {
-    Header: 'Name',
-    accessor: 'name',
+    Header: 'ຊື່ສິນຄ້າ',
+    id: 'name',
+    Cell: ({row}) => <NameCell name={row.original.name} />,
   },
   {
-    Header: 'Price (LAK)',
+    Header: 'ລາຄາ (ກີບ)',
     id: 'price',
     Cell: ({row}) => <PriceCell price={row.original.price} />,
   },
   {
-    Header: 'Category',
+    Header: 'ໝວດໝູ່',
     id: 'category',
     Cell: ({row}) => (
       <CategoryCell
@@ -70,7 +86,7 @@ const getProductsInShopColumns = (
     ),
   },
   {
-    Header: 'Available',
+    Header: 'ສະຖານະ',
     id: 'availability',
     Cell: ({row}) => <AvailabilityCell available={row.original.availability} />,
   },

@@ -12,7 +12,7 @@ netstat -ano | findstr :8081
 
 -------------------------
 
-taskkill /F /PID 35112
+taskkill /F /PID  26636
 
 ປ່ຽນເລກຖ້າຍຕາມ ເລກທີ່ແຄັສເຫັນ
 Success ແລ້ວຈຶ່ງລັນ

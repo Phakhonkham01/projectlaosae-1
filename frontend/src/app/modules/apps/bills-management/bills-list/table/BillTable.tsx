@@ -40,9 +40,9 @@ const statusTabs: {label: string; value: StatusTab}[] = [
 ]
 
 const paymentMethodMeta: Record<PaymentMethod, {title: string; shortLabel: string}> = {
-  cash: {title: 'ບິນເງິນສົດ', shortLabel: 'ເງິນສົດ'},
-  'cash+transfer': {title: 'ບິນເງິນສົດ + ໂອນ', shortLabel: 'ເງິນສົດ + ໂອນ'},
-  bcel: {title: 'ບິນ BCEL QR', shortLabel: 'BCEL QR'},
+  cash: {title: 'ເງິນສົດ', shortLabel: 'ເງິນສົດ'},
+  'cash+transfer': {title: 'ເງິນສົດ + ໂອນ', shortLabel: 'ເງິນສົດ + ໂອນ'},
+  bcel: {title: 'BCEL QR', shortLabel: 'BCEL QR'},
 }
 
 const getMethodLabel = (method?: string) => paymentMethodMeta[method as PaymentMethod]?.shortLabel || method || '-'
@@ -79,7 +79,7 @@ const BillSummaryCard = ({
   const accentStyle = isActive ? {border: '1px solid #FFFD3D', boxShadow: '0 0 0 2px #FFFD3D inset'} : {}
 
   return (
-    <div className='col-xl-3'>
+    <div className='col-xl-4'>
       <button
         type='button'
         className='p-2 h-100 w-100 text-start'

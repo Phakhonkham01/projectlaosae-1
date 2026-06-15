@@ -29,22 +29,24 @@ const styles = `
   .lp-btn-outline { border: 1px solid rgba(22,119,255,0.16); border-radius: 14px; background: #fff; color: ${BLUE}; padding: 0.9rem 1.45rem; font-size: 0.92rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 26px rgba(8,26,53,0.05); }
   .lp-btn-outline:hover, .lp-hero-btn-ghost:hover { background: ${BLUE_LIGHT}; border-color: rgba(22,119,255,0.24); transform: translateY(-2px); }
   .lp-hero { position: relative; overflow: hidden; min-height: 100vh; padding: 8.5rem 1.5rem 4rem; display: flex; align-items: center; }
-  .lp-hero-slide { position: absolute; inset: 0; background-size: cover; background-position: center center; transition: opacity 1.1s ease-in-out; transform: scale(1.04); }
-  .lp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(247, 251, 255, 0) 0%, rgba(247, 251, 255, 0) 52%, rgba(247, 251, 255, 0) 100%), linear-gradient(120deg, rgba(8,26,53,0.16), rgba(22,119,255,0.08) 48%, rgba(31,199,182,0.08) 100%); }
+  .lp-hero-slide { position: absolute; inset: 0; background-size: cover; background-position: center center; transition: opacity 1.2s ease-in-out, transform 7s ease-out; transform: scale(1.045); }
+  .lp-hero-slide.is-active { transform: scale(1); }
+  .lp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(5,16,36,0.34) 0%, rgba(5,16,36,0.08) 36%, rgba(5,16,36,0) 62%); }
   .lp-hero-content { position: relative; z-index: 10; width: 100%; max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0,1.12fr) minmax(320px,0.88fr); gap: 2rem; align-items: center; }
   .lp-hero-main { max-width: 690px; }
-  .lp-hero-chip { display: inline-flex; align-items: center; gap: 0.7rem; padding: 0.72rem 1rem; border-radius: 999px; background: rgba(255, 255, 255, 0); border: 1px solid rgba(255, 255, 255, 0); box-shadow: 0 16px 34px rgba(8, 26, 53, 0); color: ${BLUE_DARK}; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1.25rem; backdrop-filter: blur(10px); }
+  .lp-hero-chip { display: inline-flex; align-items: center; gap: 0.7rem; padding: 0.62rem 1.05rem; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.26); box-shadow: 0 16px 34px rgba(5, 16, 36, 0.28); color: #EAF3FF; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.4rem; backdrop-filter: blur(12px); }
   .lp-hero-chip-dot { width: 10px; height: 10px; border-radius: 999px; background: ${MINT}; box-shadow: 0 0 0 6px rgba(31,199,182,0.12); }
-  .lp-hero-h1 { font-size: clamp(2.8rem, 6vw, 5rem); line-height: 1.02; letter-spacing: -0.05em; color: ${NAVY}; font-weight: 900; margin-bottom: 1rem; }
-  .lp-hero-h1 span { background: linear-gradient(135deg, ${BLUE_DARK}, ${MINT}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .lp-hero-desc { font-size: 1.06rem; color: #61748B; line-height: 1.85; margin-bottom: 2rem; max-width: 620px; }
+  .lp-hero-h1 { font-size: clamp(2.8rem, 6vw, 5rem); line-height: 1.02; letter-spacing: -0.05em; color: #ffffff; font-weight: 900; margin-bottom: 1rem; text-shadow: 0 2px 12px rgba(5,16,36,0.35); }
+  .lp-hero-h1 span { color: #4FE6D4; }
+  .lp-hero-desc { font-size: 1.06rem; color: rgba(240,246,255,0.92); line-height: 1.85; margin-bottom: 2rem; max-width: 620px; text-shadow: 0 1px 8px rgba(5,16,36,0.35); }
   .lp-hero-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.65rem; }
   .lp-hero-btn-main, .lp-hero-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.65rem; padding: 1rem 1.85rem; border-radius: 16px; font-size: 0.98rem; }
-  .lp-hero-btn-ghost { border: 1px solid rgba(22,119,255,0.14); background: rgba(255,255,255,0.84); color: ${NAVY}; box-shadow: 0 14px 30px rgba(8,26,53,0.06); cursor: pointer; }
+  .lp-hero-btn-ghost { border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); color: #fff; box-shadow: 0 14px 30px rgba(5,16,36,0.25); cursor: pointer; backdrop-filter: blur(10px); }
+  .lp-hero-btn-ghost:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.45); }
   .lp-hero-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
-  .lp-hero-metric { padding: 1.15rem 1.2rem; border-radius: 20px; background: rgba(255,255,255,0.84); border: 1px solid rgba(22,119,255,0.1); box-shadow: 0 18px 38px rgba(8,26,53,0.07); }
-  .lp-hero-metric-value { color: ${NAVY}; font-size: 1.55rem; font-weight: 900; margin-bottom: 0.2rem; }
-  .lp-hero-metric-label { color: #71829A; font-size: 0.8rem; font-weight: 700; }
+  .lp-hero-metric { padding: 1.15rem 1.2rem; border-radius: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 18px 38px rgba(5,16,36,0.22); backdrop-filter: blur(12px); }
+  .lp-hero-metric-value { color: #ffffff; font-size: 1.55rem; font-weight: 900; margin-bottom: 0.2rem; }
+  .lp-hero-metric-label { color: rgba(233,241,252,0.78); font-size: 0.8rem; font-weight: 700; }
   .lp-hero-side { display: flex; flex-direction: column; gap: 1rem; }
   .lp-hero-panel, .lp-hero-glass { background: rgba(255,255,255,0.74); border: 1px solid rgba(255,255,255,0.45); border-radius: 24px; box-shadow: 0 22px 50px rgba(8,26,53,0.1); backdrop-filter: blur(14px); }
   .lp-hero-panel { padding: 1.6rem; }
@@ -88,7 +90,7 @@ const styles = `
   .lp-feature-card p { color: #6D7E95; font-size: 0.92rem; line-height: 1.75; }
   .lp-card { cursor: pointer; overflow: hidden; }
   .lp-card-img { position: relative; height: 220px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; overflow: hidden; }
-  .lp-card-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(8,26,53,0.25) 100%); }
+  .lp-card-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 68%, rgba(8,26,53,0.08) 100%); }
   .lp-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s ease; }
   .lp-card:hover .lp-card-img img { transform: scale(1.05); }
   .lp-card-img-ship { background: linear-gradient(135deg, #D7EAFF 0%, #B6D4FF 100%); }
@@ -296,7 +298,7 @@ const LandingPageShipsFoodsPage = () => {
         {images.map((image, index) => (
           <div
             key={image.url}
-            className='lp-hero-slide'
+            className={`lp-hero-slide${currentImageIndex === index ? ' is-active' : ''}`}
             style={{
               backgroundImage: `url('${image.url}')`,
               opacity: currentImageIndex === index ? 1 : 0,
@@ -524,7 +526,7 @@ const LandingPageShipsFoodsPage = () => {
             <div className='lp-divider center' />
             <h2 className='lp-section-title'>ເມນູອາຫານ</h2>
             <p className='lp-section-sub' style={{margin: '0 auto', textAlign: 'center'}}>
-              {/* ໂຊວ໌ເມນູໃນໂທນສີ mint ເພື່ອແຍກ mood ຂອງອາຫານອອກຈາກໝວດເຮືອໃຫ້ຊັດ. */}
+              ເມນູອາຫານທ້ອງຖິ່ນ ແລະ ຊີຟູ້ດສົດໃໝ່ ພ້ອມສັ່ງຄວບຄູ່ກັບການລ່ອງເຮືອ.
             </p>
           </div>
 

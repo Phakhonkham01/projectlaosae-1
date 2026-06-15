@@ -432,7 +432,7 @@ const Dashboard = () => {
     const availableProducts = products.filter((product) => product.availability !== false).length
     const activeShips = ships.filter((ship) => isActive(ship.status)).length
     const soldOutShips = ships.filter((ship) => (ship.quantity ?? 0) <= 0).length
-    const availableShips = ships.filter((ship) => (ship.quantity ?? 0) > 0).length
+    const availableShips = ships.filter((ship) => (ship.status || '').toLowerCase() === 'active').length
     const shipCapacity = ships.reduce((sum, ship) => sum + (ship.capacity || 0) * Math.max(ship.quantity || 1, 1), 0)
 
     const categoryLookup = categories.reduce<Record<string, string>>((acc, category) => {

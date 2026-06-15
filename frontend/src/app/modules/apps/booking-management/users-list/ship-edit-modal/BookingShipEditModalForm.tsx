@@ -128,119 +128,161 @@ const roundUpToStep = (minutes: number, stepMinutes: number) =>
   Math.ceil(minutes / stepMinutes) * stepMinutes
 
 const downloadReceiptPng = (bill: SavedBill) => {
-  const canvas = document.createElement('canvas')
-  const width = 1080
-  const lineHeight = 34
-  const foodsHeight = bill.foods.length > 0 ? bill.foods.length * lineHeight + 90 : 50
-  const height = 980 + foodsHeight
+  // Thermal-receipt style: narrow white paper, monospace, dashed rules, barcode.
+  const scale = 2 // render at 2x for crisp output
+  const width = 460
+  const LX = 36 // left padding
+  const RX = width - 36 // right edge
+  const CX = width / 2
+  const rowH = 26
 
-  canvas.width = width
-  canvas.height = height
+  const receiptNo = bill.id.slice(0, 8).toUpperCase()
+  const paymentLabel =
+    bill.payment_method === 'bcel'
+      ? 'BCEL QR'
+      : bill.payment_method === 'cash+transfer'
+      ? 'Cash + BCEL'
+      : 'Cash'
+
+  // Pre-compute height from the number of variable rows.
+  const metaRows = 6
+  const itemRows = 1 + bill.foods.length
+  const totalRows = bill.foods.length > 0 ? 3 : 2
+  const height =
+    330 + metaRows * rowH + itemRows * rowH + totalRows * rowH + 60 + 200
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width * scale
+  canvas.height = height * scale
 
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas not supported')
+  ctx.scale(scale, scale)
 
-  ctx.fillStyle = '#efe4cb'
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, width, height)
-  ctx.fillStyle = '#fffaf0'
-  ctx.fillRect(50, 40, width - 100, height - 80)
-  ctx.strokeStyle = '#d1bfa1'
-  ctx.lineWidth = 3
-  ctx.strokeRect(50, 40, width - 100, height - 80)
+  ctx.fillStyle = '#111111'
 
-  ctx.fillStyle = '#44311f'
-  ctx.font = 'bold 42px Georgia'
-  ctx.fillText('Booking Receipt', 90, 100)
-
-  ctx.font = '20px Arial'
-  ctx.fillStyle = '#8b6d48'
-  ctx.fillText(`Receipt ID: ${bill.id.slice(0, 8).toUpperCase()}`, 90, 142)
-  ctx.fillText(
-    `Payment: ${
-      bill.payment_method === 'bcel'
-        ? 'BCEL QR'
-        : bill.payment_method === 'cash+transfer'
-        ? 'Cash + BCEL'
-        : 'Cash'
-    }`,
-    730,
-    142
-  )
-
-  let y = 210
-  const drawRow = (label: string, value: string, color = '#2b2b2b') => {
-    ctx.font = 'bold 22px Arial'
-    ctx.fillStyle = '#8b6d48'
-    ctx.fillText(label, 90, y)
-    ctx.font = '22px Arial'
-    ctx.fillStyle = color
-    ctx.fillText(value, 330, y)
-    y += lineHeight
+  const mono = (size: number, bold = false) => {
+    ctx.font = `${bold ? 'bold ' : ''}${size}px 'Courier New', monospace`
+  }
+  const center = (text: string, y: number) => {
+    ctx.textAlign = 'center'
+    ctx.fillText(text, CX, y)
+    ctx.textAlign = 'left'
+  }
+  const lr = (label: string, value: string, y: number) => {
+    ctx.textAlign = 'left'
+    ctx.fillText(label, LX, y)
+    ctx.textAlign = 'right'
+    ctx.fillText(value, RX, y)
+    ctx.textAlign = 'left'
+  }
+  const dashed = (y: number) => {
+    ctx.save()
+    ctx.strokeStyle = '#999999'
+    ctx.lineWidth = 1
+    ctx.setLineDash([4, 4])
+    ctx.beginPath()
+    ctx.moveTo(LX, y)
+    ctx.lineTo(RX, y)
+    ctx.stroke()
+    ctx.restore()
   }
 
-  drawRow('Customer', bill.user_name || '-')
-  drawRow('Email', bill.user_email || '-')
-  drawRow('Ship', bill.ship_name || '-')
-  drawRow('Booking Date', `${formatDateDMY(bill.booking_date)} ${bill.booking_time}`.trim())
-  drawRow('People', `${bill.num_people} people`)
-  drawRow('Hours', `${bill.num_hours} hour(s)`)
-  drawRow('Status', bill.payment_status === 'approved' ? 'Paid' : 'Booked')
+  // ── Store header ──
+  let y = 50
+  mono(26, true)
+  center('BOOKING RECEIPT', y)
+  y += 26
+  mono(16)
+  center('****', y)
+  y += 30
+  mono(22, true)
+  center('LAOSAE BOAT', y)
+  y += 24
+  mono(14)
+  center('ບໍລິການລ່ອງເຮືອ', y)
+  y += 20
+  center('+856 20 0000 0000', y)
+  y += 26
+  center('********************', y)
 
-  y += 12
-  ctx.beginPath()
-  ctx.moveTo(90, y)
-  ctx.lineTo(width - 90, y)
-  ctx.stroke()
-  y += 48
+  // ── Meta ──
+  y += 32
+  mono(14)
+  lr(`Date:${formatDateDMY(bill.booking_date)}`, `Time:${bill.booking_time}`, y)
+  y += rowH
+  ctx.fillText(`Receipt#:${receiptNo}`, LX, y)
+  y += rowH
+  ctx.fillText(`Customer:${bill.customer_name || bill.user_name || '-'}`, LX, y)
+  y += rowH
+  ctx.fillText(`Tel:${bill.customer_phone || bill.user_email || '-'}`, LX, y)
+  y += rowH
+  ctx.fillText(`Ship:${bill.ship_name || '-'}`, LX, y)
+  y += rowH
+  ctx.fillText(`Cashier:${bill.booked_by_name || bill.user_name || '-'}`, LX, y)
 
-  ctx.font = 'bold 28px Georgia'
-  ctx.fillStyle = '#44311f'
-  ctx.fillText('Charges', 90, y)
-  y += 44
-
-  drawRow('Ship Total', formatLak(bill.total_ship_price), '#0d6efd')
-
-  if (bill.foods.length > 0) {
-    ctx.font = 'bold 24px Arial'
-    ctx.fillStyle = '#44311f'
-    ctx.fillText('Foods', 90, y)
-    y += 38
-
-    bill.foods.forEach((food, index) => {
-      ctx.font = '20px Arial'
-      ctx.fillStyle = '#2b2b2b'
-      ctx.fillText(`${index + 1}. ${food.name}`, 110, y)
-      ctx.fillStyle = '#8b6d48'
-      ctx.fillText(`x${food.quantity}`, 620, y)
-      ctx.fillStyle = '#2b2b2b'
-      ctx.fillText(formatLak(food.price * food.quantity), 760, y)
-      y += lineHeight
-    })
-
-    y += 8
-    drawRow('Food Total', formatLak(bill.total_food_price), '#0dcaf0')
-  }
-
+  // ── Items ──
   y += 18
-  ctx.beginPath()
-  ctx.moveTo(90, y)
-  ctx.lineTo(width - 90, y)
-  ctx.stroke()
-  y += 60
+  dashed(y)
+  y += 26
+  lr(`Ship x${bill.num_people}p ${bill.num_hours}h`, formatLak(bill.total_ship_price), y)
+  bill.foods.forEach((food) => {
+    y += rowH
+    lr(`${food.name} x${food.quantity}`, formatLak(food.price * food.quantity), y)
+  })
 
-  ctx.font = 'bold 34px Georgia'
-  ctx.fillStyle = '#44311f'
-  ctx.fillText('Grand Total', 90, y)
-  ctx.fillStyle = '#0d6efd'
-  ctx.fillText(formatLak(bill.grand_total), 760, y)
+  // ── Totals ──
+  y += 18
+  dashed(y)
+  y += 26
+  if (bill.foods.length > 0) {
+    lr('Food Total', formatLak(bill.total_food_price), y)
+    y += rowH
+  }
+  lr('Ship Total', formatLak(bill.total_ship_price), y)
+  y += rowH + 4
+  mono(18, true)
+  lr('TOTAL', formatLak(bill.grand_total), y)
 
-  y += 72
-  ctx.font = 'italic 20px Georgia'
-  ctx.fillStyle = '#8b6d48'
-  ctx.fillText('Thank you for your booking.', 90, y)
+  // ── Payment ──
+  y += 16
+  dashed(y)
+  y += 26
+  mono(14)
+  ctx.fillText('Payment', LX, y)
+  y += rowH
+  ctx.fillText(`Method:${paymentLabel} — PAID`, LX, y)
+
+  // ── Footer ──
+  y += 44
+  mono(15)
+  center('THANK YOU FOR BOOKING', y)
+
+  // ── Barcode ──
+  y += 24
+  const barTop = y
+  const barH = 56
+  let bx = LX
+  for (let i = 0; bx < RX; i++) {
+    const w = (receiptNo.charCodeAt(i % receiptNo.length) + i * 7) % 3 + 1
+    if (i % 2 === 0) {
+      ctx.fillStyle = '#111111'
+      ctx.fillRect(bx, barTop, w, barH)
+    }
+    bx += w
+  }
+  ctx.fillStyle = '#111111'
+  y = barTop + barH + 22
+  mono(14)
+  ctx.save()
+  ctx.textAlign = 'center'
+  ctx.fillText(receiptNo.split('').join(' '), CX, y)
+  ctx.restore()
 
   const link = document.createElement('a')
-  link.download = `receipt-${bill.id.slice(0, 8).toUpperCase()}.png`
+  link.download = `receipt-${receiptNo}.png`
   link.href = canvas.toDataURL('image/png')
   link.click()
 }
@@ -888,6 +930,48 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
 
   // ─── Bill view after save ──────────────────────────────────────────────────
   if (savedBill) {
+    const paymentMethodLabel =
+      savedBill.payment_method === 'bcel'
+        ? 'BCEL QR'
+        : savedBill.payment_method === 'cash+transfer'
+        ? 'Cash + BCEL'
+        : 'Cash'
+    const receiptNo = savedBill.id.slice(0, 8).toUpperCase()
+
+    // Monospaced thermal-receipt look-and-feel
+    const paperFont = "'Courier New', Courier, monospace"
+    const tornEdge = {
+      height: 10,
+      background:
+        'linear-gradient(-45deg, transparent 16px, #ffffff 0) 0 0, ' +
+        'linear-gradient(45deg, transparent 16px, #ffffff 0) 0 0',
+      backgroundSize: '22px 22px',
+      backgroundRepeat: 'repeat-x',
+    }
+    const dottedRule = {
+      borderTop: '1px dashed #9a9a9a',
+      margin: '10px 0',
+    }
+    // Deterministic barcode bars derived from the receipt number
+    const barcodeBars = Array.from({ length: 56 }, (_, i) => {
+      const code = receiptNo.charCodeAt(i % receiptNo.length) + i * 7
+      return (code % 3) + 1
+    })
+
+    const ReceiptRow = ({ label, value }: { label: string; value: string }) => (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 12,
+          lineHeight: 1.7,
+        }}
+      >
+        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{label}</span>
+        <span style={{ whiteSpace: 'nowrap' }}>{value}</span>
+      </div>
+    )
+
     return (
       <div
         className='modal-content h-100 border-0'
@@ -904,118 +988,121 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
           </div>
         </div>
 
-        <div className='modal-body scroll-y mx-5 mx-xl-12 my-4'>
-          <div
-            className='card shadow-sm mx-auto'
-            style={{
-              maxWidth: 760,
-              background: 'linear-gradient(180deg, #fffaf0 0%, #fff6e8 100%)',
-              border: '1px solid #d8c3a5',
-            }}
-          >
+        <div
+          className='modal-body scroll-y px-4 py-8'
+          style={{ background: '#e9e9ee' }}
+        >
+          <div className='mx-auto' style={{ maxWidth: 320 }}>
+            {/* torn top edge */}
+            <div style={tornEdge} />
+
             <div
-              className='card-body p-8'
-              style={{ boxShadow: 'inset 0 0 0 1px rgba(209, 191, 161, 0.35)' }}
+              style={{
+                background: '#ffffff',
+                color: '#1a1a1a',
+                fontFamily: paperFont,
+                fontSize: 13,
+                padding: '6px 24px 22px',
+                boxShadow: '0 14px 30px rgba(0,0,0,0.18)',
+              }}
             >
-              <div className='d-flex justify-content-between align-items-start flex-wrap gap-4 mb-8'>
-                <div>
-                  <div
-                    className='text-uppercase fw-bold fs-8 mb-2'
-                    style={{ color: '#8b6d48', letterSpacing: '0.18em' }}
-                  >
-                    Official Receipt
-                  </div>
-                  <h3 className='fw-bolder mb-1' style={{ color: '#44311f' }}>
-                    Booking Bill
-                  </h3>
-                  <div className='text-muted fs-7'>#{savedBill.id.slice(0, 8).toUpperCase()}</div>
+              {/* ── Store header ── */}
+              <div style={{ textAlign: 'center', marginTop: 14 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '0.18em' }}>
+                  BOOKING RECEIPT
                 </div>
-                <div className='text-end'>
-                  <div className='badge badge-light-success fs-7 mb-2'>
-                    {savedBill.payment_method === 'bcel'
-                      ? 'BCEL QR Paid'
-                      : savedBill.payment_method === 'cash+transfer'
-                      ? 'Cash + BCEL Paid'
-                      : 'Booked'}
-                  </div>
-                  <div className='text-muted fs-8'>
-                    {savedBill.payment_method === 'bcel' ||
-                    savedBill.payment_method === 'cash+transfer'
-                      ? 'ຊຳລະແລ້ວ'
-                      : 'ລໍຊຳລະຫນ້າງານ'}
-                  </div>
+                <div style={{ letterSpacing: '0.3em', margin: '4px 0' }}>****</div>
+                <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.1em' }}>
+                  LAOSAE JOVA
                 </div>
+                <div style={{ fontSize: 12 }}>ບໍລິການລ່ອງເຮືອນຳທ່ຽວ</div>
+                <div style={{ fontSize: 12 }}>+856 20 99600457</div>
               </div>
 
-              <div className='row g-8 mb-8'>
-                <div className='col-md-6'>
-                  <div className='text-muted fs-8 text-uppercase mb-2'>Customer</div>
-                  <div className='fw-bold fs-5'>
-                    {savedBill.customer_name || savedBill.user_name || '-'}
-                  </div>
-                  <div className='text-gray-600'>
-                    {savedBill.customer_phone || savedBill.user_email || '-'}
-                  </div>
-                  {savedBill.booked_by_name && (
-                    <div className='text-muted fs-8 mt-2'>
-                      ຈອງໂດຍ: <strong>{savedBill.booked_by_name}</strong>
-                      {savedBill.booked_by_role ? ` (${savedBill.booked_by_role})` : ''}
-                    </div>
-                  )}
-                </div>
-                <div className='col-md-6'>
-                  <div className='text-muted fs-8 text-uppercase mb-2'>Trip</div>
-                  <div className='fw-bold fs-5'>{savedBill.ship_name}</div>
-                  <div className='text-gray-600'>
-                    {formatDateDMY(savedBill.booking_date)} {savedBill.booking_time}
-                  </div>
-                  <div className='text-muted fs-8 mt-1'>
-                    {savedBill.num_people} ຄົນ • {savedBill.num_hours} ຊົ່ວໂມງ
-                  </div>
-                </div>
+              <div style={{ textAlign: 'center', letterSpacing: '0.15em', margin: '10px 0' }}>
+                ********************
               </div>
 
-              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }} />
-
-              <div className='d-flex justify-content-between align-items-center mb-3'>
-                <span className='text-muted'>Ship Charge</span>
-                <span className='fw-bold'>{formatLak(savedBill.total_ship_price)}</span>
+              {/* ── Meta ── */}
+              <ReceiptRow
+                label={`Date:${formatDateDMY(savedBill.booking_date)}`}
+                value={`Time:${savedBill.booking_time}`}
+              />
+              <div>Receipt#:{receiptNo}</div>
+              <div>
+                Customer:{savedBill.customer_name || savedBill.user_name || '-'}
+              </div>
+              <div>Tel:{savedBill.customer_phone || savedBill.user_email || '-'}</div>
+              <div>Ship:{savedBill.ship_name}</div>
+              <div>
+                Cashier:{savedBill.booked_by_name || savedBill.user_name || '-'}
               </div>
 
+              <div style={dottedRule} />
+
+              {/* ── Items ── */}
+              <ReceiptRow
+                label={`Ship x${savedBill.num_people}p ${savedBill.num_hours}h`}
+                value={formatLak(savedBill.total_ship_price)}
+              />
+              {savedBill.foods.map((food) => (
+                <ReceiptRow
+                  key={`${food.product_id}-${food.name}`}
+                  label={`${food.name} x${food.quantity}`}
+                  value={formatLak(food.price * food.quantity)}
+                />
+              ))}
+
+              <div style={dottedRule} />
+
+              {/* ── Totals ── */}
               {savedBill.foods.length > 0 && (
-                <>
-                  {savedBill.foods.map((food) => (
-                    <div
-                      key={`${food.product_id}-${food.name}`}
-                      className='d-flex justify-content-between align-items-center mb-3'
-                    >
-                      <div>
-                        <div className='fw-semibold text-gray-900'>{food.name}</div>
-                        <div className='text-muted fs-8'>Qty {food.quantity}</div>
-                      </div>
-                      <span className='fw-semibold'>{formatLak(food.price * food.quantity)}</span>
-                    </div>
-                  ))}
-                  <div className='d-flex justify-content-between align-items-center mb-3'>
-                    <span className='text-muted'>Food Total</span>
-                    <span className='fw-bold text-info'>{formatLak(savedBill.total_food_price)}</span>
-                  </div>
-                </>
+                <ReceiptRow label='Food Total' value={formatLak(savedBill.total_food_price)} />
               )}
+              <ReceiptRow label='Ship Total' value={formatLak(savedBill.total_ship_price)} />
+              <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4 }}>
+                <ReceiptRow label='TOTAL' value={formatLak(savedBill.grand_total)} />
+              </div>
 
-              <div className='separator separator-dashed my-6' style={{ borderColor: '#d1bfa1' }} />
+              <div style={dottedRule} />
 
-              <div className='d-flex justify-content-between align-items-center'>
-                <div>
-                  <div className='text-muted fs-8 text-uppercase mb-1'>Grand Total</div>
-                  <div className='fw-bolder fs-2 text-primary'>{formatLak(savedBill.grand_total)}</div>
-                </div>
-                <button type='button' className='btn btn-dark' onClick={handleDownloadSavedBill}>
-                  <KTIcon iconName='file-down' className='fs-4 me-2' />
-                  Download PNG
-                </button>
+              {/* ── Payment ── */}
+              <div>Payment</div>
+              <div>Method:{paymentMethodLabel} — PAID</div>
+
+              {/* ── Footer ── */}
+              <div style={{ textAlign: 'center', margin: '20px 0 8px' }}>
+                THANK YOU FOR BOOKING
+              </div>
+
+              {/* ── Barcode ── */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  height: 56,
+                  marginTop: 6,
+                }}
+              >
+                {barcodeBars.map((w, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: w,
+                      height: '100%',
+                      background: i % 2 === 0 ? '#1a1a1a' : 'transparent',
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ textAlign: 'center', letterSpacing: '0.25em', marginTop: 4 }}>
+                {receiptNo}
               </div>
             </div>
+
+            {/* torn bottom edge */}
+            <div style={{ ...tornEdge, transform: 'scaleY(-1)' }} />
           </div>
         </div>
 
@@ -1026,6 +1113,10 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             onClick={() => setItemIdForUpdate(undefined)}
           >
             ປິດ
+          </button>
+          <button type='button' className='btn btn-dark' onClick={handleDownloadSavedBill}>
+            <KTIcon iconName='file-down' className='fs-4 me-2' />
+            ດາວໂຫລດ PNG
           </button>
         </div>
       </div>

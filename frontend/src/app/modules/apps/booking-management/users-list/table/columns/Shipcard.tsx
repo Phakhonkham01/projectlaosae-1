@@ -22,14 +22,14 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
   const overlayText = isSoldOut
     ? '🚫 ເຮືອຖືກຈອງໝົດແລ້ວ'
     : isMaintenance
-    ? '🔧 ກຳລັງບຳລຸງ'
-    : '🚫 ບໍ່ໃຊ້ງານ'
+    ? '🔧 ກຳລັງປັບປຸງເຮືອ'
+    : '🚫 ປິດໃຊ້ງານ'
 
   const actionLabel = isSoldOut
     ? 'ຈອງເຕັມແລ້ວ'
     : isMaintenance
-    ? 'ກຳລັງບຳລຸງ'
-    : 'ບໍ່ໃຊ້ງານ'
+    ? 'ກຳລັງປັບປຸງເຮືອ'
+    : 'ປິດໃໍຊ້ງານ'
 
   return (
     <div className={`card card-flush h-md-100 shadow-sm position-relative ${isUnavailable ? 'border border-secondary' : ''}`}>

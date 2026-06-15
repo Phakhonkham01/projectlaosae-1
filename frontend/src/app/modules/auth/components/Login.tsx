@@ -43,13 +43,13 @@ const initialValues = {
 // ─── Firebase Error Messages ──────────────────────────────────────────────────
 const getFirebaseError = (code: string): string => {
   switch (code) {
-    case 'auth/user-not-found':         return 'ບໍ່ມີບັນຊີທີ່ພົບວ່າມີອີ-ເມວນີ້'
+    case 'auth/user-not-found':         return 'ບໍ່ມີບັນຊີອີ-ເມວນີ້'
     case 'auth/wrong-password':         return 'ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ'
     case 'auth/invalid-credential':     return 'ອີ-ເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ'
     case 'auth/invalid-email':          return 'ຮູບແບບອີ-ເມວ ບໍ່ຖືກຕ້ອງ'
     case 'auth/too-many-requests':      return 'ເຄື່ອງພະຍາຍາມຫຼາຍເກີນໄປ. ກະລຸນາລອງໃຫມ່ຕໍ່ມາ'
-    case 'auth/network-request-failed': return 'ຜໍ້າວເຄືອຂ່າຍ. ກວດສອບການເຊື່ອມຕໍ່ຂອງທ່ານ'
-    case 'auth/user-disabled':          return 'ບັນຊີນີ້ຖືກປະຕິເສດໃຊ້'
+    case 'auth/network-request-failed': return 'ກວດສອບການເຊື່ອມຕໍ່ຂອງທ່ານ'
+    case 'auth/user-disabled':          return 'ບັນຊີນີ້ຖືກປະຕິເສດການໃຊ້ງານ'
     default:                            return 'ລາຍລະອຽດການເຂົ້າສູ່ລະບົບບໍ່ຖືກຕ້ອງ'
   }
 }
@@ -267,7 +267,7 @@ export function Login() {
 
       {/* ── Divider ─────────────────────────────────────────────────────────── */}
       <div className='separator separator-content my-14'>
-        <span className='w-125px text-gray-500 fw-semibold fs-7'>ຫຼື ໂດຍອີ-ເມວ</span>
+        <span className='w-125px text-gray-500 fw-semibold fs-7'>ດ້ວຍອີ-ເມວ</span>
       </div>
 
       {/* ── Error Alert ─────────────────────────────────────────────────────── */}

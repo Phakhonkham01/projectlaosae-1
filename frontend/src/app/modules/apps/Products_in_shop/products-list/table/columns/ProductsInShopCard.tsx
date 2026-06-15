@@ -11,45 +11,41 @@ const ProductsInShopCard: React.FC<Props> = ({product, index, categoryName}) => 
   const imageSrc = product.image || '/media/avatars/blank.png'
 
   return (
-    <div className='card card-flush h-md-100 shadow-sm'>
-      <div
-        className='card-header p-0 overflow-hidden'
-        style={{borderRadius: '0.625rem 0.625rem 0 0', maxHeight: '200px'}}
-      >
+    <div className='card card-flush h-100 shadow-sm product-shop-card'>
+      <div className='card-header p-0 overflow-hidden position-relative product-shop-card__media'>
         <img
           src={imageSrc}
           alt={product.name}
-          className='w-100 object-fit-cover'
-          style={{height: '200px'}}
+          className='w-100 object-fit-cover product-shop-card__img'
+          loading='lazy'
           onError={(e) => {
             ;(e.target as HTMLImageElement).src = '/media/avatars/blank.png'
           }}
         />
+        <span className='badge badge-success position-absolute top-0 end-0 m-3 fw-bold shadow-sm'>
+          ມີຂາຍ
+        </span>
+        <span className='badge badge-circle badge-light position-absolute top-0 start-0 m-3 fw-bold text-gray-700 shadow-sm'>
+          {index + 1}
+        </span>
       </div>
 
-      <div className='card-body d-flex flex-column gap-3 pt-4 pb-4 px-5'>
-        <div className='d-flex justify-content-between align-items-center gap-2'>
-          <span className='badge badge-light-primary fw-bold fs-8'>#{index + 1}</span>
-          <span className='badge badge-light-success fw-bolder'>Available</span>
-        </div>
-
+      <div className='card-body d-flex flex-column gap-4 pt-5 pb-5 px-5'>
         <div>
-          <span className='text-gray-900 fw-bold fs-5 d-block text-truncate'>{product.name}</span>
-          <span className='text-muted fw-semibold fs-7 d-block mt-1 text-truncate'>
-            {categoryName || 'Uncategorized'}
+          <span className='text-gray-900 fw-bold fs-4 d-block text-truncate' title={product.name}>
+            {product.name}
+          </span>
+          <span className='badge badge-light-info fw-semibold mt-2'>
+            {categoryName || 'ບໍ່ໄດ້ຈັດໝວດ'}
           </span>
         </div>
 
-        <div className='d-flex justify-content-between align-items-center flex-wrap gap-2'>
-          <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Price</span>
-            <span className='text-primary fw-bold fs-6'>{product.price.toLocaleString()} LAK</span>
-          </div>
-
-          <div className='d-flex flex-column align-items-start'>
-            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>Category</span>
-            <span className='text-gray-700 fw-bold fs-6 text-truncate'>
-              {categoryName || '-'}
+        <div className='d-flex align-items-end justify-content-between mt-auto pt-3 border-top border-gray-200'>
+          <div className='d-flex flex-column'>
+            <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ລາຄາ</span>
+            <span className='text-primary fw-bolder fs-2'>
+              {product.price.toLocaleString()}
+              <span className='fs-7 fw-semibold text-muted ms-1'>ກີບ</span>
             </span>
           </div>
         </div>
