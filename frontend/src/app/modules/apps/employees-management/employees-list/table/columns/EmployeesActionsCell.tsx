@@ -3,12 +3,14 @@ import {useMutation, useQueryClient} from 'react-query'
 import {useListView} from '../../core/ListViewProvider'
 import {useQueryResponse} from '../../core/QueryResponseProvider'
 import {deleteUser} from '../../core/_requests'
-import {isViewOnlyUser} from '../../core/permissions'
+import {canManageRole} from '../../core/permissions'
+import {User} from '../../core/_models'
 import {KTIcon, QUERIES} from '../../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
 
 type Props = {
   id: string
+  role?: User['role']
 }
 
 const getCurrentUser = (): {_id?: string; role?: string} | null => {
@@ -20,15 +22,17 @@ const getCurrentUser = (): {_id?: string; role?: string} | null => {
   }
 }
 
-const EmployeesActionsCell: FC<Props> = ({id}) => {
+const EmployeesActionsCell: FC<Props> = ({id, role}) => {
   const {setItemIdForUpdate} = useListView()
   const {query} = useQueryResponse()
   const queryClient = useQueryClient()
   const currentUser = getCurrentUser()
-  const viewOnly = isViewOnlyUser()
+  // Whether the current user may manage (edit) this specific row's role.
+  const canManage = canManageRole(role)
+  const isEmployee = currentUser?.role === 'employee'
   const isOwnAccount = currentUser?._id === id
   const shouldBlockSelfDelete =
-    currentUser?.role === 'employee' || (currentUser?.role === 'owner' && isOwnAccount)
+    isEmployee || (currentUser?.role === 'owner' && isOwnAccount)
 
   const deleteMutation = useMutation(() => deleteUser(id), {
     onSuccess: () => {
@@ -60,8 +64,9 @@ const EmployeesActionsCell: FC<Props> = ({id}) => {
     })
   }
 
-  // Employees can only view details — show an eye icon and hide the delete action.
-  if (viewOnly) {
+  // Rows the current user cannot manage (e.g. an employee viewing an owner)
+  // are view-only: show an eye icon and hide the edit/delete actions.
+  if (!canManage) {
     return (
       <div className='d-flex justify-content-end gap-2'>
         <button
@@ -80,14 +85,17 @@ const EmployeesActionsCell: FC<Props> = ({id}) => {
       <button className='btn btn-icon btn-light-primary btn-sm' onClick={() => setItemIdForUpdate(id)}>
         <KTIcon iconName='pencil' className='fs-3' />
       </button>
-      <button
-        className='btn btn-icon btn-light-danger btn-sm'
-        onClick={handleDelete}
-        disabled={shouldBlockSelfDelete}
-        title={shouldBlockSelfDelete ? 'ບໍ່ສາມາດລຶບບັນຊີຂອງຕົນເອງ' : undefined}
-      >
-        <KTIcon iconName='trash' className='fs-3' />
-      </button>
+      {/* Employees may not delete users; owners may delete anyone but themselves */}
+      {!isEmployee && (
+        <button
+          className='btn btn-icon btn-light-danger btn-sm'
+          onClick={handleDelete}
+          disabled={shouldBlockSelfDelete}
+          title={shouldBlockSelfDelete ? 'ບໍ່ສາມາດລຶບບັນຊີຂອງຕົນເອງ' : undefined}
+        >
+          <KTIcon iconName='trash' className='fs-3' />
+        </button>
+      )}
     </div>
   )
 }

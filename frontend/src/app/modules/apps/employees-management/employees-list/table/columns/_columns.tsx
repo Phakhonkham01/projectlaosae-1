@@ -38,7 +38,7 @@ const UsersList: ReadonlyArray<Column<User>> = [
   {
     Header: (props) => <EmployeesListHeader tableProps={props} title='ຈັດການ' className='text-end min-w-100px' />,
     id: 'actions',
-    Cell: ({ row }) => <EmployeesActionsCell id={row.original._id} />,
+    Cell: ({ row }) => <EmployeesActionsCell id={row.original._id} role={row.original.role} />,
   },
 ]
 

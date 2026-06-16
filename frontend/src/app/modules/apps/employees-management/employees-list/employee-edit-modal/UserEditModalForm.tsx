@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { useListView } from "../core/ListViewProvider";
 import { useQueryResponse } from "../core/QueryResponseProvider";
 import { createUser, updateUser } from "../core/_requests";
-import { isViewOnlyUser } from "../core/permissions";
+import { canAddUsers, canManageRole } from "../core/permissions";
 import { User } from "../core/_models";
 import { isNotEmpty, QUERIES } from "../../../../../../_metronic/helpers";
 import { useMutation, useQueryClient } from "react-query";
@@ -56,8 +56,12 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = isNotEmpty(user?._id);
-  // Employees have view-only access: every field is disabled and saving is hidden.
-  const readOnly = isViewOnlyUser();
+  // Read-only when the current user may not manage this target:
+  //  - editing: depends on the target user's role (e.g. employee editing an owner)
+  //  - adding : depends on whether the user may add users at all
+  const readOnly = isEditMode ? !canManageRole(user?.role) : !canAddUsers();
+  // Only users allowed to manage owners may assign the "owner" role.
+  const canAssignOwner = canManageRole("owner");
 
   const invalidateUsers = () =>
     queryClient.invalidateQueries([`${QUERIES.USERS_LIST}-${query}`]);
@@ -348,7 +352,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                 value={r}
                 checked={formik.values.role === r}
                 onChange={() => formik.setFieldValue("role", r)}
-                disabled={isSubmitting || isUserLoading}
+                disabled={isSubmitting || isUserLoading || (r === "owner" && !canAssignOwner)}
               />
               <label htmlFor={`role-${r}`} className="form-check-label fw-bold text-gray-800">
                 {r === 'owner' ? 'ເຈົ້າຂອງ' : r === 'employee' ? 'ພະນັກງານ' : 'ລູກຄ້າ'}
