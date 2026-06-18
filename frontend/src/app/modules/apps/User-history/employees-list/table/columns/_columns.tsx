@@ -64,6 +64,11 @@ const getBookingTimeRange = (startTime?: string, hours?: number) => {
   return `${startTime} - ${endTime}`
 }
 
+const formatDateDMY = (value?: string) => {
+  if (!value) return '-'
+  const [y, m, d] = value.split('T')[0].split('-')
+  return y && m && d ? `${d}/${m}/${y}` : value
+}
 const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
 const getDisplayStatus = (value?: string) => {
   const normalized = normalizeStatus(value)
@@ -74,7 +79,7 @@ const getDisplayStatus = (value?: string) => {
 
 const BookingDateCell = ({booking}: {booking: HistoryBooking}) => (
   <div className='d-flex flex-column'>
-    <span className='text-gray-800 fw-bold'>{booking.booking_date}</span>
+    <span className='text-gray-800 fw-bold'>{formatDateDMY(booking.booking_date)}</span>
     <span className='text-gray-500 fs-7'>{getBookingTimeRange(booking.booking_time, booking.num_hours)}</span>
   </div>
 )

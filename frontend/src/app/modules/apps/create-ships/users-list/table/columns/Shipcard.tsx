@@ -57,7 +57,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
           <div className='d-flex flex-column align-items-start'>
             <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ລາຄາ</span>
             <span className='text-primary fw-bold fs-6'>
-              ${ship.price?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? '—'}
+              {ship.price?.toLocaleString() ?? '—'} ກີບ
             </span>
           </div>
 

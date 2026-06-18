@@ -5,13 +5,8 @@ type Props = {
 }
 
 const ShipPriceCell: FC<Props> = ({ price }) => {
-  // Format as currency
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price)
+  // Format as Lao Kip
+  const formattedPrice = `${price?.toLocaleString() ?? '—'} ກີບ`
 
   return <div className="fw-bold text-end">{formattedPrice}</div>
 }

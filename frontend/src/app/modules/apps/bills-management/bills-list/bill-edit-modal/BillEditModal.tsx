@@ -15,6 +15,11 @@ const paymentMethodLabels: Record<string, string> = {
   bcel: 'BCEL QR',
 }
 
+const formatDateDMY = (value?: string) => {
+  if (!value) return '-'
+  const [y, m, d] = value.split('T')[0].split('-')
+  return y && m && d ? `${d}/${m}/${y}` : value
+}
 const getPaymentMethodLabel = (method?: string) => paymentMethodLabels[method || ''] || method || '-'
 const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().replace(/[\s-]+/g, '_') ?? ''
 const getDisplayPaymentStatus = (value?: string) => {
@@ -171,7 +176,7 @@ const BookingShipEditModal = () => {
                     <div className='col-md-4'>
                       <div className='text-muted fs-7 mb-2'>ວັນທີຈອງ</div>
                       <div className='fw-bold fs-6'>
-                        {bill.booking_date || '-'} {bill.booking_time || ''}
+                        {formatDateDMY(bill.booking_date)} {bill.booking_time || ''}
                       </div>
                     </div>
                     <div className='col-md-4'>

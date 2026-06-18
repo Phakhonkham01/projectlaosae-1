@@ -80,6 +80,11 @@ const getDisplayPaymentStatus = (value?: string): DisplayPaymentStatus => {
 }
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
+const formatDateDMY = (value?: string) => {
+  if (!value) return '-'
+  const [y, m, d] = value.split('T')[0].split('-')
+  return y && m && d ? `${d}/${m}/${y}` : value
+}
 const paymentMethodLabels: Record<string, string> = {
   cash: 'ເງິນສົດ',
   transfer: 'ໂອນເງິນ',
@@ -227,7 +232,7 @@ const BillDetailModal: FC<{
                 <div className='row g-3'>
                   {[
                     ['ເຮືອ', bill.ship_name],
-                    ['ວັນທີ', bill.booking_date],
+                    ['ວັນທີ', formatDateDMY(bill.booking_date)],
                     ['ເວລາ', bill.booking_time],
                     ['ຈຳນວນຄົນ', `${bill.num_people} ຄົນ`],
                     ['ໄລຍະເວລາ', `${bill.num_hours} ຊົ່ວໂມງ`],
@@ -492,7 +497,7 @@ const BillManagement: FC = () => {
                       )}
                       <td className='fw-semibold'>{b.ship_name}</td>
                       <td>
-                        <div>{b.booking_date}</div>
+                        <div>{formatDateDMY(b.booking_date)}</div>
                         <div className='text-muted fs-8'>{b.booking_time}</div>
                       </td>
                       <td className='fw-bold text-primary'>{fmt(b.grand_total)}</td>

@@ -73,6 +73,11 @@ const STATUS_META: Record<
 }
 
 const fmt = (n: number) => n.toLocaleString() + ' LAK'
+const formatDateDMY = (value?: string) => {
+  if (!value) return '-'
+  const [y, m, d] = value.split('T')[0].split('-')
+  return y && m && d ? `${d}/${m}/${y}` : value
+}
 
 const downloadBillAsPng = (bill: Bill) => {
   const canvas = document.createElement('canvas')
@@ -124,7 +129,7 @@ const downloadBillAsPng = (bill: Bill) => {
   drawRow('Customer', bill.user_name || '-')
   drawRow('Email', bill.user_email || '-')
   drawRow('Ship', bill.ship_name || '-')
-  drawRow('Booking Date', `${bill.booking_date || '-'} ${bill.booking_time || ''}`.trim())
+  drawRow('Booking Date', `${formatDateDMY(bill.booking_date)} ${bill.booking_time || ''}`.trim())
   drawRow('People', `${bill.num_people} people`)
   drawRow('Hours', `${bill.num_hours} hour(s)`)
   drawRow('Payment Method', bill.payment_method === 'transfer' ? 'Transfer' : 'Cash')
@@ -348,7 +353,7 @@ const BillDetailModal: FC<{
                 <div className='row g-3'>
                   {[
                     ['ເຮືອ', bill.ship_name],
-                    ['ວັນທີ', bill.booking_date],
+                    ['ວັນທີ', formatDateDMY(bill.booking_date)],
                     ['ເວລາ', bill.booking_time],
                     ['ຈຳນວນຄົນ', `${bill.num_people} ຄົນ`],
                     ['ໄລຍະເວລາ', `${bill.num_hours} ຊົ່ວໂມງ`],
@@ -438,7 +443,7 @@ const BillDetailModal: FC<{
                         <div className='text-muted fs-8 text-uppercase mb-2'>Trip</div>
                         <div className='fw-bold fs-5'>{bill.ship_name}</div>
                         <div className='text-gray-600'>
-                          {bill.booking_date} {bill.booking_time}
+                          {formatDateDMY(bill.booking_date)} {bill.booking_time}
                         </div>
                       </div>
                     </div>
@@ -768,7 +773,7 @@ const BillManagement: FC = () => {
                       )}
                       <td className='fw-semibold'>{b.ship_name}</td>
                       <td>
-                        <div>{b.booking_date}</div>
+                        <div>{formatDateDMY(b.booking_date)}</div>
                         <div className='text-muted fs-8'>{b.booking_time}</div>
                       </td>
                       <td className='fw-bold text-primary'>{fmt(b.grand_total)}</td>

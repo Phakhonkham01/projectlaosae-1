@@ -447,7 +447,7 @@ const MyProfileCard: FC = () => {
               {[
                 { icon: 'phone', label: 'ເບີໂທ', value: profile.phone_number || '—' },
                 { icon: 'sms', label: 'ອີເມລ', value: profile.email },
-                { icon: 'calendar', label: 'ສ້າງບັນຊີ', value: profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('lo-LA') : '—' },
+                { icon: 'calendar', label: 'ສ້າງບັນຊີ', value: profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-GB') : '—' },
               ].map(({ icon, label, value }) => (
                 <div key={label} className='d-flex align-items-center py-3 border-bottom border-gray-200'>
                   <span className='symbol symbol-35px symbol-light-primary me-3'>

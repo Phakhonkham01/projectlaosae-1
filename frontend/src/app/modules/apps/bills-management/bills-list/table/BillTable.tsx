@@ -13,6 +13,11 @@ import {UsersListLoading} from '../components/loading/UsersListLoading'
 import {UsersListPagination} from '../components/pagination/UsersListPagination'
 
 const formatCurrency = (amount: number) => `${amount.toLocaleString()} LAK`
+const formatDateDMY = (value?: string) => {
+  if (!value) return '-'
+  const [y, m, d] = value.split('T')[0].split('-')
+  return y && m && d ? `${d}/${m}/${y}` : value
+}
 const defaultStatusMeta = {label: '-', badgeClass: 'badge-light'}
 
 type PaymentMethodTab = PaymentMethod
@@ -193,7 +198,7 @@ const BillSection = ({
                       <div className='text-muted fs-7'>{bill.user_email || '-'}</div>
                     </td>
                     <td>
-                      <div>{bill.booking_date || '-'}</div>
+                      <div>{formatDateDMY(bill.booking_date)}</div>
                       <div className='text-muted fs-7'>{bill.booking_time || '-'}</div>
                     </td>
                     <td>{bill.ship_name || '-'}</td>

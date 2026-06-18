@@ -408,7 +408,7 @@ const Dashboard = () => {
     const myHistory = historyBookings.filter(
       (booking) => booking.user_id === currentUserId || booking.user_email?.toLowerCase() === currentUserEmail
     )
-    const myBookings = [...myHistory, ...myBills].sort(
+    const myBookings = dedupeBookings(myHistory, myBills).sort(
       (a, b) => (getBookingDate(b)?.getTime() || 0) - (getBookingDate(a)?.getTime() || 0)
     )
 

@@ -4,6 +4,7 @@ import { useQueryResponse } from '../core/QueryResponseProvider'
 import { ShipData } from '../core/ship_models'
 import { KTIcon } from '../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
+import Flatpickr from 'react-flatpickr'
 import { collection, addDoc, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore'
 import { db } from '../../../../../../../../firebase/useFirebase'
 import { io } from 'socket.io-client'
@@ -1281,13 +1282,18 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
             <div className='row mb-5'>
               <div className='col-6'>
                 <label className='required fw-bold fs-6 mb-2'>ວັນທີ</label>
-                <input
-                  type='date'
+                <Flatpickr
                   className={`form-control form-control-solid ${errors.date ? 'is-invalid' : ''}`}
                   value={bookingDate}
-                  min={todayDateString}
-                  onChange={(e) => {
-                    setBookingDate(e.target.value)
+                  options={{
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'd/m/Y',
+                    minDate: todayDateString,
+                  }}
+                  placeholder='ວ/ດ/ປ'
+                  onChange={(_selectedDates: Date[], dateStr: string) => {
+                    setBookingDate(dateStr)
                     setBookingTime('')
                     setErrors((p) => {
                       const n = { ...p }
