@@ -12,9 +12,10 @@ import {
   QueryConstraint,
 } from 'firebase/firestore'
 import { db } from '../../../../../../../../firebase/useFirebase' // ✅ ปรับ path ให้ตรงกับโปรเจค
+import { COLLECTIONS } from '../../../../../../../../firebase/collections'
 import { Product, ProductCreate, ProductUpdate, Response } from './_models'
 
-const PRODUCTS = 'products'
+const PRODUCTS = COLLECTIONS.products
 const colRef = () => collection(db, PRODUCTS)
 
 // ─── Helper: strip undefined fields ──────────────────────────────────────────
@@ -38,22 +39,22 @@ export const getUsers = async (queryString: string): Promise<Response<Array<Prod
     all = all.filter(
       (p) =>
         p.name.toLowerCase().includes(search) ||
-        p.category_id.toLowerCase().includes(search)
+        p.categoryId.toLowerCase().includes(search)
     )
   }
 
   // ── client-side filter ────────────────────────────────────────────────────
   // Metronic stringifyRequestQuery flat-maps filter keys ออกมาเป็น params ตรงๆ
   // เช่น category_id=xxx&availability=true (ไม่ได้ wrap ใน filter=...)
-  const filterCategoryId = params.get('category_id')
-  const filterAvailability = params.get('availability')
+  const filterCategoryId = params.get('categoryId')
+  const filterAvailability = params.get('available')
 
   if (filterCategoryId) {
-    all = all.filter((p) => p.category_id === filterCategoryId)
+    all = all.filter((p) => p.categoryId === filterCategoryId)
   }
   if (filterAvailability !== null && filterAvailability !== '') {
     const wantAvailable = filterAvailability === 'true'
-    all = all.filter((p) => p.availability === wantAvailable)
+    all = all.filter((p) => p.available === wantAvailable)
   }
 
   const total = all.length
@@ -108,9 +109,9 @@ export const createUser = async (data: Product | ProductCreate): Promise<Product
   const clean = toFirestore({
     name: data.name,
     price: data.price,
-    category_id: data.category_id,
-    availability: data.availability,
-    image: data.image,
+    categoryId: data.categoryId,
+    available: data.available,
+    imageUrl: data.imageUrl,
   })
   const docRef = await addDoc(colRef(), clean)
   return { product_id: docRef.id, ...clean } as Product
@@ -124,9 +125,9 @@ export const updateUser = async (data: Product): Promise<Product> => {
   const clean = toFirestore({
     name: data.name,
     price: data.price,
-    category_id: data.category_id,
-    availability: data.availability,
-    image: data.image,
+    categoryId: data.categoryId,
+    available: data.available,
+    imageUrl: data.imageUrl,
   })
   await updateDoc(doc(db, PRODUCTS, product_id), clean)
   return { product_id, ...clean } as Product
@@ -145,7 +146,7 @@ export const deleteSelectedUsers = async (ids: string[]): Promise<void> => {
 // ─── getProductsByCategory ────────────────────────────────────────────────────
 export const getProductsByCategory = async (categoryId: string): Promise<Product[]> => {
   const constraints: QueryConstraint[] = [
-    where('category_id', '==', categoryId),
+    where('categoryId', '==', categoryId),
     orderBy('name'),
   ]
   const snapshot = await getDocs(query(colRef(), ...constraints))

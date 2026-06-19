@@ -59,10 +59,10 @@ export const useProducts = () => {
     );
   };
 
-  const toggle = async (id: string, availability: boolean) => {
-    await toggleAvailability(id, availability);
+  const toggle = async (id: string, available: boolean) => {
+    await toggleAvailability(id, available);
     setProducts((prev) =>
-      prev.map((p) => (p.product_id === id ? { ...p, availability } : p))
+      prev.map((p) => (p.product_id === id ? { ...p, available } : p))
     );
   };
 

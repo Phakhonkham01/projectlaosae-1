@@ -1,40 +1,16 @@
 import { FC } from 'react'
+import { ShipStatus, SHIP_STATUS_META } from '../../../../../../../../../firebase/schema'
 
 type Props = {
-  status: 'Active' | 'Inactive' | 'Maintenance'
+  status: ShipStatus
 }
 
 const ShipStatusCell: FC<Props> = ({ status }) => {
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'ພ້ອມໃຊ້ງານ'
-      case 'Inactive':
-        return 'ບໍ່ພ້ອມໃຊ້ງານ'
-      case 'Maintenance':
-        return 'ກຳລັງບຳລຸງຮັກສາ'
-      default:
-        return status
-    }
-  }
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'badge-light-success'
-      case 'Inactive':
-        return 'badge-light-secondary'
-      case 'Maintenance':
-        return 'badge-light-warning'
-      default:
-        return 'badge-light-light'
-    }
-  }
-
+  const meta = SHIP_STATUS_META[status] ?? SHIP_STATUS_META.active
   return (
     <div className="text-center">
-      <span className={`badge ${getStatusClass(status)} fw-bold px-3 py-2`}>
-        {getStatusLabel(status)}
+      <span className={`badge badge-light-${meta.color} fw-bold px-3 py-2`}>
+        {meta.label}
       </span>
     </div>
   )

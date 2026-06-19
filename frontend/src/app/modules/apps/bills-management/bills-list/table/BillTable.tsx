@@ -28,9 +28,12 @@ const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().r
 const getDisplayStatus = (value?: string) => {
   const normalized = normalizePaymentStatus(value)
   if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 're_submitted') return 'pending' // ສະຖານະ "ສົ່ງກວດອີກຄັ້ງ" ຖືກລົບອອກ — ໃຫ້ນັບເປັນ pending
   if (normalized === 'payment_failed') return 'payment failed'
   return normalized
 }
+
+const isRejectedBill = (bill: BillData) => getDisplayStatus(bill.payment_status) === 'rejected'
 
 const getStatusMeta = (paymentStatus: string | undefined) => {
   const key = getDisplayStatus(paymentStatus)
@@ -40,8 +43,6 @@ const getStatusMeta = (paymentStatus: string | undefined) => {
 const statusTabs: {label: string; value: StatusTab}[] = [
   {label: 'ທັງໝົດ', value: 'all'},
   {label: PAYMENT_STATUS_META.approved!.label, value: 'approved'},
-  {label: PAYMENT_STATUS_META.rejected!.label, value: 'rejected'},
-  {label: PAYMENT_STATUS_META.re_submitted!.label, value: 're_submitted'},
 ]
 
 const paymentMethodMeta: Record<PaymentMethod, {title: string; shortLabel: string}> = {
@@ -222,6 +223,81 @@ const BillSection = ({
   </div>
 )
 
+const RejectedBillSection = ({
+  bills,
+  onEdit,
+}: {
+  bills: BillData[]
+  onEdit: (id: string) => void
+}) => {
+  if (bills.length === 0) return null
+
+  return (
+    <div className='card mb-7 border border-danger border-dashed'>
+      <div className='card-header border-0 pt-5 d-flex align-items-center gap-3'>
+        <h3 className='fw-bold text-danger mb-0'>
+          <i className='bi bi-x-octagon-fill text-danger me-2'></i>
+          ໃບບິນທີ່ຖືກປະຕິເສດ
+        </h3>
+        <span className='badge badge-light-danger'>{bills.length}</span>
+        <span className='text-muted fs-7'>ບໍ່ນັບລວມໃນຍອດລາຍຮັບ</span>
+      </div>
+
+      <div className='card-body pt-3'>
+        <div className='table-responsive'>
+          <table className='table align-middle table-row-dashed fs-6 gy-4'>
+            <thead>
+              <tr className='text-start text-muted fw-bolder fs-7 text-uppercase gs-0'>
+                <th>ບິນ</th>
+                <th>ລູກຄ້າ</th>
+                <th>ວັນທີຈອງ</th>
+                <th>ເຮືອ</th>
+                <th>ລວມ</th>
+                <th>ເຫດຜົນການປະຕິເສດ</th>
+                <th className='text-end'>ຈັດການ</th>
+              </tr>
+            </thead>
+            <tbody className='fw-semibold text-gray-700'>
+              {bills.map((bill) => (
+                <tr key={bill.id} className='bg-light-danger'>
+                  <td>
+                    <div className='fw-bold'>#{bill.id.slice(0, 8).toUpperCase()}</div>
+                    <div className='text-muted fs-7'>{getMethodLabel(bill.payment_method)}</div>
+                  </td>
+                  <td>
+                    <div>{bill.user_name || '-'}</div>
+                    <div className='text-muted fs-7'>{bill.user_email || '-'}</div>
+                  </td>
+                  <td>
+                    <div>{formatDateDMY(bill.booking_date)}</div>
+                    <div className='text-muted fs-7'>{bill.booking_time || '-'}</div>
+                  </td>
+                  <td>{bill.ship_name || '-'}</td>
+                  <td className='fw-bolder text-decoration-line-through text-muted'>
+                    {formatCurrency(bill.grand_total || 0)}
+                  </td>
+                  <td>
+                    <span className='text-danger fw-semibold'>{bill.reject_reason || '—'}</span>
+                  </td>
+                  <td className='text-end'>
+                    <button
+                      type='button'
+                      className='btn btn-sm btn-light-danger'
+                      onClick={() => onEdit(bill.id)}
+                    >
+                      ເບິ່ງລາຍລະອຽດ
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const ShipTable = () => {
   const bills = useQueryResponseData()
   const isLoading = useQueryResponseLoading()
@@ -229,16 +305,20 @@ const ShipTable = () => {
   const [activeTab, setActiveTab] = useState<PaymentMethodTab>('cash')
   const [activeStatus, setActiveStatus] = useState<StatusTab>('all')
 
+  // ໃບບິນທີ່ຖືກປະຕິເສດ ຖືກແຍກອອກເປັນສ່ວນຕ່າງຫາກ ແລະ ບໍ່ນັບລວມໃນຍອດ/ສະຖິຕິ
+  const rejectedBills = useMemo(() => bills.filter(isRejectedBill), [bills])
+  const activeBills = useMemo(() => bills.filter((bill) => !isRejectedBill(bill)), [bills])
+
   const billsByMethod = useMemo(
     () =>
       PAYMENT_METHOD_OPTIONS.reduce((acc, method) => {
-        acc[method] = bills.filter((bill) => bill.payment_method === method)
+        acc[method] = activeBills.filter((bill) => bill.payment_method === method)
         return acc
       }, {} as Record<PaymentMethod, BillData[]>),
-    [bills]
+    [activeBills]
   )
 
-  const methodBills = billsByMethod[activeTab] || []
+  const methodBills = useMemo(() => billsByMethod[activeTab] || [], [billsByMethod, activeTab])
 
   const filteredBills = useMemo(
     () =>
@@ -312,6 +392,8 @@ const ShipTable = () => {
         onStatusChange={setActiveStatus}
         counts={statusCounts}
       />
+
+      <RejectedBillSection bills={rejectedBills} onEdit={setItemIdForUpdate} />
 
       <UsersListPagination />
       {isLoading && <UsersListLoading />}

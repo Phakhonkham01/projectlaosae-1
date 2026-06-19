@@ -18,7 +18,7 @@ import {useAuth} from '../../modules/auth'
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ArcElement, Tooltip, Legend)
 
 type DashboardRole = 'customer' | 'employee' | 'owner' | 'admin' | 'user'
-type PaymentStatus = 'pending' | 'approved' | 'rejected' | 're_submitted'
+type PaymentStatus = 'pending' | 'approved' | 'rejected'
 
 interface AppUser {
   id: string
@@ -50,6 +50,7 @@ interface BookingItem {
   num_people?: number
   payment_method?: string
   payment_status?: PaymentStatus | string
+  reject_reason?: string
   ship_id?: string
   ship_name?: string
   ship_price_per_hour?: number
@@ -162,14 +163,21 @@ const dedupeBookings = (history: BookingItem[], bills: BookingItem[]) => {
 
 const isActive = (status?: string) => ['active', 'available', 'work day'].includes((status || '').toLowerCase())
 
-const pendingStatuses = ['pending', 're_submitted']
+// ສະຖານະ "ສົ່ງກວດອີກຄັ້ງ" (re_submitted) ຖືກລົບອອກ — ຂໍ້ມູນເກົ່າຖືກນັບເປັນ pending
+const normalizeStatus = (status?: string) => {
+  const s = (status || '').toLowerCase().trim().replace(/[\s-]+/g, '_')
+  if (s === 're_submitted' || s === 'slip_submitted') return 'pending'
+  return s
+}
+const isRejectedStatus = (status?: string) => normalizeStatus(status) === 'rejected'
+
+const pendingStatuses = ['pending']
 const paidStatuses = ['approved']
 
 const paymentStatusLabels: Record<string, string> = {
   pending: 'ລໍຖ້າຊຳລະ',
   approved: 'ຊຳລະແລ້ວ',
   rejected: 'ປະຕິເສດ',
-  re_submitted: 'ສົ່ງກວດອີກຄັ້ງ',
 }
 
 const paymentMethodLabels: Record<string, string> = {
@@ -187,7 +195,7 @@ const roleLabels: Record<DashboardRole, string> = {
 }
 
 const getPaymentStatusLabel = (status?: string) => {
-  const key = (status || 'pending').toLowerCase()
+  const key = normalizeStatus(status) || 'pending'
   return paymentStatusLabels[key] || status || paymentStatusLabels.pending
 }
 
@@ -197,10 +205,9 @@ const getPaymentMethodLabel = (method?: string) => {
 }
 
 const getPaymentBadgeStyle = (status?: string): React.CSSProperties => {
-  const current = (status || 'pending').toLowerCase()
+  const current = normalizeStatus(status) || 'pending'
   if (current === 'approved') return {background: '#e6f9f4', color: '#00876b'}
   if (current === 'rejected') return {background: '#fdeaea', color: '#c0392b'}
-  if (current === 're_submitted') return {background: '#e0f2fe', color: '#0284c7'}
   return {background: '#fef6e0', color: '#b56a00'}
 }
 
@@ -386,6 +393,11 @@ const Dashboard = () => {
 
   const dashboardData = useMemo(() => {
     const allBookings = dedupeBookings(historyBookings, bills)
+    // ໃບບິນທີ່ຖືກປະຕິເສດ ບໍ່ນັບລວມໃນສະຖິຕິ ແລະ ຖືກແຍກສະແດງຕ່າງຫາກ
+    const activeBookings = allBookings.filter((booking) => !isRejectedStatus(booking.payment_status))
+    const rejectedBookings = allBookings
+      .filter((booking) => isRejectedStatus(booking.payment_status))
+      .sort((a, b) => (getBookingDate(b)?.getTime() || 0) - (getBookingDate(a)?.getTime() || 0))
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const todayIso = now.toISOString().slice(0, 10)
@@ -408,9 +420,11 @@ const Dashboard = () => {
     const myHistory = historyBookings.filter(
       (booking) => booking.user_id === currentUserId || booking.user_email?.toLowerCase() === currentUserEmail
     )
-    const myBookings = dedupeBookings(myHistory, myBills).sort(
+    const myBookingsAll = dedupeBookings(myHistory, myBills).sort(
       (a, b) => (getBookingDate(b)?.getTime() || 0) - (getBookingDate(a)?.getTime() || 0)
     )
+    const myBookings = myBookingsAll.filter((booking) => !isRejectedStatus(booking.payment_status))
+    const myRejectedBookings = myBookingsAll.filter((booking) => isRejectedStatus(booking.payment_status))
 
     const totalRevenue = approvedHistory.reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
     const monthlyRevenue = monthlyApproved.reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
@@ -425,8 +439,8 @@ const Dashboard = () => {
       return acc
     }, {})
 
-    const pendingPayments = bills.filter((booking) => pendingStatuses.includes((booking.payment_status || '').toLowerCase()))
-    const todayBookings = allBookings.filter((booking) => booking.booking_date === todayIso)
+    const pendingPayments = bills.filter((booking) => pendingStatuses.includes(normalizeStatus(booking.payment_status)))
+    const todayBookings = activeBookings.filter((booking) => booking.booking_date === todayIso)
     const totalCustomers = users.filter((user) => normalizeRole(user.role) === 'customer').length
     const activeUsers = users.filter((user) => isActive(user.status)).length
     const availableProducts = products.filter((product) => product.availability !== false).length
@@ -441,7 +455,7 @@ const Dashboard = () => {
       return acc
     }, {})
 
-    const productSales = allBookings.flatMap((booking) => booking.foods || []).reduce<Record<string, {name: string; total: number; qty: number}>>(
+    const productSales = activeBookings.flatMap((booking) => booking.foods || []).reduce<Record<string, {name: string; total: number; qty: number}>>(
       (acc, food) => {
         const key = food.product_id || food.name || 'unknown'
         if (!acc[key]) acc[key] = {name: food.name || 'ອາຫານ', total: 0, qty: 0}
@@ -454,7 +468,7 @@ const Dashboard = () => {
 
     const topFoods = Object.values(productSales).sort((a, b) => b.total - a.total).slice(0, 5)
 
-    const categorySales = allBookings
+    const categorySales = activeBookings
       .flatMap((booking) => booking.foods || [])
       .reduce<Record<string, number>>((acc, food) => {
         const product = products.find((item) => item.product_id === food.product_id || item.id === food.product_id)
@@ -463,7 +477,7 @@ const Dashboard = () => {
         return acc
       }, {})
 
-    const shipSales = allBookings.reduce<Record<string, {total: number; count: number; people: number}>>((acc, booking) => {
+    const shipSales = activeBookings.reduce<Record<string, {total: number; count: number; people: number}>>((acc, booking) => {
       const key = booking.ship_name || 'ບໍ່ລະບຸເຮືອ'
       if (!acc[key]) acc[key] = {total: 0, count: 0, people: 0}
       acc[key].total += booking.grand_total || 0
@@ -485,14 +499,16 @@ const Dashboard = () => {
 
     const rankedCustomers = Object.entries(customerRanking).sort((a, b) => b[1] - a[1]).slice(0, 5)
     const customerTotalSpent = myHistory.reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
-    const customerPendingBills = myBills.filter((booking) => pendingStatuses.includes((booking.payment_status || '').toLowerCase()))
+    const customerPendingBills = myBills.filter((booking) => pendingStatuses.includes(normalizeStatus(booking.payment_status)))
     const customerApprovedBookings = myHistory.filter((booking) => (booking.payment_status || '').toLowerCase() === 'approved').length
 
     return {
-      totalBookings: allBookings.length,
+      totalBookings: activeBookings.length,
       sortedBills,
-      sortedHistory,
+      sortedHistory: sortedHistory.filter((booking) => !isRejectedStatus(booking.payment_status)),
+      rejectedBookings,
       myBookings,
+      myRejectedBookings,
       myHistory,
       myBills,
       totalRevenue,
@@ -662,6 +678,17 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
+
+      {dashboardData.myRejectedBookings.length > 0 && (
+        <Card>
+          <CardTitle>ການຈອງທີ່ຖືກປະຕິເສດ ({dashboardData.myRejectedBookings.length})</CardTitle>
+          <div style={stackStyle}>
+            {dashboardData.myRejectedBookings.slice(0, 6).map((booking) => (
+              <BookingRow key={booking.id} booking={booking} />
+            ))}
+          </div>
+        </Card>
+      )}
     </>
   )
 
@@ -887,6 +914,19 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
+
+      {dashboardData.rejectedBookings.length > 0 && (
+        <Card>
+          <CardTitle>
+            ໃບບິນທີ່ຖືກປະຕິເສດ ({dashboardData.rejectedBookings.length}) · ບໍ່ນັບລວມໃນລາຍຮັບ
+          </CardTitle>
+          <div style={stackStyle}>
+            {dashboardData.rejectedBookings.slice(0, 8).map((booking) => (
+              <BookingRow key={booking.id} booking={booking} />
+            ))}
+          </div>
+        </Card>
+      )}
     </>
   )
 
@@ -957,6 +997,11 @@ const BookingRow = ({booking}: {booking: BookingItem}) => {
             <div style={{...mutedTextStyle, fontStyle: 'italic'}}>
               ຈອງໂດຍ: {booking.booked_by_name}
               {booking.booked_by_role ? ` (${booking.booked_by_role})` : ''}
+            </div>
+          )}
+          {isRejectedStatus(booking.payment_status) && (
+            <div style={{marginTop: 6, color: '#c0392b', fontSize: 12, fontWeight: 700}}>
+              ເຫດຜົນປະຕິເສດ: {booking.reject_reason || 'ບໍ່ໄດ້ລະບຸ'}
             </div>
           )}
         </div>

@@ -1,11 +1,11 @@
 // ─── Product Model ────────────────────────────────────────────────────────────
 export interface Product {
-  product_id?: string    // Firestore doc id
+  product_id?: string    // alias ຂອງ Firestore doc id (ບໍ່ໄດ້ເກັບລົງ document)
   name: string           // ຊື່ສິນຄ້າ
   price: number          // ລາຄາ
-  category_id: string    // ອ້າງອີງ collection categories
-  availability: boolean  // ສະຖານະຄວາມພ້ອມ
-  image: string          // ຮູບສິນຄ້າ
+  categoryId: string     // ອ້າງອີງ collection categories (FK)
+  available: boolean     // ສະຖານະຄວາມພ້ອມ
+  imageUrl: string       // ຮູບສິນຄ້າ
 }
 
 // ── aliases ให้ Metronic boilerplate ยังใช้ชื่อ User ได้ (ไม่ต้องแก้ทุกไฟล์) ──
@@ -18,9 +18,9 @@ export const initialProduct: Product = {
   product_id: undefined,
   name: '',
   price: 0,
-  category_id: '',
-  availability: true,
-  image: '',
+  categoryId: '',
+  available: true,
+  imageUrl: '',
 }
 
 // alias สำหรับ Metronic boilerplate ที่ใช้ initialUser

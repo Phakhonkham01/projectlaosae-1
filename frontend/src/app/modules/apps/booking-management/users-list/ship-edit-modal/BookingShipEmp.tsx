@@ -82,7 +82,18 @@ const BookingShipEditModalForm: FC = () => {
     setLoading(true)
     getDoc(doc(db, 'ships', itemIdForUpdate))
       .then((snap) => {
-        if (snap.exists()) setShipData({ id: snap.id, ...snap.data() } as ShipData)
+        if (snap.exists()) {
+          const raw = snap.data() as Record<string, any>
+          setShipData({
+            ...(raw as ShipData),
+            id: snap.id,
+            // ຮອງຮັບທັງຊື່ field ໃໝ່ (create-ships) ແລະ ຊື່ເກົ່າ
+            name: raw.name ?? raw.ship_name ?? '',
+            ship_name: raw.ship_name ?? raw.name ?? '',
+            price: raw.price ?? raw.pricePerHour ?? 0,
+            image_url: raw.image_url ?? raw.imageUrl ?? '',
+          })
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -92,7 +103,18 @@ const BookingShipEditModalForm: FC = () => {
   useEffect(() => {
     getDocs(collection(db, 'products'))
       .then((snap) => {
-        const data = snap.docs.map((d) => ({ product_id: d.id, ...d.data() } as Product))
+        const data = snap.docs.map((d) => {
+          const raw = d.data() as Record<string, any>
+          return {
+            product_id: d.id,
+            name: raw.name,
+            price: raw.price,
+            // ຮອງຮັບທັງຊື່ field ໃໝ່ (addFood) ແລະ ຊື່ເກົ່າ
+            image: raw.imageUrl ?? raw.image ?? '',
+            availability: raw.available ?? raw.availability ?? false,
+            category_id: raw.categoryId ?? raw.category_id ?? '',
+          } as Product
+        })
         setProducts(data.filter((p) => p.availability))
       })
       .catch(console.error)

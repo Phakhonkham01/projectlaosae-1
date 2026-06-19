@@ -31,9 +31,9 @@ type Props = {
 const productSchema = Yup.object().shape({
   name: Yup.string().required('ກະລຸນາໃສ່ຊື່ສິນຄ້າ'),
   price: Yup.number().moreThan(0, 'ລາຄາຕ້ອງຫຼາຍກວ່າ 0').required('ກະລຸນາໃສ່ລາຄາ'),
-  category_id: Yup.string().required('ກະລຸນາເລືອກໝວດໝູ່'),
-  image: Yup.string().required('ກະລຸນາໃສ່ຮູບສິນຄ້າ'),
-  availability: Yup.boolean().required(),
+  categoryId: Yup.string().required('ກະລຸນາເລືອກໝວດໝູ່'),
+  imageUrl: Yup.string().required('ກະລຸນາໃສ່ຮູບສິນຄ້າ'),
+  available: Yup.boolean().required(),
 })
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
   const [showManageCategoriesModal, setShowManageCategoriesModal] = useState(false)
 
   // ── Image upload state ─────────────────────────────────────────────────────
-  const [imagePreview, setImagePreview] = useState<string>(user?.image || '')
+  const [imagePreview, setImagePreview] = useState<string>(user?.imageUrl || '')
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -117,12 +117,12 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
           console.error('Upload error:', error)
           toast.error('ອັບໂຫຼດຮູບບໍ່ສຳເລັດ')
           setUploading(false)
-          setImagePreview(formik.values.image || '')
+          setImagePreview(formik.values.imageUrl || '')
         },
         async () => {
           // ✅ Upload complete — get download URL
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-          formik.setFieldValue('image', downloadURL)
+          formik.setFieldValue('imageUrl', downloadURL)
           setImagePreview(downloadURL)
           setUploading(false)
           setUploadProgress(0)
@@ -137,15 +137,15 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
 
   const handleRemoveImage = async () => {
     // ลบจาก Storage ถ้าเป็น Firebase URL
-    if (formik.values.image?.includes('firebasestorage')) {
+    if (formik.values.imageUrl?.includes('firebasestorage')) {
       try {
-        const imageRef = ref(storage, formik.values.image)
+        const imageRef = ref(storage, formik.values.imageUrl)
         await deleteObject(imageRef)
       } catch {
         // ไม่สำคัญถ้าลบ storage ไม่สำเร็จ
       }
     }
-    formik.setFieldValue('image', '')
+    formik.setFieldValue('imageUrl', '')
     setImagePreview('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -157,9 +157,9 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
       ...user,
       name: user?.name || '',
       price: user?.price || 0,
-      category_id: user?.category_id || '',
-      image: user?.image || '',
-      availability: user?.availability ?? true,
+      categoryId: user?.categoryId || '',
+      imageUrl: user?.imageUrl || '',
+      available: user?.available ?? true,
     },
     validationSchema: productSchema,
     enableReinitialize: true,
@@ -220,7 +220,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
       const docRef = await addDoc(collection(db, 'categories'), { name: newCategoryName.trim() })
       const created: Category = { category_id: docRef.id, name: newCategoryName.trim() }
       setCategories((prev) => [...prev, created])
-      formik.setFieldValue('category_id', docRef.id)
+      formik.setFieldValue('categoryId', docRef.id)
       setNewCategoryName('')
       setShowCategoryModal(false)
       toast.success('ສ້າງໝວດໝູ່ສຳເລັດ!')
@@ -268,7 +268,7 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
     try {
       await deleteDoc(doc(db, 'categories', cat.category_id))
       setCategories((prev) => prev.filter((c) => c.category_id !== cat.category_id))
-      if (formik.values.category_id === cat.category_id) formik.setFieldValue('category_id', '')
+      if (formik.values.categoryId === cat.category_id) formik.setFieldValue('categoryId', '')
       toast.success('ລຶບໝວດໝູ່ສຳເລັດ!')
     } catch {
       toast.error('ລຶບໝວດໝູ່ບໍ່ສຳເລັດ')
@@ -352,8 +352,8 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
             </div>
           </div>
           <select
-            {...formik.getFieldProps('category_id')}
-            className={fieldClass('category_id')}
+            {...formik.getFieldProps('categoryId')}
+            className={fieldClass('categoryId')}
             disabled={isSubmitting || isUserLoading || loadingCategories}
           >
             <option value=''>ເລືອກໝວດໝູ່</option>
@@ -361,9 +361,9 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
               <option key={cat.category_id} value={cat.category_id}>{cat.name}</option>
             ))}
           </select>
-          {formik.touched.category_id && formik.errors.category_id && (
+          {formik.touched.categoryId && formik.errors.categoryId && (
             <div className='fv-plugins-message-container'>
-              <span role='alert' className='fv-help-block'>{formik.errors.category_id as string}</span>
+              <span role='alert' className='fv-help-block'>{formik.errors.categoryId as string}</span>
             </div>
           )}
         </div>
@@ -455,9 +455,9 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
             )}
           </button>
 
-          {formik.touched.image && formik.errors.image && (
+          {formik.touched.imageUrl && formik.errors.imageUrl && (
             <div className='fv-plugins-message-container mt-2'>
-              <span role='alert' className='fv-help-block'>{formik.errors.image as string}</span>
+              <span role='alert' className='fv-help-block'>{formik.errors.imageUrl as string}</span>
             </div>
           )}
         </div>
@@ -472,8 +472,8 @@ const UserEditModalForm: FC<Props> = ({ user, isUserLoading }) => {
                   id={`avail-${val}`}
                   className='form-check-input'
                   type='radio'
-                  checked={formik.values.availability === val}
-                  onChange={() => formik.setFieldValue('availability', val)}
+                  checked={formik.values.available === val}
+                  onChange={() => formik.setFieldValue('available', val)}
                   disabled={isSubmitting || isUserLoading}
                 />
                 <label htmlFor={`avail-${val}`} className='form-check-label fw-bold text-gray-800'>

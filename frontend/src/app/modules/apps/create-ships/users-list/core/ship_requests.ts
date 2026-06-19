@@ -1,19 +1,21 @@
 // core/ship_requests.ts
-import { 
-  collection, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  collection,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
   doc,
   query,
-  orderBy 
+  orderBy,
+  serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../../../../../../../../firebase/useFirebase'
+import { COLLECTIONS } from '../../../../../../../../firebase/collections'
 import { ShipData } from './ship_models'
 
-const SHIPS_COLLECTION = 'ships'
+const SHIPS_COLLECTION = COLLECTIONS.ships
 
 // Get all ships
 export const getShips = async (): Promise<ShipData[]> => {
@@ -21,15 +23,15 @@ export const getShips = async (): Promise<ShipData[]> => {
     const shipsRef = collection(db, SHIPS_COLLECTION)
     const q = query(shipsRef, orderBy('createdAt', 'desc'))
     const querySnapshot = await getDocs(q)
-    
+
     const ships: ShipData[] = []
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach((d) => {
       ships.push({
-        id: doc.id,
-        ...doc.data()
+        id: d.id,
+        ...d.data(),
       } as ShipData)
     })
-    
+
     return ships
   } catch (error) {
     console.error('Error getting ships:', error)
@@ -42,11 +44,11 @@ export const getShipById = async (id: string): Promise<ShipData | null> => {
   try {
     const shipRef = doc(db, SHIPS_COLLECTION, id)
     const shipSnap = await getDoc(shipRef)
-    
+
     if (shipSnap.exists()) {
       return {
         id: shipSnap.id,
-        ...shipSnap.data()
+        ...shipSnap.data(),
       } as ShipData
     }
     return null
@@ -62,13 +64,13 @@ export const createShip = async (shipData: ShipData): Promise<ShipData> => {
     const shipsRef = collection(db, SHIPS_COLLECTION)
     const docRef = await addDoc(shipsRef, {
       ...shipData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
-    
+
     return {
       id: docRef.id,
-      ...shipData
+      ...shipData,
     }
   } catch (error) {
     console.error('Error creating ship:', error)
@@ -82,7 +84,7 @@ export const updateShip = async (id: string, shipData: Partial<ShipData>): Promi
     const shipRef = doc(db, SHIPS_COLLECTION, id)
     await updateDoc(shipRef, {
       ...shipData,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp(),
     })
   } catch (error) {
     console.error('Error updating ship:', error)
@@ -104,7 +106,7 @@ export const deleteShip = async (id: string): Promise<void> => {
 // Delete multiple ships
 export const deleteSelectedShips = async (selectedIds: string[]): Promise<void> => {
   try {
-    const deletePromises = selectedIds.map(id => deleteShip(id))
+    const deletePromises = selectedIds.map((id) => deleteShip(id))
     await Promise.all(deletePromises)
   } catch (error) {
     console.error('Error deleting ships:', error)

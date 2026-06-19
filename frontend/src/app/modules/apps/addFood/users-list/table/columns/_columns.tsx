@@ -84,7 +84,7 @@ export const getProductsColumns = (
   {
     Header: 'Image',
     id: 'image',
-    Cell: ({ row }) => <ImageCell src={row.original.image} name={row.original.name} />,
+    Cell: ({ row }) => <ImageCell src={row.original.imageUrl} name={row.original.name} />,
   },
   {
     Header: 'Name',
@@ -100,7 +100,7 @@ export const getProductsColumns = (
     id: 'category',
     Cell: ({ row }) => (
       <CategoryCell
-        categoryId={row.original.category_id}
+        categoryId={row.original.categoryId}
         categoryMap={categoryMap}
         loadingMap={loadingMap}
       />
@@ -109,7 +109,7 @@ export const getProductsColumns = (
   {
     Header: 'Available',
     id: 'availability',
-    Cell: ({ row }) => <AvailabilityCell available={row.original.availability} />,
+    Cell: ({ row }) => <AvailabilityCell available={row.original.available} />,
   },
   {
     Header: () => <div className='text-end pe-3'>Actions</div>,

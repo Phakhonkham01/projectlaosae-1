@@ -19,7 +19,7 @@ const ProductsInShopTable = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('card')
 
   const data = useMemo(
-    () => (products as Product[]).filter((product) => product.availability !== false),
+    () => (products as Product[]).filter((product) => product.available !== false),
     [products]
   )
   const columns = useMemo(

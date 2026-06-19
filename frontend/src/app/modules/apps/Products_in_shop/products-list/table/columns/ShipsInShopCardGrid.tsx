@@ -62,7 +62,7 @@ const ShipsInShopCardGrid = ({data}: Props) => {
           </div>
         ) : (
           data.map((ship, index) => (
-            <div key={ship.id || `${ship.ship_name}-${index}`} className='ship-card-col'>
+            <div key={ship.id || `${ship.name}-${index}`} className='ship-card-col'>
               <ShipsInShopCard ship={ship} index={index} />
             </div>
           ))

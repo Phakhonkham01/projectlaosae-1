@@ -25,6 +25,7 @@ const normalizePaymentStatus = (value?: string) => value?.toLowerCase().trim().r
 const getDisplayPaymentStatus = (value?: string) => {
   const normalized = normalizePaymentStatus(value)
   if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 're_submitted') return 'pending' // ສະຖານະ "ສົ່ງກວດອີກຄັ້ງ" ຖືກລົບອອກ
   if (normalized === 'payment_failed') return 'payment failed'
   return normalized
 }
@@ -133,6 +134,19 @@ const BookingShipEditModal = () => {
             </div>
 
             <div className='modal-body py-8 px-10'>
+              {getDisplayPaymentStatus(bill.payment_status) === 'rejected' && (
+                <div className='alert alert-danger d-flex align-items-start gap-3 mb-8' role='alert'>
+                  <KTIcon iconName='cross-circle' className='fs-2x text-danger' />
+                  <div>
+                    <div className='fw-bold fs-5 mb-1'>ບິນນີ້ຖືກປະຕິເສດ</div>
+                    <div className='fs-6'>
+                      <span className='text-muted'>ເຫດຜົນ: </span>
+                      <span className='fw-semibold'>{bill.reject_reason || 'ບໍ່ໄດ້ລະບຸເຫດຜົນ'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className='row g-5 mb-8'>
                 <div className='col-xl-4 col-md-6'>
                   <div className='card bg-light-primary border-0 h-100'>
@@ -173,17 +187,25 @@ const BookingShipEditModal = () => {
               <div className='card border-0 bg-light mb-8'>
                 <div className='card-body py-6'>
                   <div className='row g-6'>
-                    <div className='col-md-4'>
+                    <div className='col-md-4 col-6'>
                       <div className='text-muted fs-7 mb-2'>ວັນທີຈອງ</div>
                       <div className='fw-bold fs-6'>
                         {formatDateDMY(bill.booking_date)} {bill.booking_time || ''}
                       </div>
                     </div>
-                    <div className='col-md-4'>
+                    <div className='col-md-4 col-6'>
                       <div className='text-muted fs-7 mb-2'>ເຮືອ</div>
                       <div className='fw-bold fs-6'>{bill.ship_name || '-'}</div>
                     </div>
-                    <div className='col-md-4'>
+                    <div className='col-md-4 col-6'>
+                      <div className='text-muted fs-7 mb-2'>ຈຳນວນຄົນ</div>
+                      <div className='fw-bold fs-6'>{bill.num_people || '-'} ຄົນ</div>
+                    </div>
+                    <div className='col-md-4 col-6'>
+                      <div className='text-muted fs-7 mb-2'>ຈຳນວນຊົ່ວໂມງ</div>
+                      <div className='fw-bold fs-6'>{bill.num_hours || '-'} ຊົ່ວໂມງ</div>
+                    </div>
+                    <div className='col-md-4 col-6'>
                       <div className='text-muted fs-7 mb-2'>ວິທີຊຳລະ</div>
                       <div className='fw-bold fs-6 text-capitalize'>
                         {getPaymentMethodLabel(bill.payment_method)}
@@ -254,6 +276,85 @@ const BookingShipEditModal = () => {
                 </div>
 
                 <div className='col-lg-5'>
+                  <div className='card border border-gray-200 mb-8'>
+                    <div className='card-header border-0 pt-6'>
+                      <div className='card-title'>
+                        <h3 className='fw-bold m-0'>ສະຫຼຸບລາຄາ</h3>
+                      </div>
+                    </div>
+                    <div className='card-body pt-0'>
+                      <div className='d-flex justify-content-between align-items-center mb-3'>
+                        <span className='text-muted fw-semibold'>ຄ່າເຮືອ/ຊົ່ວໂມງ</span>
+                        <span className='fw-bold'>{(bill.ship_price_per_hour || 0).toLocaleString()} LAK</span>
+                      </div>
+                      <div className='d-flex justify-content-between align-items-center mb-3'>
+                        <span className='text-muted fw-semibold'>
+                          ຄ່າຈອງເຮືອ ({bill.num_hours || 0} ຊົ່ວໂມງ)
+                        </span>
+                        <span className='fw-bold'>{(bill.total_ship_price || 0).toLocaleString()} LAK</span>
+                      </div>
+                      <div className='d-flex justify-content-between align-items-center mb-3'>
+                        <span className='text-muted fw-semibold'>
+                          ຄ່າອາຫານ ({bill.foods?.length || 0} ລາຍການ)
+                        </span>
+                        <span className='fw-bold'>{(bill.total_food_price || 0).toLocaleString()} LAK</span>
+                      </div>
+                      <div className='separator separator-dashed my-4'></div>
+                      <div className='d-flex justify-content-between align-items-center'>
+                        <span className='fw-bold fs-5'>ຍອດລວມທັງໝົດ</span>
+                        <span className='fw-bold fs-3 text-success'>
+                          {(bill.grand_total || 0).toLocaleString()} LAK
+                        </span>
+                      </div>
+
+                      {(bill.payment_method === 'cash+transfer' ||
+                        bill.payment_method === 'bcel' ||
+                        bill.cash_amount != null ||
+                        bill.transfer_amount != null ||
+                        bill.bcel_amount_usd != null) && (
+                        <>
+                          <div className='separator separator-dashed my-4'></div>
+                          <div className='text-muted fs-7 fw-bold text-uppercase mb-3'>
+                            ລາຍລະອຽດການຊຳລະ
+                          </div>
+                          {bill.cash_amount != null && (
+                            <div className='d-flex justify-content-between align-items-center mb-2'>
+                              <span className='text-muted fw-semibold'>ເງິນສົດ</span>
+                              <span className='fw-bold'>{bill.cash_amount.toLocaleString()} LAK</span>
+                            </div>
+                          )}
+                          {bill.transfer_amount != null && (
+                            <div className='d-flex justify-content-between align-items-center mb-2'>
+                              <span className='text-muted fw-semibold'>ໂອນ</span>
+                              <span className='fw-bold'>{bill.transfer_amount.toLocaleString()} LAK</span>
+                            </div>
+                          )}
+                          {bill.bcel_amount_usd != null && (
+                            <div className='d-flex justify-content-between align-items-center mb-2'>
+                              <span className='text-muted fw-semibold'>BCEL (USD)</span>
+                              <span className='fw-bold'>${bill.bcel_amount_usd.toLocaleString()}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {bill.slip_url && (
+                        <>
+                          <div className='separator separator-dashed my-4'></div>
+                          <div className='text-muted fs-7 fw-bold text-uppercase mb-3'>ໃບໂອນ/ສະລິບ</div>
+                          <a href={bill.slip_url} target='_blank' rel='noreferrer'>
+                            <img
+                              src={bill.slip_url}
+                              alt='payment slip'
+                              className='rounded w-100'
+                              style={{maxHeight: 220, objectFit: 'cover'}}
+                            />
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   <div className='card border border-gray-200 mb-8'>
                     <div className='card-header border-0 pt-6'>
                       <div className='card-title'>

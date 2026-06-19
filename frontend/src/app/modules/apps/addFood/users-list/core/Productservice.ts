@@ -1,11 +1,11 @@
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface Product {
-  product_id: string;    // ໄອດີສິນຄ້າ
+  product_id: string;    // alias ຂອງ doc id
   name: string;          // ຊື່
   price: number;         // ລາຄາ
-  category_id: string;   // ອ້າງອີງໄປຫາ collection categories
-  availability: boolean; // ສະຖານະຄວາມພ້ອມໃຊ້ງານ
-  image: string;         // ຮູບສິນຄ້າ
+  categoryId: string;    // ອ້າງອີງໄປຫາ collection categories (FK)
+  available: boolean;    // ສະຖານະຄວາມພ້ອມໃຊ້ງານ
+  imageUrl: string;      // ຮູບສິນຄ້າ
 }
 
 export type ProductCreate = Omit<Product, "product_id">;
@@ -48,9 +48,9 @@ export const getProductById = async (id: string): Promise<Product | null> => {
 /**
  * ດຶງສິນຄ້າຕາມ category_id (reference ໄປ collection categories)
  */
-export const getProductsByCategoryId = async (category_id: string): Promise<Product[]> => {
+export const getProductsByCategoryId = async (categoryId: string): Promise<Product[]> => {
   const constraints: QueryConstraint[] = [
-    where("category_id", "==", category_id),
+    where("categoryId", "==", categoryId),
     orderBy("name"),
   ];
   const snapshot = await getDocs(query(colRef(), ...constraints));
@@ -60,20 +60,20 @@ export const getProductsByCategoryId = async (category_id: string): Promise<Prod
 // ─── GET AVAILABLE ────────────────────────────────────────────────────────────
 export const getAvailableProducts = async (): Promise<Product[]> => {
   const snapshot = await getDocs(
-    query(colRef(), where("availability", "==", true))
+    query(colRef(), where("available", "==", true))
   );
   return snapshot.docs.map((d) => ({ product_id: d.id, ...d.data() } as Product));
 };
 
 // ─── GET AVAILABLE BY CATEGORY ────────────────────────────────────────────────
 export const getAvailableProductsByCategoryId = async (
-  category_id: string
+  categoryId: string
 ): Promise<Product[]> => {
   const snapshot = await getDocs(
     query(
       colRef(),
-      where("category_id", "==", category_id),
-      where("availability", "==", true),
+      where("categoryId", "==", categoryId),
+      where("available", "==", true),
       orderBy("name")
     )
   );
@@ -104,9 +104,9 @@ export const updateProduct = async (
 
 export const toggleAvailability = async (
   id: string,
-  availability: boolean
+  available: boolean
 ): Promise<void> => {
-  await updateDoc(doc(db, COLLECTION, id), { availability });
+  await updateDoc(doc(db, COLLECTION, id), { available });
 };
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────

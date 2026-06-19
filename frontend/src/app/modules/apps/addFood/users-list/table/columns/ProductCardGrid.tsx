@@ -55,7 +55,7 @@ const ProductCardGrid: React.FC<Props> = ({data, categoryMap}) => {
               <ProductCard
                 product={product}
                 index={index}
-                categoryName={categoryMap[product.category_id]}
+                categoryName={categoryMap[product.categoryId]}
               />
             </div>
           ))

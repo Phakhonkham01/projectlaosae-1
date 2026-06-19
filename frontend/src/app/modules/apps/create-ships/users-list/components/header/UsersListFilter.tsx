@@ -95,9 +95,9 @@ const UsersListFilter = () => {
               value={status || ''}
             >
               <option value=''>ທຸກສະຖານະ</option>
-              <option value='Active'>ພ້ອມໃຊ້ງານ</option>
-              <option value='Inactive'>ບໍ່ພ້ອມໃຊ້ງານ</option>
-              <option value='On Leave'>ຢຸດໃຫ້ບໍລິການ</option>
+              <option value='active'>ພ້ອມໃຊ້ງານ</option>
+              <option value='inactive'>ບໍ່ພ້ອມໃຊ້ງານ</option>
+              <option value='maintenance'>ກຳລັງບຳລຸງຮັກສາ</option>
             </select>
           </div>
 

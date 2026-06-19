@@ -15,21 +15,30 @@ import { ShipData } from './ship_models'
 
 const SHIPS_COLLECTION = 'ships'
 
+// ─── Normalize ──────────────────────────────────────────────────────────────
+// ໜ້າສ້າງເຮືອ (create-ships) ບັນທຶກ field ຊື່ pricePerHour / imageUrl
+// ແຕ່ໂມເດລການຈອງໃຊ້ price / image_url — ຕ້ອງແມັບໃຫ້ກົງ (ຮອງຮັບທັງຊື່ເກົ່າ ແລະ ໃໝ່)
+const normalizeShip = (id: string, raw: Record<string, any>): ShipData => ({
+  ...(raw as ShipData),
+  id,
+  name: raw.name ?? raw.ship_name ?? '',
+  ship_name: raw.ship_name ?? raw.name ?? '',
+  price: raw.price ?? raw.pricePerHour ?? 0,
+  image_url: raw.image_url ?? raw.imageUrl ?? '',
+})
+
 // Get all ships
 export const getShips = async (): Promise<ShipData[]> => {
   try {
     const shipsRef = collection(db, SHIPS_COLLECTION)
     const q = query(shipsRef, orderBy('createdAt', 'desc'))
     const querySnapshot = await getDocs(q)
-    
+
     const ships: ShipData[] = []
     querySnapshot.forEach((doc) => {
-      ships.push({
-        id: doc.id,
-        ...doc.data()
-      } as ShipData)
+      ships.push(normalizeShip(doc.id, doc.data()))
     })
-    
+
     return ships
   } catch (error) {
     console.error('Error getting ships:', error)
@@ -42,12 +51,9 @@ export const getShipById = async (id: string): Promise<ShipData | null> => {
   try {
     const shipRef = doc(db, SHIPS_COLLECTION, id)
     const shipSnap = await getDoc(shipRef)
-    
+
     if (shipSnap.exists()) {
-      return {
-        id: shipSnap.id,
-        ...shipSnap.data()
-      } as ShipData
+      return normalizeShip(shipSnap.id, shipSnap.data())
     }
     return null
   } catch (error) {

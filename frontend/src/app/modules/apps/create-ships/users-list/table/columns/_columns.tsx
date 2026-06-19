@@ -24,8 +24,8 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
       <UserCustomHeader tableProps={props} title="ຮູບພາບ" className="min-w-220px text-center" />
     ),
     id: 'image',
-    accessor: 'image_url',
-    Cell: ({ value }) => <ShipImageCell image_url={value} />,
+    accessor: 'imageUrl',
+    Cell: ({ value }) => <ShipImageCell imageUrl={value} />,
   },
 
   // Ship Name
@@ -33,9 +33,9 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
     Header: (props) => (
       <UserCustomHeader tableProps={props} title="ຊື່ເຮືອ" className="min-w-200px" />
     ),
-    id: 'ship_name',
-    accessor: 'ship_name',
-    Cell: ({ value, row }) => <ShipInfoCell ship_name={value} status={row.original.status} />,
+    id: 'name',
+    accessor: 'name',
+    Cell: ({ value, row }) => <ShipInfoCell name={value} status={row.original.status} />,
   },
 
   // Capacity
@@ -52,7 +52,7 @@ const shipColumns: ReadonlyArray<Column<ShipData>> = [
     Header: (props) => (
       <UserCustomHeader tableProps={props} title="ລາຄາ" className="min-w-120px text-end" />
     ),
-    accessor: 'price',
+    accessor: 'pricePerHour',
     Cell: ({ value }) => <ShipPriceCell price={value} />,
   },
 

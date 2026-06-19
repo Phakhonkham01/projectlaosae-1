@@ -1,10 +1,10 @@
 import { FC } from 'react'
 
 type Props = {
-  image_url: string
+  imageUrl: string
 }
 
-const ShipImageCell: FC<Props> = ({ image_url }) => {
+const ShipImageCell: FC<Props> = ({ imageUrl }) => {
   return (
     <div className="d-flex justify-content-center">
       <div 
@@ -17,9 +17,9 @@ const ShipImageCell: FC<Props> = ({ image_url }) => {
           border: '1px solid #EFF2F5'
         }}
       >
-        {image_url ? (
-          <img 
-            src={image_url} 
+        {imageUrl ? (
+          <img
+            src={imageUrl}
             alt="ເຮືອ" 
             className="symbol-label"
             style={{ 

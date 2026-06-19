@@ -8,7 +8,7 @@ type Props = {
 }
 
 const ProductsInShopCard: React.FC<Props> = ({product, index, categoryName}) => {
-  const imageSrc = product.image || '/media/avatars/blank.png'
+  const imageSrc = product.imageUrl || '/media/avatars/blank.png'
 
   return (
     <div className='card card-flush h-100 shadow-sm product-shop-card'>

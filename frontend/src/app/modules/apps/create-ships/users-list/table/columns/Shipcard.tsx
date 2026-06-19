@@ -18,8 +18,8 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
         style={{ borderRadius: '0.625rem 0.625rem 0 0', maxHeight: '200px' }}
       >
         <img
-          src={ship.image_url || '/media/avatars/blank.png'}
-          alt={ship.ship_name}
+          src={ship.imageUrl || '/media/avatars/blank.png'}
+          alt={ship.name}
           className='w-100 object-fit-cover'
           style={{ height: '200px' }}
           onError={(e) => {
@@ -39,7 +39,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
         {/* Ship Name */}
         <div>
           <span className='text-gray-900 fw-bold fs-5 d-block text-truncate'>
-            {ship.ship_name}
+            {ship.name}
           </span>
         </div>
 
@@ -57,7 +57,7 @@ const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
           <div className='d-flex flex-column align-items-start'>
             <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ລາຄາ</span>
             <span className='text-primary fw-bold fs-6'>
-              {ship.price?.toLocaleString() ?? '—'} ກີບ
+              {ship.pricePerHour?.toLocaleString() ?? '—'} ກີບ
             </span>
           </div>
 

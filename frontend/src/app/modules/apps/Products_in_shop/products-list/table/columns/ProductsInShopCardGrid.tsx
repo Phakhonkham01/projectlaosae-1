@@ -67,7 +67,7 @@ const ProductsInShopCardGrid: React.FC<Props> = ({data, categoryMap}) => {
               <ProductsInShopCard
                 product={product}
                 index={index}
-                categoryName={categoryMap[product.category_id]}
+                categoryName={categoryMap[product.categoryId]}
               />
             </div>
           ))

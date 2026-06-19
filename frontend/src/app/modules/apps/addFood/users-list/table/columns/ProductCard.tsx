@@ -9,7 +9,7 @@ type Props = {
 }
 
 const ProductCard: React.FC<Props> = ({product, index, categoryName}) => {
-  const imageSrc = product.image || '/media/avatars/blank.png'
+  const imageSrc = product.imageUrl || '/media/avatars/blank.png'
 
   return (
     <div className='card card-flush h-md-100 shadow-sm'>
@@ -31,8 +31,8 @@ const ProductCard: React.FC<Props> = ({product, index, categoryName}) => {
       <div className='card-body d-flex flex-column gap-3 pt-4 pb-3 px-5'>
         <div className='d-flex justify-content-between align-items-center gap-2'>
           <span className='badge badge-light-primary fw-bold fs-8'>#{index + 1}</span>
-          <span className={`badge fw-bolder badge-light-${product.availability ? 'success' : 'danger'}`}>
-            {product.availability ? 'Available' : 'Unavailable'}
+          <span className={`badge fw-bolder badge-light-${product.available ? 'success' : 'danger'}`}>
+            {product.available ? 'Available' : 'Unavailable'}
           </span>
         </div>
 

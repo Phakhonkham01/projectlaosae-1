@@ -46,8 +46,8 @@ const UsersListFilter = () => {
 
   const filterData = () => {
     const filter: Record<string, string> = {}
-    if (selectedCategory) filter.category_id = selectedCategory
-    if (availability !== '') filter.availability = availability
+    if (selectedCategory) filter.categoryId = selectedCategory
+    if (availability !== '') filter.available = availability
 
     updateState({
       filter: Object.keys(filter).length > 0 ? filter : undefined,

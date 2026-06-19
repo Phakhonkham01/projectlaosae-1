@@ -53,9 +53,8 @@ const QueryResponseProvider: FC<WithChildren> = ({children}) => {
         // Filter by search term
         if (state.search) {
           const searchTerm = state.search.toLowerCase()
-          filteredShips = filteredShips.filter(ship => 
+          filteredShips = filteredShips.filter(ship =>
             ship.name.toLowerCase().includes(searchTerm) ||
-            ship.ship_name.toLowerCase().includes(searchTerm) ||
             ship.status.toLowerCase().includes(searchTerm)
           )
         }

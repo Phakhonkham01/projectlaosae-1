@@ -62,7 +62,7 @@ const getProductsInShopColumns = (
   {
     Header: 'ຮູບ',
     id: 'image',
-    Cell: ({row}) => <ImageCell src={row.original.image} name={row.original.name} />,
+    Cell: ({row}) => <ImageCell src={row.original.imageUrl} name={row.original.name} />,
   },
   {
     Header: 'ຊື່ສິນຄ້າ',
@@ -79,7 +79,7 @@ const getProductsInShopColumns = (
     id: 'category',
     Cell: ({row}) => (
       <CategoryCell
-        categoryId={row.original.category_id}
+        categoryId={row.original.categoryId}
         categoryMap={categoryMap}
         loadingMap={loadingMap}
       />
@@ -88,7 +88,7 @@ const getProductsInShopColumns = (
   {
     Header: 'ສະຖານະ',
     id: 'availability',
-    Cell: ({row}) => <AvailabilityCell available={row.original.availability} />,
+    Cell: ({row}) => <AvailabilityCell available={row.original.available} />,
   },
 ]
 

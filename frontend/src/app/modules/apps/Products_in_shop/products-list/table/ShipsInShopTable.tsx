@@ -21,7 +21,7 @@ const ShipsInShopTable = () => {
       try {
         setIsLoading(true)
         const response = await getShips()
-        setShips(response.filter((ship) => ship.status !== 'Inactive' && (ship.quantity ?? 0) > 0))
+        setShips(response.filter((ship) => ship.status !== 'inactive' && (ship.quantity ?? 0) > 0))
       } catch (error) {
         console.error('Failed to load ships in shop:', error)
         setShips([])
@@ -38,7 +38,7 @@ const ShipsInShopTable = () => {
     if (!keyword) return ships
 
     return ships.filter((ship) =>
-      [ship.ship_name, ship.name, String(ship.capacity), String(ship.price)]
+      [ship.name, String(ship.capacity), String(ship.pricePerHour)]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(keyword))
     )

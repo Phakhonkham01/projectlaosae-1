@@ -2,9 +2,9 @@ import {Column} from 'react-table'
 import {ShipData} from '../../../../create-ships/users-list/core/ship_models'
 
 const STATUS_LABELS: Record<string, string> = {
-  Active: 'ໃຊ້ງານ',
-  Maintenance: 'ສ້ອມແປງ',
-  Inactive: 'ບໍ່ໃຊ້ງານ',
+  active: 'ໃຊ້ງານ',
+  maintenance: 'ສ້ອມແປງ',
+  inactive: 'ບໍ່ໃຊ້ງານ',
 }
 
 const ShipImageCell = ({src, name}: {src: string; name: string}) => (
@@ -30,9 +30,9 @@ const ShipImageCell = ({src, name}: {src: string; name: string}) => (
 
 const ShipStatusBadge = ({status}: {status: ShipData['status']}) => {
   const statusClass =
-    status === 'Maintenance'
+    status === 'maintenance'
       ? 'badge-light-warning'
-      : status === 'Inactive'
+      : status === 'inactive'
       ? 'badge-light-secondary'
       : 'badge-light-success'
 
@@ -44,14 +44,14 @@ const getShipsInShopColumns = (): ReadonlyArray<Column<ShipData>> => [
     Header: 'ຮູບ',
     id: 'image',
     Cell: ({row}) => (
-      <ShipImageCell src={row.original.image_url} name={row.original.ship_name || row.original.name} />
+      <ShipImageCell src={row.original.imageUrl} name={row.original.name} />
     ),
   },
   {
     Header: 'ຊື່ເຮືອ',
-    id: 'ship_name',
+    id: 'name',
     Cell: ({row}) => (
-      <span className='text-gray-900 fw-bold fs-6'>{row.original.ship_name || row.original.name}</span>
+      <span className='text-gray-900 fw-bold fs-6'>{row.original.name}</span>
     ),
   },
   {
@@ -61,9 +61,9 @@ const getShipsInShopColumns = (): ReadonlyArray<Column<ShipData>> => [
   },
   {
     Header: 'ລາຄາ (ກີບ)',
-    id: 'price',
+    id: 'pricePerHour',
     Cell: ({row}) => (
-      <span className='text-primary fw-bolder fs-6'>{row.original.price?.toLocaleString() ?? '-'}</span>
+      <span className='text-primary fw-bolder fs-6'>{row.original.pricePerHour?.toLocaleString() ?? '-'}</span>
     ),
   },
   {

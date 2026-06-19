@@ -6,17 +6,17 @@ type Props = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  Active: 'ໃຊ້ງານ',
-  Maintenance: 'ສ້ອມແປງ',
-  Inactive: 'ບໍ່ໃຊ້ງານ',
+  active: 'ໃຊ້ງານ',
+  maintenance: 'ສ້ອມແປງ',
+  inactive: 'ບໍ່ໃຊ້ງານ',
 }
 
 const ShipsInShopCard = ({ship, index}: Props) => {
-  const shipName = ship.ship_name || ship.name
+  const shipName = ship.name
   const statusClass =
-    ship.status === 'Maintenance'
+    ship.status === 'maintenance'
       ? 'badge-warning'
-      : ship.status === 'Inactive'
+      : ship.status === 'inactive'
       ? 'badge-secondary'
       : 'badge-success'
   const statusLabel = STATUS_LABELS[ship.status as string] || ship.status
@@ -25,7 +25,7 @@ const ShipsInShopCard = ({ship, index}: Props) => {
     <div className='card card-flush h-100 shadow-sm product-shop-card'>
       <div className='card-header p-0 overflow-hidden position-relative product-shop-card__media'>
         <img
-          src={ship.image_url || '/media/avatars/blank.png'}
+          src={ship.imageUrl || '/media/avatars/blank.png'}
           alt={shipName}
           className='w-100 object-fit-cover product-shop-card__img'
           loading='lazy'
@@ -55,7 +55,7 @@ const ShipsInShopCard = ({ship, index}: Props) => {
           <div className='d-flex flex-column align-items-start'>
             <span className='text-muted fs-8 fw-semibold text-uppercase ls-1'>ລາຄາ</span>
             <span className='text-primary fw-bolder fs-3'>
-              {ship.price?.toLocaleString()}
+              {ship.pricePerHour?.toLocaleString()}
               <span className='fs-8 fw-semibold text-muted ms-1'>ກີບ</span>
             </span>
           </div>

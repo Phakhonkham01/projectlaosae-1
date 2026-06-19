@@ -1,16 +1,11 @@
 // core/ship_models.ts
-export interface ShipData {
+// ShipData = canonical ShipDoc (ເບິ່ງ /firebase/schema.ts). id ເປັນ optional ສຳລັບ form ຕອນສ້າງໃໝ່.
+import {ShipDoc, ShipStatus} from '../../../../../../../../firebase/schema'
+
+export type {ShipStatus}
+
+export interface ShipData extends Omit<ShipDoc, 'id'> {
   id?: string
-  name: string
-  capacity: number
-  image_url: string
-  price: number
-  quantity: number
-  ship_name: string
-  status: 'Active' | 'Inactive' | 'Maintenance'
-  createdAt?: string
-  updatedAt?: string
-  status_color?: string
 }
 
 export interface ShipQueryResponse {

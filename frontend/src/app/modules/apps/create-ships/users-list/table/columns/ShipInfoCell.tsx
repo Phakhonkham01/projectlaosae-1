@@ -1,29 +1,19 @@
 import { FC } from 'react'
+import { ShipStatus, SHIP_STATUS_META } from '../../../../../../../../../firebase/schema'
 
 type Props = {
-  ship_name: string
-  status?: string
+  name: string
+  status?: ShipStatus
 }
 
-const ShipInfoCell: FC<Props> = ({ ship_name, status }) => {
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'ພ້ອມໃຊ້ງານ'
-      case 'Inactive':
-        return 'ບໍ່ພ້ອມໃຊ້ງານ'
-      case 'Maintenance':
-        return 'ກຳລັງບຳລຸງຮັກສາ'
-      default:
-        return status
-    }
-  }
+const ShipInfoCell: FC<Props> = ({ name, status }) => {
+  const getStatusLabel = (s: ShipStatus) => SHIP_STATUS_META[s]?.label ?? s
 
   return (
     <div className="d-flex align-items-center">
       <div className="d-flex flex-column">
         <span className="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">
-          {ship_name}
+          {name}
         </span>
         {status && (
           <span className="text-gray-600 fw-semibold d-block fs-7">
