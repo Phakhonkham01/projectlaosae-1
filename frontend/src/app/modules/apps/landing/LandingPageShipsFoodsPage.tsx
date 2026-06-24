@@ -1,142 +1,132 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useState, CSSProperties} from 'react'
 import {useNavigate} from 'react-router-dom'
 import Swal from 'sweetalert2'
 import {useAuth} from '../../auth/core/Auth'
 import {getUsers} from '../addFood/users-list/core/_requests'
 import {getShips} from '../create-ships/users-list/core/ship_requests'
 
-const BLUE = '#1677FF'
-const BLUE_DARK = '#0F4FC8'
-const BLUE_LIGHT = '#EDF5FF'
-const MINT = '#1FC7B6'
-const MINT_DARK = '#129D93'
-const NAVY = '#081A35'
-const BLUE_GRADIENT = 'linear-gradient(135deg, #1677FF 0%, #0F4FC8 100%)'
+/* ============================================================
+   Theme tokens — Ocean Blue (cyan / seafoam) + White
+   ============================================================ */
+const C = {
+  ink: '#0c2d34',
+  body: '#4a6b72',
+  muted: '#5b7479',
+  teal: '#0891b2',
+  tealDark: '#0e7490',
+  seafoam: '#cffafe',
+  seafoamBorder: '#e8f4f5',
+  bg: '#f5fafb',
+  white: '#ffffff',
+  accent: '#f59e0b',
+  accentGrad: 'linear-gradient(135deg,#f59e0b,#f97316)',
+  deep: '#07313a',
+}
 
-const styles = `
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Google Sans', 'Noto Serif Lao', sans-serif; background: #F5FAFF; }
-  .lp-root { font-family: 'Google Sans', 'Noto Serif Lao', sans-serif; color: ${NAVY}; background: linear-gradient(180deg, #f7fbff00 0%, #ffffff00 30%, #f7fbff00 100%); }
-  .lp-navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 78px; padding: 0 1.25rem; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.88); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(22,119,255,0.08); box-shadow: 0 14px 34px rgba(8,26,53,0.06); }
-  .lp-navbar-brand { display: flex; align-items: center; gap: 1rem; text-decoration: none; }
-  .lp-navbar-logo { width: 58px; height: 58px; border-radius: 18px; overflow: hidden; background: linear-gradient(135deg, rgba(22,119,255,0.18), rgba(31,199,182,0.2)); box-shadow: 0 16px 34px rgba(22,119,255,0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .lp-navbar-title { font-size: 1.05rem; font-weight: 800; color: ${NAVY}; }
-  .lp-navbar-subtitle { font-size: 0.72rem; color: #6B7A90; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-  .lp-navbar-actions { display: flex; align-items: center; gap: 0.75rem; }
-  .lp-btn-primary, .lp-btn-outline, .lp-hero-btn-main, .lp-hero-btn-ghost, .lp-cta-btn { font-family: 'Google Sans', sans-serif; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease; }
-  .lp-btn-primary, .lp-hero-btn-main { border: none; border-radius: 14px; background: ${BLUE_GRADIENT}; color: #fff; padding: 0.9rem 1.55rem; font-size: 0.92rem; font-weight: 800; cursor: pointer; box-shadow: 0 18px 38px rgba(22,119,255,0.22); }
-  .lp-btn-primary:hover, .lp-hero-btn-main:hover, .lp-cta-btn:hover { transform: translateY(-2px); box-shadow: 0 24px 44px rgba(22,119,255,0.28); }
-  .lp-btn-outline { border: 1px solid rgba(22,119,255,0.16); border-radius: 14px; background: #fff; color: ${BLUE}; padding: 0.9rem 1.45rem; font-size: 0.92rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 26px rgba(8,26,53,0.05); }
-  .lp-btn-outline:hover, .lp-hero-btn-ghost:hover { background: ${BLUE_LIGHT}; border-color: rgba(22,119,255,0.24); transform: translateY(-2px); }
-  .lp-hero { position: relative; overflow: hidden; min-height: 100vh; padding: 8.5rem 1.5rem 4rem; display: flex; align-items: center; }
-  .lp-hero-slide { position: absolute; inset: 0; background-size: cover; background-position: center center; transition: opacity 1.2s ease-in-out, transform 7s ease-out; transform: scale(1.045); }
-  .lp-hero-slide.is-active { transform: scale(1); }
-  .lp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(5,16,36,0.34) 0%, rgba(5,16,36,0.08) 36%, rgba(5,16,36,0) 62%); }
-  .lp-hero-content { position: relative; z-index: 10; width: 100%; max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0,1.12fr) minmax(320px,0.88fr); gap: 2rem; align-items: center; }
-  .lp-hero-main { max-width: 690px; }
-  .lp-hero-chip { display: inline-flex; align-items: center; gap: 0.7rem; padding: 0.62rem 1.05rem; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.26); box-shadow: 0 16px 34px rgba(5, 16, 36, 0.28); color: #EAF3FF; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.4rem; backdrop-filter: blur(12px); }
-  .lp-hero-chip-dot { width: 10px; height: 10px; border-radius: 999px; background: ${MINT}; box-shadow: 0 0 0 6px rgba(31,199,182,0.12); }
-  .lp-hero-h1 { font-size: clamp(2.8rem, 6vw, 5rem); line-height: 1.02; letter-spacing: -0.05em; color: #ffffff; font-weight: 900; margin-bottom: 1rem; text-shadow: 0 2px 12px rgba(5,16,36,0.35); }
-  .lp-hero-h1 span { color: #4FE6D4; }
-  .lp-hero-desc { font-size: 1.06rem; color: rgba(240,246,255,0.92); line-height: 1.85; margin-bottom: 2rem; max-width: 620px; text-shadow: 0 1px 8px rgba(5,16,36,0.35); }
-  .lp-hero-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.65rem; }
-  .lp-hero-btn-main, .lp-hero-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.65rem; padding: 1rem 1.85rem; border-radius: 16px; font-size: 0.98rem; }
-  .lp-hero-btn-ghost { border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); color: #fff; box-shadow: 0 14px 30px rgba(5,16,36,0.25); cursor: pointer; backdrop-filter: blur(10px); }
-  .lp-hero-btn-ghost:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.45); }
-  .lp-hero-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
-  .lp-hero-metric { padding: 1.15rem 1.2rem; border-radius: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 18px 38px rgba(5,16,36,0.22); backdrop-filter: blur(12px); }
-  .lp-hero-metric-value { color: #ffffff; font-size: 1.55rem; font-weight: 900; margin-bottom: 0.2rem; }
-  .lp-hero-metric-label { color: rgba(233,241,252,0.78); font-size: 0.8rem; font-weight: 700; }
-  .lp-hero-side { display: flex; flex-direction: column; gap: 1rem; }
-  .lp-hero-panel, .lp-hero-glass { background: rgba(255,255,255,0.74); border: 1px solid rgba(255,255,255,0.45); border-radius: 24px; box-shadow: 0 22px 50px rgba(8,26,53,0.1); backdrop-filter: blur(14px); }
-  .lp-hero-panel { padding: 1.6rem; }
-  .lp-hero-panel-label { display: inline-flex; align-items: center; gap: 0.45rem; margin-bottom: 0.8rem; color: ${BLUE_DARK}; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-  .lp-hero-panel-title { color: ${NAVY}; font-size: 1.4rem; font-weight: 800; line-height: 1.3; margin-bottom: 0.45rem; }
-  .lp-hero-panel-text { color: #62748B; line-height: 1.75; font-size: 0.94rem; }
-  .lp-hero-panel-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.9rem; margin-top: 1.25rem; }
-  .lp-hero-panel-item { border-radius: 18px; padding: 1rem; background: linear-gradient(180deg, #FFFFFF 0%, #F4FAFF 100%); border: 1px solid rgba(22,119,255,0.08); }
-  .lp-hero-panel-item strong { display: block; color: ${NAVY}; font-size: 1.1rem; margin-bottom: 0.2rem; }
-  .lp-hero-panel-item span { color: #7B8DA5; font-size: 0.8rem; font-weight: 700; }
-  .lp-hero-glass { padding: 1.35rem 1.45rem; }
-  .lp-hero-glass h3 { color: ${NAVY}; font-size: 1.12rem; font-weight: 800; margin-bottom: 0.3rem; }
-  .lp-hero-glass p { color: #62748B; font-size: 0.92rem; line-height: 1.7; }
-  .lp-dots { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 0.6rem; }
-  .lp-dot { width: 10px; height: 10px; border: none; border-radius: 999px; background: rgba(22,119,255,0.22); cursor: pointer; transition: all 0.3s ease; }
-  .lp-dot.active { width: 30px; background: linear-gradient(90deg, ${BLUE}, ${MINT}); }
-  .lp-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 20; width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(22,119,255,0.12); background: rgba(255,255,255,0.82); color: ${NAVY}; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 18px 34px rgba(8,26,53,0.08); transition: all 0.25s ease; }
-  .lp-arrow:hover { transform: translateY(-50%) translateY(-2px); background: #fff; color: ${BLUE_DARK}; }
-  .lp-arrow.left { left: 1.5rem; }
-  .lp-arrow.right { right: 1.5rem; }
-  .lp-stats { position: relative; z-index: 12; margin-top: -2rem; padding: 0 1.5rem; }
-  .lp-stats-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1rem; background: rgba(255,255,255,0.94); border: 1px solid rgba(22,119,255,0.1); border-radius: 28px; box-shadow: 0 26px 52px rgba(8,26,53,0.08); padding: 1.25rem; }
-  .lp-stat-card { border-radius: 20px; padding: 1.2rem 1rem; text-align: center; background: linear-gradient(180deg, #FFFFFF 0%, #F4FAFF 100%); border: 1px solid rgba(22,119,255,0.08); }
-  .lp-stat-num { color: ${NAVY}; font-size: 2rem; font-weight: 900; }
-  .lp-stat-label { color: #71829A; font-size: 0.82rem; font-weight: 700; margin-top: 0.25rem; }
-  .lp-features, .lp-ships-section, .lp-foods-section { padding: 5.5rem 1.5rem; }
-  .lp-foods-section { background: linear-gradient(180deg, #F6FBFF 0%, #FFFFFF 100%); }
-  .lp-section-shell { max-width: 1180px; margin: 0 auto; }
-  .lp-section-header { text-align: center; margin-bottom: 3rem; }
-  .lp-section-label { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 1rem; border-radius: 999px; background: rgba(22,119,255,0.08); color: ${BLUE_DARK}; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-  .lp-divider { width: 64px; height: 4px; border-radius: 999px; background: linear-gradient(90deg, ${BLUE}, ${MINT}); margin: 1rem 0 1.25rem; }
-  .lp-divider.center { margin-left: auto; margin-right: auto; }
-  .lp-section-title { font-size: clamp(2rem, 4vw, 3.15rem); font-weight: 900; color: ${NAVY}; line-height: 1.1; letter-spacing: -0.04em; margin-bottom: 0.85rem; }
-  .lp-section-sub { max-width: 620px; color: #66778F; font-size: 1rem; line-height: 1.8; }
-  .lp-features-grid, .lp-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.35rem; }
-  .lp-card, .lp-feature-card { background: rgba(255,255,255,0.96); border: 1px solid rgba(22,119,255,0.1); border-radius: 26px; box-shadow: 0 22px 44px rgba(8,26,53,0.07); transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease; }
-  .lp-card:hover, .lp-feature-card:hover { transform: translateY(-8px); border-color: rgba(22,119,255,0.2); box-shadow: 0 30px 56px rgba(8,26,53,0.12); }
-  .lp-feature-card { padding: 2rem 1.75rem; }
-  .lp-feature-icon { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(22,119,255,0.14), rgba(31,199,182,0.2)); color: ${BLUE_DARK}; font-size: 1.55rem; margin-bottom: 1.1rem; }
-  .lp-feature-card h3 { color: ${NAVY}; font-size: 1.08rem; font-weight: 800; margin-bottom: 0.45rem; }
-  .lp-feature-card p { color: #6D7E95; font-size: 0.92rem; line-height: 1.75; }
-  .lp-card { cursor: pointer; overflow: hidden; }
-  .lp-card-img { position: relative; height: 220px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; overflow: hidden; }
-  .lp-card-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 68%, rgba(8,26,53,0.08) 100%); }
-  .lp-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s ease; }
-  .lp-card:hover .lp-card-img img { transform: scale(1.05); }
-  .lp-card-img-ship { background: linear-gradient(135deg, #D7EAFF 0%, #B6D4FF 100%); }
-  .lp-card-img-food { background: linear-gradient(135deg, #DCF9F4 0%, #BAF0E6 100%); }
-  .lp-card-body { padding: 1.4rem 1.4rem 1.5rem; }
-  .lp-card-title { color: ${NAVY}; font-size: 1.08rem; font-weight: 800; margin-bottom: 0.4rem; }
-  .lp-card-meta { color: #71829A; font-size: 0.9rem; line-height: 1.75; }
-  .lp-card-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-top: 1.1rem; }
-  .lp-card-price { color: ${BLUE_DARK}; font-size: 1.38rem; font-weight: 900; letter-spacing: -0.02em; }
-  .lp-card-price.mint { color: ${MINT_DARK}; }
-  .lp-badge { display: inline-flex; align-items: center; justify-content: center; padding: 0.45rem 0.8rem; border-radius: 999px; font-size: 0.72rem; font-weight: 800; white-space: nowrap; }
-  .lp-badge-success { background: #E9FCF8; color: ${MINT_DARK}; }
-  .lp-badge-danger { background: #FFF1F0; color: #D9363E; }
-  .lp-loading { min-height: 140px; display: flex; align-items: center; justify-content: center; gap: 0.75rem; color: #6B7A90; font-size: 1rem; padding: 3rem; }
-  .lp-spinner { width: 24px; height: 24px; border: 3px solid ${BLUE_LIGHT}; border-top-color: ${BLUE}; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  .lp-cta { padding: 2rem 1.5rem 5.5rem; }
-  .lp-cta-shell { max-width: 1180px; margin: 0 auto; padding: 3rem; border-radius: 32px; position: relative; overflow: hidden; background: linear-gradient(135deg, #0B3D91 0%, #1677FF 50%, #1FC7B6 100%); box-shadow: 0 30px 64px rgba(15,79,200,0.24); text-align: center; }
-  .lp-cta-shell::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 30%), linear-gradient(180deg, transparent, rgba(255,255,255,0.06)); }
-  .lp-cta h2, .lp-cta p, .lp-cta-actions { position: relative; z-index: 1; }
-  .lp-cta h2 { color: #fff; font-size: clamp(2rem, 4vw, 3.15rem); font-weight: 900; letter-spacing: -0.04em; margin-bottom: 0.9rem; }
-  .lp-cta p { max-width: 640px; margin: 0 auto 2rem; color: rgba(255,255,255,0.84); font-size: 1rem; line-height: 1.85; }
-  .lp-cta-actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-  .lp-cta-btn { border: none; border-radius: 16px; padding: 1rem 2rem; background: #fff; color: ${BLUE_DARK}; font-size: 0.98rem; font-weight: 800; cursor: pointer; }
-  .lp-cta-btn.lp-cta-btn-alt { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.34); box-shadow: none; }
-  .lp-footer { background: ${NAVY}; padding: 4rem 1.5rem 2rem; }
-  .lp-footer-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1.15fr repeat(3, minmax(0,1fr)); gap: 2rem; padding-bottom: 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
-  .lp-footer-brand p { max-width: 280px; margin-top: 0.9rem; color: rgba(214,224,238,0.74); font-size: 0.92rem; line-height: 1.8; }
-  .lp-footer-links h4 { color: #fff; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
-  .lp-footer-links ul { list-style: none; }
-  .lp-footer-links li { margin-bottom: 0.65rem; }
-  .lp-footer-links a { color: rgba(214,224,238,0.72); text-decoration: none; font-size: 0.92rem; transition: color 0.2s ease; }
-  .lp-footer-links a:hover { color: #fff; }
-  .lp-footer-copy { color: #8FA6C0; font-size: 0.82rem; text-align: center; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (max-width: 1100px) { .lp-hero-content { grid-template-columns: 1fr; } .lp-hero-main { max-width: 100%; } .lp-stats-inner { grid-template-columns: repeat(2, minmax(0,1fr)); } .lp-footer-inner { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-  @media (max-width: 767px) { .lp-navbar { height: auto; padding-top: 0.9rem; padding-bottom: 0.9rem; flex-direction: column; gap: 0.9rem; } .lp-navbar-brand, .lp-navbar-actions { width: 100%; justify-content: center; flex-wrap: wrap; } .lp-hero { padding-top: 10.5rem; } .lp-hero-actions, .lp-cta-actions { flex-direction: column; } .lp-btn-primary, .lp-btn-outline, .lp-hero-btn-main, .lp-hero-btn-ghost, .lp-cta-btn { width: 100%; } .lp-hero-metrics, .lp-hero-panel-grid, .lp-stats-inner, .lp-footer-inner { grid-template-columns: 1fr; } .lp-arrow { display: none; } .lp-cta-shell { padding: 2rem 1.35rem; border-radius: 24px; } }
-`
+const FONT = "'Plus Jakarta Sans','Noto Sans Lao',sans-serif"
 
+const placeholder: CSSProperties = {
+  background:
+    'repeating-linear-gradient(135deg,#d9f1f2,#d9f1f2 12px,#c9e9eb 12px,#c9e9eb 24px)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}
+
+/* ============================================================
+   Feature card
+   ============================================================ */
 const FeatureCard = ({icon, title, desc}: {icon: string; title: string; desc: string}) => (
-  <div className='lp-feature-card'>
-    <div className='lp-feature-icon'>{icon}</div>
-    <h3>{title}</h3>
-    <p>{desc}</p>
+  <div
+    style={{
+      background: C.white,
+      border: `1px solid ${C.seafoamBorder}`,
+      borderRadius: 20,
+      padding: '28px 24px',
+      boxShadow: '0 10px 30px -22px rgba(6,80,90,.5)',
+    }}
+  >
+    <div
+      style={{
+        width: 54,
+        height: 54,
+        borderRadius: 15,
+        background: C.seafoam,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 25,
+        marginBottom: 16,
+      }}
+    >
+      {icon}
+    </div>
+    <h3 style={{fontWeight: 700, fontSize: 17, color: C.ink, margin: '0 0 7px'}}>{title}</h3>
+    <p style={{fontSize: 14, color: C.muted, lineHeight: 1.55, margin: 0}}>{desc}</p>
   </div>
 )
 
+const SectionHead = ({
+  eyebrow,
+  title,
+  desc,
+  center,
+}: {
+  eyebrow: string
+  title: string
+  desc: string
+  center?: boolean
+}) => (
+  <div style={{maxWidth: center ? 620 : 560, margin: center ? '0 auto 44px' : '0 0 36px', textAlign: center ? 'center' : 'left'}}>
+    <span
+      style={{
+        color: C.teal,
+        fontWeight: 700,
+        fontSize: 13,
+        letterSpacing: '.1em',
+        textTransform: 'uppercase',
+      }}
+    >
+      {eyebrow}
+    </span>
+    <h2 style={{fontSize: 36, fontWeight: 800, color: C.ink, margin: '10px 0 10px', letterSpacing: '-.01em'}}>
+      {title}
+    </h2>
+    <p style={{fontSize: 16, color: C.muted, margin: 0}}>{desc}</p>
+  </div>
+)
+
+const btnPrimary: CSSProperties = {
+  fontFamily: FONT,
+  cursor: 'pointer',
+  border: 'none',
+  background: C.accentGrad,
+  color: '#3a1d00',
+  fontWeight: 800,
+  fontSize: 16,
+  padding: '16px 30px',
+  borderRadius: 14,
+  boxShadow: '0 12px 26px rgba(245,158,11,.36)',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 9,
+}
+
+const btnOutline: CSSProperties = {
+  fontFamily: FONT,
+  cursor: 'pointer',
+  border: '1.5px solid #9bd9dd',
+  background: C.white,
+  color: C.tealDark,
+  fontWeight: 700,
+  fontSize: 16,
+  padding: '16px 28px',
+  borderRadius: 14,
+}
+
+/* ============================================================
+   Landing page
+   ============================================================ */
 const LandingPageShipsFoodsPage = () => {
   const navigate = useNavigate()
   const {auth, currentUser} = useAuth()
@@ -144,25 +134,6 @@ const LandingPageShipsFoodsPage = () => {
   const [ships, setShips] = useState<any[]>([])
   const [foods, setFoods] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const links: HTMLLinkElement[] = []
-    const addLink = (attrs: Record<string, string>) => {
-      const element = document.createElement('link')
-      Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value))
-      document.head.appendChild(element)
-      links.push(element)
-    }
-
-    addLink({rel: 'preconnect', href: 'https://fonts.googleapis.com'})
-    addLink({rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: ''})
-    addLink({
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Noto+Serif+Lao:wght@100..900&display=swap',
-    })
-
-    return () => links.forEach((element) => element.remove())
-  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -255,343 +226,593 @@ const LandingPageShipsFoodsPage = () => {
     {num: '5,000+', label: 'ລູກຄ້າພໍໃຈ'},
     {num: '10+', label: 'ປີໃຫ້ບໍລິການ'},
   ]
+  const cur = images[currentImageIndex]
+  const container: CSSProperties = {maxWidth: 1200, margin: '0 auto', padding: '0 32px'}
 
   return (
-    <div className='lp-root'>
-      <style>{styles}</style>
+    <div style={{fontFamily: FONT, color: C.ink, background: C.bg, width: '100%', lineHeight: 1.6}}>
+      <link
+        href='https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Lao:wght@400;500;600;700&display=swap'
+        rel='stylesheet'
+      />
 
-      <nav className='lp-navbar'>
-        <a className='lp-navbar-brand' href='/'>
-          <div className='lp-navbar-logo'>
-            <img src='media/logos/sys.jpeg' alt='Logo' style={{width: '100%', height: '100%'}} />
-          </div>
-          <div>
-            <div className='lp-navbar-title'>JoVa ທະເລລາວ</div>
-            <div className='lp-navbar-subtitle'>Cruise &amp; Dining Experience</div>
-          </div>
-        </a>
+      {/* NAV */}
+      <nav
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          background: 'rgba(255,255,255,.86)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid #e4f0f1',
+        }}
+      >
+        <div
+          style={{
+            ...container,
+            padding: '14px 32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 24,
+          }}
+        >
+          <a href='/' style={{display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none'}}>
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 13,
+                background: 'linear-gradient(140deg,#0891b2,#06b6d4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                boxShadow: '0 6px 16px rgba(8,145,178,.28)',
+              }}
+            >
+              <img src='media/logos/sys.jpeg' alt='Logo' style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+            </div>
+            <div>
+              <div style={{fontWeight: 700, fontSize: 17, color: C.ink, lineHeight: 1.2}}>JoVa ທະເລລາວ</div>
+              <div style={{fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: '#5b9aa3', fontWeight: 600}}>
+                Cruise &amp; Dining
+              </div>
+            </div>
+          </a>
 
-        <div className='lp-navbar-actions'>
-          {isLoggedIn ? (
-            <>
-              <button className='lp-btn-outline' onClick={() => handleBookingClick('food')}>
-                ຈອງອາຫານ
-              </button>
-              <button className='lp-btn-primary' onClick={() => handleBookingClick('ship')}>
-                ຈອງເຮືອ
-              </button>
-            </>
-          ) : (
-            <>
-              <button className='lp-btn-outline' onClick={() => navigate('/auth/login')}>
-                ເຂົ້າສູ່ລະບົບ
-              </button>
-              <button className='lp-btn-primary' onClick={() => navigate('/auth/registration')}>
-                ສະໝັກໃຊ້
-              </button>
-            </>
-          )}
+          <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+            {isLoggedIn ? (
+              <>
+                <button
+                  onClick={() => handleBookingClick('food')}
+                  style={{
+                    fontFamily: FONT,
+                    cursor: 'pointer',
+                    border: '1.5px solid #b6e4e6',
+                    background: C.white,
+                    color: C.tealDark,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    padding: '10px 20px',
+                    borderRadius: 11,
+                  }}
+                >
+                  ຈອງອາຫານ
+                </button>
+                <button
+                  onClick={() => handleBookingClick('ship')}
+                  style={{
+                    fontFamily: FONT,
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: C.teal,
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    padding: '11px 22px',
+                    borderRadius: 11,
+                    boxShadow: '0 6px 16px rgba(8,145,178,.25)',
+                  }}
+                >
+                  ຈອງເຮືອ
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/auth/login')}
+                  style={{
+                    fontFamily: FONT,
+                    cursor: 'pointer',
+                    border: '1.5px solid #b6e4e6',
+                    background: C.white,
+                    color: C.tealDark,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    padding: '10px 20px',
+                    borderRadius: 11,
+                  }}
+                >
+                  ເຂົ້າສູ່ລະບົບ
+                </button>
+                <button
+                  onClick={() => navigate('/auth/registration')}
+                  style={{
+                    fontFamily: FONT,
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: C.teal,
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    padding: '11px 22px',
+                    borderRadius: 11,
+                    boxShadow: '0 6px 16px rgba(8,145,178,.25)',
+                  }}
+                >
+                  ສະໝັກໃຊ້
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </nav>
 
-      <section className='lp-hero'>
-        {images.map((image, index) => (
-          <div
-            key={image.url}
-            className={`lp-hero-slide${currentImageIndex === index ? ' is-active' : ''}`}
-            style={{
-              backgroundImage: `url('${image.url}')`,
-              opacity: currentImageIndex === index ? 1 : 0,
-            }}
-          >
-            <div className='lp-hero-overlay' />
-          </div>
-        ))}
-
-        <div className='lp-hero-content'>
-          <div className='lp-hero-main'>
-            <div className='lp-hero-chip'>
-              <span className='lp-hero-chip-dot' />
-              JOVA Cruise Collection
+      {/* HERO */}
+      <section
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          background:
+            'radial-gradient(1200px 500px at 78% -10%,#d6f5f6 0%,rgba(214,245,246,0) 60%),linear-gradient(180deg,#eefafb 0%,#f5fafb 100%)',
+        }}
+      >
+        <div
+          style={{
+            ...container,
+            padding: '76px 32px 88px',
+            display: 'grid',
+            gridTemplateColumns: '1.05fr .95fr',
+            gap: 56,
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: C.seafoam,
+                color: C.tealDark,
+                fontWeight: 700,
+                fontSize: 12.5,
+                letterSpacing: '.06em',
+                padding: '7px 14px',
+                borderRadius: 999,
+                textTransform: 'uppercase',
+              }}
+            >
+              🌊 JoVa Cruise Collection
             </div>
 
-            <h1 className='lp-hero-h1'>
+            <h1
+              style={{
+                fontSize: 'clamp(40px,5vw,66px)',
+                lineHeight: 1.18,
+                fontWeight: 800,
+                letterSpacing: '-.01em',
+                margin: '22px 0 18px',
+                color: C.ink,
+              }}
+            >
               ທ່ອງທ່ຽວ
               <br />
-              <span>ທະເລລາວ</span>
+              <span
+                style={{
+                  background: 'linear-gradient(120deg,#0891b2,#06b6d4 60%,#22d3ee)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                }}
+              >
+                ທະເລລາວ
+              </span>
             </h1>
 
-            <p className='lp-hero-desc'>
-              ພົບກັບປະສົບການລ່ອງເຮືອ ແລະ ການຮັບປະທານອາຫານໃນບັນຍາກາດທີ່ສະອາດ,
-              ທັນສະໄໝ ແລະ ເປັນມືອາຊີບ ດ້ວຍທີມງານທີ່ພ້ອມດູແລທຸກລາຍລະອຽດ.
+            <p style={{fontSize: 17.5, color: C.body, maxWidth: 480, margin: '0 0 30px'}}>
+              ພົບກັບປະສົບການລ່ອງເຮືອ ແລະ ການຮັບປະທານອາຫານໃນບັນຍາກາດທີ່ສະອາດ, ທັນສະໄໝ ແລະ ເປັນມືອາຊີບ
+              ດ້ວຍທີມງານທີ່ພ້ອມດູແລທຸກລາຍລະອຽດ.
             </p>
 
             {isLoggedIn ? (
-              <div className='lp-hero-actions'>
-                <button className='lp-hero-btn-main' onClick={() => handleBookingClick('ship')}>
-                  <svg
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='2.2'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  >
-                    <path d='M3 20h18' />
-                    <path d='M6 16l2-9h8l2 9' />
-                    <path d='M9 7V4h6v3' />
-                  </svg>
-                  ຈອງເຮືອຕອນນີ້
+              <div style={{display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 42}}>
+                <button onClick={() => handleBookingClick('ship')} style={btnPrimary}>
+                  ຈອງເຮືອຕອນນີ້ <span style={{fontSize: 18}}>→</span>
                 </button>
-                <button className='lp-hero-btn-ghost' onClick={() => handleBookingClick('food')}>
+                <button onClick={() => handleBookingClick('food')} style={btnOutline}>
                   ສັ່ງອາຫານ
                 </button>
               </div>
             ) : (
-              <div className='lp-hero-actions'>
-                <button className='lp-hero-btn-main' onClick={() => navigate('/auth/login')}>
-                  ເຂົ້າສູ່ລະບົບ
+              <div style={{display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 42}}>
+                <button onClick={() => navigate('/auth/login')} style={btnPrimary}>
+                  ເຂົ້າສູ່ລະບົບ <span style={{fontSize: 18}}>→</span>
                 </button>
-                <button className='lp-hero-btn-ghost' onClick={() => navigate('/auth/registration')}>
+                <button onClick={() => navigate('/auth/registration')} style={btnOutline}>
                   ສ້າງບັນຊີ
                 </button>
               </div>
             )}
 
-            <div className='lp-hero-metrics'>
+            <div style={{display: 'flex', gap: 30}}>
               {heroStats.map((item) => (
-                <div key={item.label} className='lp-hero-metric'>
-                  <div className='lp-hero-metric-value'>{item.value}</div>
-                  <div className='lp-hero-metric-label'>{item.label}</div>
+                <div key={item.label}>
+                  <div style={{fontSize: 30, fontWeight: 800, color: C.teal, lineHeight: 1}}>{item.value}</div>
+                  <div style={{fontSize: 13.5, color: C.muted, fontWeight: 500, marginTop: 4}}>{item.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className='lp-hero-side'>
-            <div className='lp-hero-panel'>
-              <div className='lp-hero-panel-label'>Featured Experience</div>
-              <div className='lp-hero-panel-title'>{images[currentImageIndex].title}</div>
-              <div className='lp-hero-panel-text'>{images[currentImageIndex].description}</div>
+          {/* featured card */}
+          <div
+            style={{
+              background: C.white,
+              borderRadius: 26,
+              padding: 18,
+              boxShadow: '0 30px 70px -28px rgba(6,80,90,.45)',
+              border: `1px solid ${C.seafoamBorder}`,
+            }}
+          >
+            <div style={{position: 'relative', borderRadius: 18, overflow: 'hidden', aspectRatio: '4 / 3'}}>
+              {images.map((image, index) => (
+                <img
+                  key={image.url}
+                  src={image.url}
+                  alt={image.title}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    opacity: currentImageIndex === index ? 1 : 0,
+                    transition: 'opacity .6s ease',
+                  }}
+                />
+              ))}
 
-              <div className='lp-hero-panel-grid'>
-                <div className='lp-hero-panel-item'>
-                  <strong>Premium</strong>
-                  <span>ບັນຍາກາດດີ ແລະ ອອກແບບການເດີນທາງເປັນລະບົບ</span>
-                </div>
-                <div className='lp-hero-panel-item'>
-                  <strong>Fresh Menu</strong>
-                  <span>ອາຫານທ້ອງຖິ່ນ ແລະ ເມນູທັນສະໄໝໃນໂທນ mint</span>
-                </div>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 14,
+                  left: 14,
+                  background: 'rgba(255,255,255,.92)',
+                  color: C.tealDark,
+                  fontWeight: 700,
+                  fontSize: 11.5,
+                  letterSpacing: '.08em',
+                  textTransform: 'uppercase',
+                  padding: '6px 12px',
+                  borderRadius: 999,
+                }}
+              >
+                Featured
+              </div>
+
+              <button
+                onClick={prevImage}
+                aria-label='Previous'
+                style={{
+                  cursor: 'pointer',
+                  position: 'absolute',
+                  top: '50%',
+                  left: 12,
+                  transform: 'translateY(-50%)',
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(255,255,255,.9)',
+                  color: C.tealDark,
+                  fontSize: 20,
+                  lineHeight: 1,
+                  boxShadow: '0 4px 12px rgba(0,0,0,.15)',
+                }}
+              >
+                ‹
+              </button>
+              <button
+                onClick={nextImage}
+                aria-label='Next'
+                style={{
+                  cursor: 'pointer',
+                  position: 'absolute',
+                  top: '50%',
+                  right: 12,
+                  transform: 'translateY(-50%)',
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(255,255,255,.9)',
+                  color: C.tealDark,
+                  fontSize: 20,
+                  lineHeight: 1,
+                  boxShadow: '0 4px 12px rgba(0,0,0,.15)',
+                }}
+              >
+                ›
+              </button>
+
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  padding: '22px 18px 16px',
+                  background: 'linear-gradient(transparent,rgba(7,49,58,.82))',
+                  color: '#fff',
+                }}
+              >
+                <div style={{fontWeight: 700, fontSize: 18}}>{cur.title}</div>
+                <div style={{fontSize: 13.5, color: '#d7f0f2', marginTop: 3, lineHeight: 1.45}}>{cur.description}</div>
               </div>
             </div>
 
-            <div className='lp-hero-glass'>
-              <h3>{isLoggedIn ? 'ພ້ອມສຳລັບການຈອງ' : 'ເລີ່ມຕົ້ນໄດ້ທັນທີ'}</h3>
-              <p>
-                {isLoggedIn
-                  ? 'ເລືອກເຮືອ ຫຼື ເລືອກອາຫານໄດ້ເລີຍ ດ້ວຍຂັ້ນຕອນຈອງທີ່ຊັດເຈນ.'
-                  : 'ເຂົ້າສູ່ລະບົບເພື່ອຈອງເຮືອ, ສັ່ງອາຫານ ແລະ ຈັດການການເດີນທາງຂອງທ່ານ.'}
-              </p>
+            <div style={{display: 'flex', justifyContent: 'center', gap: 7, margin: '14px 0 6px'}}>
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  aria-label={`Slide ${index + 1}`}
+                  style={{
+                    cursor: 'pointer',
+                    border: 'none',
+                    padding: 0,
+                    height: 8,
+                    width: currentImageIndex === index ? 24 : 8,
+                    borderRadius: 999,
+                    background: currentImageIndex === index ? C.accent : '#cbe9ec',
+                    transition: 'all .3s ease',
+                  }}
+                />
+              ))}
+            </div>
+
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8}}>
+              <div style={{background: '#f0fafb', border: '1px solid #e1f1f2', borderRadius: 13, padding: '13px 15px'}}>
+                <div style={{fontWeight: 700, fontSize: 13.5, color: C.tealDark}}>Premium</div>
+                <div style={{fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4}}>ບັນຍາກາດດີ ເປັນລະບົບ</div>
+              </div>
+              <div style={{background: '#f0fafb', border: '1px solid #e1f1f2', borderRadius: 13, padding: '13px 15px'}}>
+                <div style={{fontWeight: 700, fontSize: 13.5, color: C.tealDark}}>Fresh Menu</div>
+                <div style={{fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4}}>ອາຫານທ້ອງຖິ່ນ ທັນສະໄໝ</div>
+              </div>
             </div>
           </div>
         </div>
-
-        <button className='lp-arrow left' onClick={prevImage} aria-label='Previous'>
-          <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'>
-            <polyline points='15 18 9 12 15 6' />
-          </svg>
-        </button>
-        <button className='lp-arrow right' onClick={nextImage} aria-label='Next'>
-          <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'>
-            <polyline points='9 18 15 12 9 6' />
-          </svg>
-        </button>
-
-        <div className='lp-dots'>
-          {images.map((_, index) => (
-            <button
-              key={index}
-              className={`lp-dot${index === currentImageIndex ? ' active' : ''}`}
-              onClick={() => setCurrentImageIndex(index)}
-              aria-label={`Slide ${index + 1}`}
-            />
-          ))}
-        </div>
       </section>
 
-      <section className='lp-stats'>
-        <div className='lp-stats-inner'>
+      {/* STATS BAND */}
+      <section style={{background: 'linear-gradient(120deg,#0e7490,#0891b2 55%,#0ea5b5)'}}>
+        <div
+          style={{
+            ...container,
+            padding: '42px 32px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4,1fr)',
+            gap: 24,
+          }}
+        >
           {platformStats.map((item) => (
-            <div key={item.label} className='lp-stat-card'>
-              <div className='lp-stat-num'>{item.num}</div>
-              <div className='lp-stat-label'>{item.label}</div>
+            <div key={item.label} style={{textAlign: 'center', color: '#fff', borderLeft: '1px solid rgba(255,255,255,.2)'}}>
+              <div style={{fontSize: 34, fontWeight: 800, lineHeight: 1}}>{item.num}</div>
+              <div style={{fontSize: 13.5, color: '#cdeef2', marginTop: 5, fontWeight: 500}}>{item.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className='lp-features'>
-        <div className='lp-section-shell'>
-          <div className='lp-section-header'>
-            <span className='lp-section-label'>ເປັນຫຍັງຕ້ອງເລືອກເຮົາ</span>
-            <div className='lp-divider center' />
-            <h2 className='lp-section-title'>ບໍລິການທີ່ເປັນມືອາຊີບ</h2>
-            <p className='lp-section-sub' style={{margin: '0 auto'}}>
-              ປະສົບການທ່ອງທ່ຽວທາງນ້ຳທີ່ຖືກຈັດລະບຽບດີ ແລະ ມີມາດຕະຖານການບໍລິການຊັດເຈນ.
-            </p>
-          </div>
-
-          <div className='lp-features-grid'>
-            <FeatureCard
-              icon='🏝️'
-              title='ສະຖານທີ່ສວຍງາມ'
-              desc='ລ່ອງເຮືອຜ່ານບັນຍາກາດທີ່ສະຫງົບ ແລະ ຈຸດທ່ອງທ່ຽວສຳຄັນ.'
-            />
-            <FeatureCard
-              icon='⭐'
-              title='ບໍລິການລະດັບພຣີເມຍມ'
-              desc='ທີມງານມືອາຊີບຄອຍແລການຈອງ, ການຂຶ້ນເຮືອ ແລະ ການໃຫ້ບໍລິການ.'
-            />
-            <FeatureCard
-              icon='💠'
-              title='ໂທນທັນສະໄໝ'
-              desc='ອອກແບບການໃຊ້ງານໃຫ້ອ່ານງ່າຍ ສະອາດ ແລະ ດູນ່າເຊື່ອຖື.'
-            />
-            <FeatureCard
-              icon='🛡️'
-              title='ຄວາມປອດໄພ'
-              desc='ເຮືອ ແລະ ຂັ້ນຕອນບໍລິການຖືກຈັດການໃຫ້ມີຄວາມພ້ອມໃນທຸກທຣິບ.'
-            />
-          </div>
+      {/* FEATURES */}
+      <section style={{...container, padding: '88px 32px 40px'}}>
+        <SectionHead
+          center
+          eyebrow='ເປັນຫຍັງຕ້ອງເລືອກເຮົາ'
+          title='ບໍລິການທີ່ເປັນມືອາຊີບ'
+          desc='ປະສົບການທ່ອງທ່ຽວທາງນ້ຳທີ່ຖືກຈັດລະບຽບດີ ແລະ ມີມາດຕະຖານການບໍລິການຊັດເຈນ.'
+        />
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 22}}>
+          <FeatureCard icon='🏝️' title='ສະຖານທີ່ສວຍງາມ' desc='ລ່ອງເຮືອຜ່ານບັນຍາກາດທີ່ສະຫງົບ ແລະ ຈຸດທ່ອງທ່ຽວສຳຄັນ.' />
+          <FeatureCard icon='⭐' title='ບໍລິການລະດັບພຣີເມຍມ' desc='ທີມງານມືອາຊີບຄອຍແລການຈອງ, ການຂຶ້ນເຮືອ ແລະ ການໃຫ້ບໍລິການ.' />
+          <FeatureCard icon='💠' title='ໂທນທັນສະໄໝ' desc='ອອກແບບການໃຊ້ງານໃຫ້ອ່ານງ່າຍ ສະອາດ ແລະ ດູນ່າເຊື່ອຖື.' />
+          <FeatureCard icon='🛡️' title='ຄວາມປອດໄພ' desc='ເຮືອ ແລະ ຂັ້ນຕອນບໍລິການຖືກຈັດການໃຫ້ມີຄວາມພ້ອມໃນທຸກທຣິບ.' />
         </div>
       </section>
 
-      <section className='lp-ships-section'>
-        <div className='lp-section-shell'>
-          <div className='lp-section-header'>
-            <span className='lp-section-label'>ເຮືອຂອງເຮົາ</span>
-            <div className='lp-divider center' />
-            <h2 className='lp-section-title'>ເລືອກເຮືອທ່ອງທ່ຽວ</h2>
-            <p className='lp-section-sub' style={{margin: '0 auto', textAlign: 'center'}}>
-              ເຮືອທຸກລຳຖືກຈັດວາງຂໍ້ມູນໃຫ້ເຫັນຊັດ ເພື່ອໃຫ້ຕັດສິນໃຈໄດ້ໄວ ແລະ ແມ່ນຍຳ.
-            </p>
-          </div>
+      {/* SHIPS */}
+      <section style={{...container, padding: '64px 32px 40px'}}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 24,
+            flexWrap: 'wrap',
+            marginBottom: 36,
+          }}
+        >
+          <SectionHead
+            eyebrow='ເຮືອຂອງເຮົາ'
+            title='ເລືອກເຮືອທ່ອງທ່ຽວ'
+            desc='ເຮືອທຸກລຳຖືກຈັດວາງຂໍ້ມູນໃຫ້ເຫັນຊັດ ເພື່ອໃຫ້ຕັດສິນໃຈໄດ້ໄວ ແລະ ແມ່ນຍຳ.'
+          />
+        </div>
 
-          {loading ? (
-            <div className='lp-loading'>
-              <div className='lp-spinner' /> ກຳລັງໂຫຼດຂໍ້ມູນ...
-            </div>
-          ) : ships.length > 0 ? (
-            <div className='lp-cards-grid'>
-              {ships.map((ship) => (
-                <div key={ship.id} className='lp-card' onClick={() => handleBookingClick('ship')}>
-                  <div className='lp-card-img lp-card-img-ship'>
-                    {ship.image_url ? (
-                      <img src={ship.image_url} alt={ship.ship_name || ship.name} />
-                    ) : (
-                      '🚢'
-                    )}
-                  </div>
-
-                  <div className='lp-card-body'>
-                    <div className='lp-card-title'>{ship.ship_name || ship.name}</div>
-                    <div className='lp-card-meta'>ຄວາມຈຸ {ship.capacity} ຄົນ</div>
-                    <div className='lp-card-footer'>
-                      <span className='lp-card-price'>{ship.price?.toLocaleString()} ₭</span>
-                      <span
-                        className={`lp-badge ${
-                          ship.status === 'Active' ? 'lp-badge-success' : 'lp-badge-danger'
-                        }`}
-                      >
-                        {ship.status === 'Active' ? 'ພ້ອມໃຫ້ບໍລິການ' : 'ບໍ່ວ່າງ'}
-                      </span>
-                    </div>
+        {loading ? (
+          <div style={{textAlign: 'center', color: C.muted, padding: '40px 0'}}>ກຳລັງໂຫຼດຂໍ້ມູນ...</div>
+        ) : ships.length > 0 ? (
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24}}>
+            {ships.map((ship) => (
+              <div
+                key={ship.id}
+                onClick={() => handleBookingClick('ship')}
+                style={{
+                  cursor: 'pointer',
+                  background: C.white,
+                  border: `1px solid ${C.seafoamBorder}`,
+                  borderRadius: 20,
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 32px -24px rgba(6,80,90,.5)',
+                }}
+              >
+                <div style={{position: 'relative', aspectRatio: '16 / 10', ...placeholder}}>
+                  {ship.imageUrl ? (
+                    <img
+                      src={ship.imageUrl}
+                      alt={ship.name}
+                      style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                    />
+                  ) : (
+                    <span style={{fontSize: 36}}>🚢</span>
+                  )}
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      background: 'rgba(255,255,255,.92)',
+                      color: C.tealDark,
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      padding: '5px 11px',
+                      borderRadius: 999,
+                    }}
+                  >
+                    {ship.status === 'active' ? 'ພ້ອມໃຫ້ບໍລິການ' : 'ບໍ່ວ່າງ'}
+                  </span>
+                </div>
+                <div style={{padding: '18px 20px'}}>
+                  <div style={{fontWeight: 700, fontSize: 17, color: C.ink}}>{ship.name}</div>
+                  <div style={{fontSize: 13.5, color: C.muted, margin: '4px 0 14px'}}>⚓ ຄວາມຈຸ {ship.capacity} ຄົນ</div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderTop: '1px solid #eef6f6',
+                      paddingTop: 13,
+                    }}
+                  >
+                    <span style={{fontWeight: 800, fontSize: 18, color: C.teal}}>{ship.pricePerHour?.toLocaleString()} ₭</span>
+                    <span style={{fontSize: 13, fontWeight: 700, color: C.accent}}>ຈອງ →</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className='lp-loading'>ບໍ່ມີເຮືອ ກະລຸນາກັບມາໃນພາຍຫຼັງ</div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{textAlign: 'center', color: C.muted, padding: '40px 0'}}>ບໍ່ມີເຮືອ ກະລຸນາກັບມາໃນພາຍຫຼັງ</div>
+        )}
       </section>
 
-      <section className='lp-foods-section'>
-        <div className='lp-section-shell'>
-          <div className='lp-section-header'>
-            <span className='lp-section-label'>ອາຫານ</span>
-            <div className='lp-divider center' />
-            <h2 className='lp-section-title'>ເມນູອາຫານ</h2>
-            <p className='lp-section-sub' style={{margin: '0 auto', textAlign: 'center'}}>
-              ເມນູອາຫານທ້ອງຖິ່ນ ແລະ ຊີຟູ້ດສົດໃໝ່ ພ້ອມສັ່ງຄວບຄູ່ກັບການລ່ອງເຮືອ.
-            </p>
-          </div>
+      {/* FOODS */}
+      <section style={{...container, padding: '48px 32px 80px'}}>
+        <SectionHead
+          eyebrow='ອາຫານ'
+          title='ເມນູອາຫານ'
+          desc='ເມນູອາຫານທ້ອງຖິ່ນ ແລະ ຊີຟູ້ດສົດໃໝ່ ພ້ອມສັ່ງຄວບຄູ່ກັບການລ່ອງເຮືອ.'
+        />
 
-          {loading ? (
-            <div className='lp-loading'>
-              <div className='lp-spinner' /> ກຳລັງໂຫຼດຂໍ້ມູນ...
-            </div>
-          ) : foods.length > 0 ? (
-            <div className='lp-cards-grid'>
-              {foods.map((food) => (
-                <div
-                  key={food.product_id || food.id || food.name}
-                  className='lp-card'
-                  onClick={() => handleBookingClick('food')}
-                >
-                  <div className='lp-card-img lp-card-img-food'>
-                    {food.image ? <img src={food.image} alt={food.name} /> : '🍜'}
-                  </div>
-
-                  <div className='lp-card-body'>
-                    <div className='lp-card-title'>{food.name}</div>
-                    <div className='lp-card-meta'>ປະເພດ {food.category_id || 'ທົ່ວໄປ'}</div>
-                    <div className='lp-card-footer'>
-                      <span className='lp-card-price mint'>{food.price?.toLocaleString()} ₭</span>
-                      <span
-                        className={`lp-badge ${
-                          food.availability ? 'lp-badge-success' : 'lp-badge-danger'
-                        }`}
-                      >
-                        {food.availability ? 'ພ້ອມສັ່ງ' : 'ສິນຄ້າໝົດ'}
-                      </span>
-                    </div>
+        {loading ? (
+          <div style={{textAlign: 'center', color: C.muted, padding: '40px 0'}}>ກຳລັງໂຫຼດຂໍ້ມູນ...</div>
+        ) : foods.length > 0 ? (
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24}}>
+            {foods.map((food) => (
+              <div
+                key={food.product_id || food.id || food.name}
+                onClick={() => handleBookingClick('food')}
+                style={{
+                  cursor: 'pointer',
+                  background: C.white,
+                  border: `1px solid ${C.seafoamBorder}`,
+                  borderRadius: 20,
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 32px -24px rgba(6,80,90,.5)',
+                  display: 'flex',
+                }}
+              >
+                <div style={{width: 118, flexShrink: 0, fontSize: 30, ...placeholder}}>
+                  {food.imageUrl ? (
+                    <img src={food.imageUrl} alt={food.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                  ) : (
+                    '🍜'
+                  )}
+                </div>
+                <div style={{padding: '16px 18px', flex: 1, minWidth: 0}}>
+                  <div style={{fontWeight: 700, fontSize: 16, color: C.ink, marginBottom: 12}}>{food.name}</div>
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <span style={{fontWeight: 800, fontSize: 16, color: C.teal}}>{food.price?.toLocaleString()} ₭</span>
+                    <span
+                      style={{
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        color: C.tealDark,
+                        background: C.seafoam,
+                        padding: '4px 10px',
+                        borderRadius: 999,
+                      }}
+                    >
+                      {food.available ? 'ພ້ອມສັ່ງ' : 'ສິນຄ້າໝົດ'}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className='lp-loading'>ບໍ່ມີອາຫານ ກະລຸນາກັບມາໃນພາຍຫຼັງ</div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{textAlign: 'center', color: C.muted, padding: '40px 0'}}>ບໍ່ມີອາຫານ ກະລຸນາກັບມາໃນພາຍຫຼັງ</div>
+        )}
       </section>
 
-      <section className='lp-cta'>
-        <div className='lp-cta-shell'>
-          <h2>ພ້ອມເລີ່ມການເດີນທາງແບບໃໝ່ບໍ?</h2>
-          <p>
-            ຈອງເຮືອ ແລະ ສັ່ງອາຫານໄດ້ທັນທີ ດ້ວຍໜ້າຈໍທີ່ຈັດວາງຊັດເຈນ ແລະ
-            ພ້ອມສຳລັບການໃຊ້ງານຈິງ.
+      {/* CTA */}
+      <section style={{position: 'relative', overflow: 'hidden', background: 'linear-gradient(120deg,#06525f,#0891b2 70%,#0ea5b5)'}}>
+        <div style={{maxWidth: 840, margin: '0 auto', padding: '80px 32px', textAlign: 'center'}}>
+          <h2 style={{fontSize: 'clamp(30px,4vw,46px)', fontWeight: 800, color: '#fff', margin: '0 0 16px', letterSpacing: '-.01em'}}>
+            ພ້ອມເລີ່ມການເດີນທາງແບບໃໝ່ບໍ?
+          </h2>
+          <p style={{fontSize: 17, color: '#d2f0f3', margin: '0 auto 32px', maxWidth: 600}}>
+            ຈອງເຮືອ ແລະ ສັ່ງອາຫານໄດ້ທັນທີ
           </p>
 
           {isLoggedIn ? (
-            <div className='lp-cta-actions'>
-              <button className='lp-cta-btn' onClick={() => handleBookingClick('ship')}>
+            <div style={{display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap'}}>
+              <button onClick={() => handleBookingClick('ship')} style={{...btnPrimary, padding: '16px 32px'}}>
                 ຈອງເຮືອ
               </button>
               <button
-                className='lp-cta-btn lp-cta-btn-alt'
                 onClick={() => handleBookingClick('food')}
+                style={{
+                  fontFamily: FONT,
+                  cursor: 'pointer',
+                  border: '1.5px solid rgba(255,255,255,.5)',
+                  background: 'rgba(255,255,255,.08)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  padding: '16px 30px',
+                  borderRadius: 14,
+                }}
               >
                 ສັ່ງອາຫານ
               </button>
             </div>
           ) : (
-            <div className='lp-cta-actions'>
-              <button className='lp-cta-btn' onClick={() => navigate('/auth/login')}>
+            <div style={{display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap'}}>
+              <button onClick={() => navigate('/auth/login')} style={{...btnPrimary, padding: '16px 32px'}}>
                 ເຂົ້າສູ່ລະບົບ
               </button>
             </div>
@@ -599,47 +820,74 @@ const LandingPageShipsFoodsPage = () => {
         </div>
       </section>
 
-      <footer className='lp-footer'>
-        <div className='lp-footer-inner'>
-          <div className='lp-footer-brand'>
-            <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
-              <div className='lp-navbar-logo' style={{width: 40, height: 40}}>
-                <span style={{fontSize: '1.05rem'}}>🚢</span>
+      {/* FOOTER */}
+      <footer style={{background: C.deep, color: '#bcd9dd'}}>
+        <div
+          style={{
+            ...container,
+            padding: '60px 32px 28px',
+            display: 'grid',
+            gridTemplateColumns: '1.6fr 1fr 1fr 1fr',
+            gap: 40,
+          }}
+        >
+          <div>
+            <div style={{display: 'flex', alignItems: 'center', gap: 11, marginBottom: 14}}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 11,
+                  background: 'linear-gradient(140deg,#0891b2,#06b6d4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 800,
+                }}
+              >
+                JV
               </div>
-              <span style={{color: '#fff', fontWeight: 800, fontSize: '1rem'}}>JoVa ທະເລລາວ</span>
+              <span style={{fontWeight: 700, fontSize: 17, color: '#fff'}}>JoVa ທະເລລາວ</span>
             </div>
-            <p>ບໍລິການທ່ອງທ່ຽວທາງນ້ຳ ແລະ ອາຫານຄັດສັນທີ່ສະອາດ ແລະ ທັນສະໄໝ.</p>
+            <p style={{fontSize: 14, color: '#8fb9bf', maxWidth: 300, margin: 0, lineHeight: 1.6}}>
+              ບໍລິການທ່ອງທ່ຽວທາງນ້ຳ ແລະ ອາຫານຄັດສັນທີ່ສະອາດ ແລະ ທັນສະໄໝ.
+            </p>
           </div>
 
-          <div className='lp-footer-links'>
-            <h4>ບໍລິການ</h4>
-            <ul>
-              <li><a href='#'>ຈອງເຮືອ</a></li>
-              <li><a href='#'>ສັ່ງອາຫານ</a></li>
-              <li><a href='#'>ແພັກເກດທ່ອງທ່ຽວ</a></li>
-            </ul>
-          </div>
-
-          <div className='lp-footer-links'>
-            <h4>ຂໍ້ມູນ</h4>
-            <ul>
-              <li><a href='#'>ກ່ຽວກັບເຮົາ</a></li>
-              <li><a href='#'>ຕິດຕໍ່</a></li>
-              <li><a href='#'>ນະໂຍບາຍ</a></li>
-            </ul>
-          </div>
-
-          <div className='lp-footer-links'>
-            <h4>ຕິດຕໍ່</h4>
-            <ul>
-              <li><a href='#'>ວຽງຈັນ, ລາວ</a></li>
-              <li><a href='#'>+856 20 55588558</a></li>
-              <li><a href='#'>info@laosea.la</a></li>
-            </ul>
+          {[
+            {h: 'ບໍລິການ', items: ['ຈອງເຮືອ', 'ສັ່ງອາຫານ', 'ແພັກເກດທ່ອງທ່ຽວ']},
+            {h: 'ຂໍ້ມູນ', items: ['ກ່ຽວກັບເຮົາ', 'ຕິດຕໍ່', 'ນະໂຍບາຍ']},
+            {h: 'ຕິດຕໍ່', items: ['📍 ວຽງຈັນ, ລາວ', '📞 +856 20 55588558', '✉️ info@laosea.la']},
+          ].map((col) => (
+            <div key={col.h}>
+              <h4
+                style={{
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  margin: '0 0 14px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '.06em',
+                }}
+              >
+                {col.h}
+              </h4>
+              <div style={{display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14}}>
+                {col.items.map((it) => (
+                  <a key={it} href='#' style={{color: '#9ec4c9', textDecoration: 'none'}}>
+                    {it}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{borderTop: '1px solid rgba(255,255,255,.1)'}}>
+          <div style={{...container, padding: '20px 32px', fontSize: 13, color: '#7da6ac'}}>
+            © 2025 JoVa ທະເລລາວ. ສະຫງວນລິຂະສິດ.
           </div>
         </div>
-
-        <div className='lp-footer-copy'>© 2025 JoVa ທະເລລາວ. ສະຫງວນລິຂະສິດ.</div>
       </footer>
     </div>
   )
