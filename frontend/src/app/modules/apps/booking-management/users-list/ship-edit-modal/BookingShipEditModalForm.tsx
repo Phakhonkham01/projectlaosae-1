@@ -1382,9 +1382,9 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               >
                 {isTodaySelected
                   ? isSameDayBookingClosed
-                    ? 'Today can no longer be booked because same-day booking closes after 17:00.'
+                    ? 'ມື້ນີ້ບໍ່ສາມາດຈອງໄດ້ແລ້ວ ເພາະວ່າການຈອງພາຍໃນມື້ນີ້ແມ່ນປິດຕັ້ງແຕ່ເວລາ 17:00 ໂມງເປັນຕົ້ນໄປ'
                     : `For today, booking starts from ${minutesToTimeString(minimumBookingMinutes)} and must be made by ${minutesToTimeString(SAME_DAY_LAST_BOOKING_MINUTES)}.`
-                  : `Bookings start from ${minutesToTimeString(SHOP_OPEN_MINUTES)}. You can choose any later time, but the booking must still end by ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
+                  : `ເລີ່ມຕົ້ນຈອງໄດ້ຕັ້ງແຕ່ ${minutesToTimeString(SHOP_OPEN_MINUTES)}. ທ່ານສາມາດເລືອກເວລາໃດກໍໄດ້ທີ່ຫຼັງຈາກນັ້ນ, ແຕ່ການຈອງຈະຕ້ອງສິ້ນສຸດລົງພາຍໃນ ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
               </div>
             )}
 
