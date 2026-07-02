@@ -36,7 +36,7 @@ const ShipEditModalForm: FC = () => {
       const fetchShipData = async () => {
         try {
           setLoading(true)
-          const shipRef = doc(db, 'ships', itemIdForUpdate)
+          const shipRef = doc(db, 'ship', itemIdForUpdate)
           const shipSnap = await getDoc(shipRef)
           
           if (shipSnap.exists()) {
@@ -215,7 +215,7 @@ const ShipEditModalForm: FC = () => {
   // Create mutation
   const createMutation = useMutation(
     async () => {
-      const docRef = await addDoc(collection(db, COLLECTIONS.ships), {
+      const docRef = await addDoc(collection(db, COLLECTIONS.ship), {
         name: formData.name,
         capacity: formData.capacity,
         imageUrl: formData.imageUrl,
@@ -256,7 +256,7 @@ const ShipEditModalForm: FC = () => {
     async () => {
       if (!itemIdForUpdate) throw new Error('ບໍ່ພົບ ID ຂອງເຮືອ')
       
-      const shipRef = doc(db, COLLECTIONS.ships, itemIdForUpdate)
+      const shipRef = doc(db, COLLECTIONS.ship, itemIdForUpdate)
       await updateDoc(shipRef, {
         name: formData.name,
         capacity: formData.capacity,

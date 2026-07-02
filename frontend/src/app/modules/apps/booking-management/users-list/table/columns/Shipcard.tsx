@@ -11,8 +11,11 @@ interface ShipCardProps {
 
 const ShipCard: React.FC<ShipCardProps> = ({ ship, index }) => {
   const isSoldOut = (ship.quantity ?? 0) <= 0
-  const isInactive = ship.status === 'Inactive'
-  const isMaintenance = ship.status === 'Maintenance'
+  // status ຖືກບັນທຶກເປັນໂຕນ້ອຍ ('inactive' / 'maintenance') — normalize ກ່ອນທຽບ
+  // ເພື່ອຮອງຮັບທັງຂໍ້ມູນເກົ່າ ('Inactive' / 'Maintenance') ແລະ ໃໝ່
+  const status = String(ship.status ?? '').toLowerCase()
+  const isInactive = status === 'inactive'
+  const isMaintenance = status === 'maintenance'
 
   // A ship can't be booked when it's sold out OR its status is not "Active".
   // Inactive / Maintenance ships reuse the same sold-out look (grayscale + overlay

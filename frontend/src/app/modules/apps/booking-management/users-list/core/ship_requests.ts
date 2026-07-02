@@ -13,7 +13,7 @@ import {
 import { db } from '../../../../../../../../firebase/useFirebase'
 import { ShipData } from './ship_models'
 
-const SHIPS_COLLECTION = 'ships'
+const SHIPS_COLLECTION = 'ship'
 
 // ─── Normalize ──────────────────────────────────────────────────────────────
 // ໜ້າສ້າງເຮືອ (create-ships) ບັນທຶກ field ຊື່ pricePerHour / imageUrl

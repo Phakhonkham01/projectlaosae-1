@@ -5,7 +5,7 @@ import { MyProfileCard } from './components/MyProfileCard'
 const MyProfilePage: FC = () => {
   return (
     <>
-      <PageTitle breadcrumbs={[]}>ຂໍ້ມູນສ່ວນຕົ</PageTitle>
+      <PageTitle breadcrumbs={[]}>ຂໍ້ມູນສ່ວນຕົວ</PageTitle>
       <MyProfileCard />
     </>
   )

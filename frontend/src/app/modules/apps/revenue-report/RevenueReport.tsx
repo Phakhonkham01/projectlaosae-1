@@ -84,7 +84,7 @@ const RevenueReport = () => {
     let mounted = true
     const load = async () => {
       try {
-        const snap = await getDocs(collection(db, 'bill'))
+        const snap = await getDocs(collection(db, 'booking'))
         const data = snap.docs.map((d) => ({id: d.id, ...d.data()})) as Bill[]
         if (mounted) setAllBills(data)
       } catch (err) {

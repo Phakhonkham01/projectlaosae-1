@@ -114,7 +114,7 @@ const EditProfileModal: FC<EditProfileModalProps> = ({ show, onClose }) => {
     const fetchUser = async () => {
       setLoading(true)
       try {
-        const snap = await getDoc(doc(db, 'Users', currentUser._id))
+        const snap = await getDoc(doc(db, 'users', currentUser._id))
         if (snap.exists()) {
           const d = snap.data()
           setUserName(d.name          || '')
@@ -162,7 +162,7 @@ const EditProfileModal: FC<EditProfileModalProps> = ({ show, onClose }) => {
         await uploadBytes(storageRef, avatarFile)
         avatarUrl = await getDownloadURL(storageRef)
       }
-      await updateDoc(doc(db, 'Users', currentUser._id), {
+      await updateDoc(doc(db, 'users', currentUser._id), {
         name: userName, lastname: userLastname,
         email: userEmail, phone_number: userPhone,
         updatedAt: new Date(),

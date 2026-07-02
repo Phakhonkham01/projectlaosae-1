@@ -87,8 +87,8 @@ export function Registration() {
         )
         const firebaseUser = userCredential.user
 
-        // Step 2: Save user profile to Firestore → collection: USER
-        await setDoc(doc(db, 'Users', firebaseUser.uid), {
+        // Step 2: Save user profile to Firestore → collection: users
+        await setDoc(doc(db, 'users', firebaseUser.uid), {
           email: values.email,
           name: values.firstname,
           lastname: values.lastname,

@@ -111,7 +111,7 @@ export function Login() {
         let role: UserRole = 'employee'
         let phone_number = ''
 
-        const userSnap = await getDoc(doc(db, 'Users', firebaseUser.uid))
+        const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid))
 
         let status = 'Active'
         if (userSnap.exists()) {

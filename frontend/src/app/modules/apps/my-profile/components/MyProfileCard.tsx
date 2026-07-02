@@ -27,13 +27,11 @@ const syncBookingUserName = async (userId: string, userName: string) => {
   const batch = writeBatch(db)
   let updates = 0
 
-  for (const collectionName of ['bill', 'history_booking']) {
-    const snap = await getDocs(query(collection(db, collectionName), where('user_id', '==', userId)))
-    snap.docs.forEach((bookingDoc) => {
-      batch.update(bookingDoc.ref, { user_name: userName })
-      updates += 1
-    })
-  }
+  const snap = await getDocs(query(collection(db, 'booking'), where('user_id', '==', userId)))
+  snap.docs.forEach((bookingDoc) => {
+    batch.update(bookingDoc.ref, { user_name: userName })
+    updates += 1
+  })
 
   if (updates > 0) {
     await batch.commit()
@@ -190,6 +188,7 @@ const MyProfileCard: FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
   const [imageSaving, setImageSaving] = useState(false)
+  const [avatarHover, setAvatarHover] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Password section
@@ -206,7 +205,7 @@ const MyProfileCard: FC = () => {
         const local = JSON.parse(raw) as { _id?: string; user_name?: string; user_email?: string; role?: string }
         if (!local._id) { setLoading(false); return }
 
-        const snap = await getDoc(doc(db, 'Users', local._id))
+        const snap = await getDoc(doc(db, 'users', local._id))
         if (snap.exists()) {
           const data = { _id: snap.id, ...snap.data() } as ProfileData
           setProfile(data)
@@ -239,7 +238,7 @@ const MyProfileCard: FC = () => {
     setSavingField(field)
     try {
       const payload = { [field]: value, updatedAt: new Date().toISOString() }
-      await updateDoc(doc(db, 'Users', profile._id), payload)
+      await updateDoc(doc(db, 'users', profile._id), payload)
       const updatedProfile = { ...profile, [field]: value }
       const updatedUserName = `${updatedProfile.name || ''} ${updatedProfile.lastname || ''}`.trim()
 
@@ -300,7 +299,7 @@ const MyProfileCard: FC = () => {
       const storageRef = ref(storage, `users/${profile._id}/profile_${Date.now()}`)
       const snap = await uploadBytes(storageRef, file)
       const url = await getDownloadURL(snap.ref)
-      await updateDoc(doc(db, 'Users', profile._id), { image_url: url, updatedAt: new Date().toISOString() })
+      await updateDoc(doc(db, 'users', profile._id), { image_url: url, updatedAt: new Date().toISOString() })
       setProfile((p) => p ? { ...p, image_url: url } : p)
       setImagePreview(url)
       setImageFile(null)
@@ -311,6 +310,34 @@ const MyProfileCard: FC = () => {
     } finally {
       setImageSaving(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  // ── Remove avatar ─────────────────────────────────────────────────────────────
+  const handleRemoveImage = async () => {
+    if (!profile?._id || !imagePreview) return
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'ລົບຮູບໂປຣໄຟລ໌?',
+      text: 'ຮູບຈະຖືກເອົາອອກ ແລະ ສະແດງເປັນຕົວອັກສອນຫຍໍ້ແທນ',
+      showCancelButton: true,
+      confirmButtonText: 'ລົບ',
+      cancelButtonText: 'ຍົກເລີກ',
+      confirmButtonColor: '#f1416c',
+    })
+    if (!result.isConfirmed) return
+
+    setImageSaving(true)
+    try {
+      await updateDoc(doc(db, 'users', profile._id), { image_url: '', updatedAt: new Date().toISOString() })
+      setProfile((p) => p ? { ...p, image_url: '' } : p)
+      setImagePreview('')
+      setImageFile(null)
+      Swal.fire({ icon: 'success', title: 'ລົບຮູບສຳເລັດ', timer: 1500, showConfirmButton: false })
+    } catch {
+      Swal.fire({ icon: 'error', title: 'ລົບຮູບຜິດພາດ' })
+    } finally {
+      setImageSaving(false)
     }
   }
 
@@ -405,34 +432,78 @@ const MyProfileCard: FC = () => {
                   <span className='spinner-border text-white' />
                 </div>
               )}
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt='avatar'
-                  className='rounded-circle shadow'
-                  style={{ width: 120, height: 120, objectFit: 'cover', border: '4px solid #e2e8f0' }}
-                />
-              ) : (
-                <div
-                  className='rounded-circle d-flex align-items-center justify-content-center bg-primary shadow'
-                  style={{ width: 120, height: 120, fontSize: 36, color: '#fff', fontWeight: 800 }}
-                >
-                  {initials || '?'}
-                </div>
-              )}
+              {/* ກົດຮູບໄດ້ໂດຍກົງ ພ້ອມ overlay ຕອນ hover */}
+              <div
+                role='button'
+                onClick={() => !imageSaving && fileInputRef.current?.click()}
+                onMouseEnter={() => setAvatarHover(true)}
+                onMouseLeave={() => setAvatarHover(false)}
+                className='profile-avatar rounded-circle overflow-hidden position-relative'
+                style={{ width: 120, height: 120, cursor: imageSaving ? 'default' : 'pointer' }}
+                title='ປ່ຽນຮູບໂປຣໄຟລ໌'
+              >
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt='avatar'
+                    className='w-100 h-100 shadow'
+                    style={{ objectFit: 'cover', border: '4px solid #e2e8f0', borderRadius: '50%' }}
+                  />
+                ) : (
+                  <div
+                    className='w-100 h-100 d-flex align-items-center justify-content-center bg-primary shadow'
+                    style={{ fontSize: 36, color: '#fff', fontWeight: 800, borderRadius: '50%' }}
+                  >
+                    {initials || '?'}
+                  </div>
+                )}
 
-              {/* Camera button */}
+                {/* Hover overlay */}
+                <div
+                  className='profile-avatar__overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white'
+                  style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '50%', opacity: avatarHover && !imageSaving ? 1 : 0, transition: 'opacity .2s' }}
+                >
+                  <KTIcon iconName='picture' className='fs-2 text-white' />
+                  <span className='fs-8 fw-bold mt-1'>ປ່ຽນຮູບ</span>
+                </div>
+              </div>
+
+              {/* Camera button (FAB) */}
               <button
                 type='button'
-                className='btn btn-icon btn-sm btn-primary position-absolute bottom-0 end-0 shadow-sm'
-                style={{ width: 32, height: 32, borderRadius: '50%' }}
+                className='btn btn-icon btn-primary position-absolute bottom-0 end-0 shadow'
+                style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid #fff' }}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={imageSaving}
                 title='ປ່ຽນຮູບໂປຣໄຟລ໌'
               >
-                <KTIcon iconName='camera' className='fs-6' />
+                <KTIcon iconName='picture' className='fs-4' />
               </button>
               <input ref={fileInputRef} type='file' accept='image/*' className='d-none' onChange={handleImageChange} />
+            </div>
+
+            {/* ປຸ່ມຈັດການຮູບ ໃຫ້ກົດງ່າຍ */}
+            <div className='d-flex flex-wrap justify-content-center gap-2 mb-4'>
+              <button
+                type='button'
+                className='btn btn-sm btn-light-primary fw-bold d-inline-flex align-items-center gap-2'
+                onClick={() => fileInputRef.current?.click()}
+                disabled={imageSaving}
+              >
+                <KTIcon iconName='picture' className='fs-6' />
+                {imageSaving ? 'ກຳລັງອັບໂຫຼດ...' : 'ປ່ຽນຮູບໂປຣໄຟລ໌'}
+              </button>
+              {imagePreview && (
+                <button
+                  type='button'
+                  className='btn btn-sm btn-light-danger fw-bold d-inline-flex align-items-center gap-2'
+                  onClick={handleRemoveImage}
+                  disabled={imageSaving}
+                >
+                  <KTIcon iconName='trash' className='fs-6' />
+                  ລົບຮູບ
+                </button>
+              )}
             </div>
 
             <h4 className='fw-bolder fs-3 mb-1'>{profile.name} {profile.lastname}</h4>

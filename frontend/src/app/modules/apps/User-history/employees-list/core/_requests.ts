@@ -2,7 +2,7 @@ import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, 
 import { db } from '../../../../../../../../firebase/useFirebase'
 import { HistoryBooking } from './_models'
 
-const COLLECTION = 'bill'
+const COLLECTION = 'booking'
 
 // Get all history
 export const getHistoryBookings = async (): Promise<HistoryBooking[]> => {
@@ -94,7 +94,6 @@ export const updatePaymentStatus = async (
   }
 
   await updateDoc(doc(db, COLLECTION, id), payload)
-  await updateDoc(doc(db, 'history_booking', id), payload).catch(() => undefined)
 }
 
 // Update booking status only

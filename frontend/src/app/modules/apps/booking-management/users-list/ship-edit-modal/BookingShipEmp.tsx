@@ -80,7 +80,7 @@ const BookingShipEditModalForm: FC = () => {
   useEffect(() => {
     if (!itemIdForUpdate) return
     setLoading(true)
-    getDoc(doc(db, 'ships', itemIdForUpdate))
+    getDoc(doc(db, 'ship', itemIdForUpdate))
       .then((snap) => {
         if (snap.exists()) {
           const raw = snap.data() as Record<string, any>
@@ -230,8 +230,15 @@ const BookingShipEditModalForm: FC = () => {
         createdAt: new Date().toISOString(),
       }
 
-      await addDoc(collection(db, 'bill'), bookingPayload)
-      await addDoc(collection(db, 'history_booking'), bookingPayload)
+      const bookingRef = await addDoc(collection(db, 'booking'), bookingPayload)
+
+      // payment: ສ້າງ 1 doc ຕໍ່ 1 booking ຕອນສ້າງ booking
+      await addDoc(collection(db, 'payment'), {
+        bookingId: bookingRef.id,
+        userId: bookingPayload.user_id,
+        Amount: bookingPayload.grand_total,
+        Date: bookingPayload.createdAt,
+      })
 
       Swal.fire({
         icon: 'success',

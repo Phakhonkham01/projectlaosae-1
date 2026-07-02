@@ -214,8 +214,7 @@ const BillDetailModal: FC<{
   const handleApprove = async () => {
     setActionLoading(true)
     try {
-      await updateDoc(doc(db, 'bill', bill.id), { payment_status: 'approved' })
-      await updateDoc(doc(db, 'history_booking', bill.id), { payment_status: 'approved' }).catch(() => {})
+      await updateDoc(doc(db, 'booking', bill.id), { payment_status: 'approved' })
       Swal.fire({ icon: 'success', title: 'ອະນຸມັດແລ້ວ', timer: 1500, showConfirmButton: false })
       onRefresh()
       onClose()
@@ -235,8 +234,7 @@ const BillDetailModal: FC<{
     setActionLoading(true)
     try {
       const update = { payment_status: 'rejected', reject_reason: rejectReason }
-      await updateDoc(doc(db, 'bill', bill.id), update)
-      await updateDoc(doc(db, 'history_booking', bill.id), update).catch(() => {})
+      await updateDoc(doc(db, 'booking', bill.id), update)
       Swal.fire({ icon: 'info', title: 'ປະຕິເສດແລ້ວ', text: 'ຈະແຈ້ງໃຫ້ຜູ້ໃຊ້ຊຳລະໃໝ່', timer: 2000, showConfirmButton: false })
       onRefresh()
       onClose()
@@ -261,8 +259,7 @@ const BillDetailModal: FC<{
       await uploadBytes(storageRef, file)
       const url = await getDownloadURL(storageRef)
       const update = { slip_url: url, payment_status: 're_submitted', reject_reason: '' }
-      await updateDoc(doc(db, 'bill', bill.id), update)
-      await updateDoc(doc(db, 'history_booking', bill.id), update).catch(() => {})
+      await updateDoc(doc(db, 'booking', bill.id), update)
       Swal.fire({ icon: 'success', title: 'ສົ່ງສະລິບໃໝ່ແລ້ວ', text: 'ກຳລັງລໍຖ້າພະນັກງານກວດສອບ', timer: 2000, showConfirmButton: false })
       onRefresh()
       onClose()
@@ -660,7 +657,7 @@ const BillManagement: FC = () => {
     setLoading(true)
     try {
       const isEmployee = currentUser.role !== 'user'
-      const colRef = collection(db, 'bill')
+      const colRef = collection(db, 'booking')
 
       // User sees only their own bills; employee sees all
       const q = isEmployee

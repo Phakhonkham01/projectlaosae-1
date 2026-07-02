@@ -25,7 +25,7 @@ const UsersPage = () => {
           index  // ← ใช้ index แทน path=''
           element={
             <>
-              <PageTitle breadcrumbs={usersBreadcrumbs}>Users list</PageTitle>
+              <PageTitle breadcrumbs={usersBreadcrumbs}>ຈັດການຂໍ້ມູນຜູ້ໃຊ້ງານ</PageTitle>
               <UsersListWrapper />
             </>
           }

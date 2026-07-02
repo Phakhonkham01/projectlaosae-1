@@ -15,7 +15,7 @@ import { db } from '../../../../../../../../firebase/useFirebase'
 import { COLLECTIONS } from '../../../../../../../../firebase/collections'
 import { ShipData } from './ship_models'
 
-const SHIPS_COLLECTION = COLLECTIONS.ships
+const SHIPS_COLLECTION = COLLECTIONS.ship
 
 // Get all ships
 export const getShips = async (): Promise<ShipData[]> => {

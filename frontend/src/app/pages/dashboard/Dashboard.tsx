@@ -136,9 +136,8 @@ const formatDate = (value?: string) => {
 
 const getBookingDate = (booking: BookingItem) => parseDateValue(booking.createdAt) || parseDateValue(booking.booking_date)
 
-// Each booking is stored in BOTH `bill` and `history_booking` with the same payload
-// (see BookingShipEditModalForm). The two copies have different doc ids, so we dedupe
-// on a stable content key to avoid double-counting revenue and booking totals.
+// bill + history_booking ໄດ້ຖືກລວມເປັນ collection `booking` ອັນດຽວແລ້ວ. bills ແລະ
+// historyBookings ຈຶ່ງມາຈາກຊຸດຂໍ້ມູນດຽວກັນ — dedupe ດ້ວຍ content key ເພື່ອບໍ່ໃຫ້ນັບຊ້ຳ.
 const getBookingKey = (booking: BookingItem) => {
   const createdAt = getBookingDate(booking)
   return [
@@ -365,18 +364,20 @@ const Dashboard = () => {
       setError('')
 
       try {
-        const [usersSnap, billsSnap, historySnap, categoriesSnap, productsSnap, shipsSnap] = await Promise.all([
-          getDocs(collection(db, 'Users')),
-          getDocs(query(collection(db, 'bill'), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'history_booking'), orderBy('createdAt', 'desc'))),
+        const [usersSnap, bookingSnap, categoriesSnap, productsSnap, shipsSnap] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          getDocs(query(collection(db, 'booking'), orderBy('createdAt', 'desc'))),
           getDocs(collection(db, 'categories')),
           getDocs(collection(db, 'products')),
-          getDocs(query(collection(db, 'ships'), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, 'ship'), orderBy('createdAt', 'desc'))),
         ])
 
+        // bill + history_booking ຖືກລວມເປັນ collection ດຽວ `booking` ແລ້ວ —
+        // ໃຊ້ຊຸດຂໍ້ມູນດຽວກັນທັງ bills ແລະ historyBookings (dedupe ດ້ານລຸ່ມຈະ collapse ໃຫ້ເຫຼືອອັນດຽວ)
+        const bookingItems = bookingSnap.docs.map((doc) => ({id: doc.id, ...doc.data()}) as BookingItem)
         setUsers(usersSnap.docs.map((doc) => ({id: doc.id, _id: doc.id, ...doc.data()}) as AppUser))
-        setBills(billsSnap.docs.map((doc) => ({id: doc.id, ...doc.data()}) as BookingItem))
-        setHistoryBookings(historySnap.docs.map((doc) => ({id: doc.id, ...doc.data()}) as BookingItem))
+        setBills(bookingItems)
+        setHistoryBookings(bookingItems)
         setCategories(categoriesSnap.docs.map((doc) => ({id: doc.id, category_id: doc.id, ...doc.data()}) as CategoryItem))
         setProducts(productsSnap.docs.map((doc) => ({id: doc.id, product_id: doc.id, ...doc.data()}) as ProductItem))
         setShips(shipsSnap.docs.map((doc) => ({id: doc.id, ...doc.data()}) as ShipItem))

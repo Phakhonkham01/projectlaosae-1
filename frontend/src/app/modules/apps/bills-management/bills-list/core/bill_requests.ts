@@ -10,8 +10,7 @@ import {
 import {db} from '../../../../../../../../firebase/useFirebase'
 import {BillData, PaymentStatus} from './bill_models'
 
-const BILLS_COLLECTION = 'bill'
-const BILL_HISTORY_COLLECTION = 'history_booking'
+const BILLS_COLLECTION = 'booking'
 
 export const getBills = async (): Promise<BillData[]> => {
   const billsRef = collection(db, BILLS_COLLECTION)
@@ -40,8 +39,6 @@ export const updateBillStatus = async (
   }
 
   await updateDoc(doc(db, BILLS_COLLECTION, billId), payload)
-
-  await updateDoc(doc(db, BILL_HISTORY_COLLECTION, billId), payload).catch(() => undefined)
 }
 
 export const deleteSelectedBills = async (selectedIds: string[]): Promise<void> => {

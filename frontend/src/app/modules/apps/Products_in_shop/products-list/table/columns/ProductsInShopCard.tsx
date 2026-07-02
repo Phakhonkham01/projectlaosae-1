@@ -9,21 +9,44 @@ type Props = {
 
 const ProductsInShopCard: React.FC<Props> = ({product, index, categoryName}) => {
   const imageSrc = product.imageUrl || '/media/avatars/blank.png'
+  const isUnavailable = product.available === false
 
   return (
-    <div className='card card-flush h-100 shadow-sm product-shop-card'>
+    <div className={`card card-flush h-100 shadow-sm product-shop-card ${isUnavailable ? 'border border-secondary' : ''}`}>
       <div className='card-header p-0 overflow-hidden position-relative product-shop-card__media'>
         <img
           src={imageSrc}
           alt={product.name}
           className='w-100 object-fit-cover product-shop-card__img'
           loading='lazy'
+          style={{
+            opacity: isUnavailable ? 0.35 : 1,
+            filter: isUnavailable ? 'grayscale(100%)' : 'none',
+            transition: 'opacity .2s, filter .2s',
+          }}
           onError={(e) => {
             ;(e.target as HTMLImageElement).src = '/media/avatars/blank.png'
           }}
         />
-        <span className='badge badge-success position-absolute top-0 end-0 m-3 fw-bold shadow-sm'>
-          ມີຂາຍ
+        {isUnavailable && (
+          <div
+            className='position-absolute top-50 start-50 translate-middle text-center w-100 px-3'
+            style={{pointerEvents: 'none'}}
+          >
+            <span
+              className='badge bg-danger text-white fw-bolder fs-6 px-4 py-3 shadow-sm'
+              style={{letterSpacing: '0.04em'}}
+            >
+              🚫 ໝົດ
+            </span>
+          </div>
+        )}
+        <span
+          className={`badge position-absolute top-0 end-0 m-3 fw-bold shadow-sm ${
+            isUnavailable ? 'badge-secondary' : 'badge-success'
+          }`}
+        >
+          {isUnavailable ? 'ບໍ່ມີຂາຍ' : 'ມີຂາຍ'}
         </span>
         <span className='badge badge-circle badge-light position-absolute top-0 start-0 m-3 fw-bold text-gray-700 shadow-sm'>
           {index + 1}

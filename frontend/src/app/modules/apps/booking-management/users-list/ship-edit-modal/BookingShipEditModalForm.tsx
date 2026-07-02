@@ -372,7 +372,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
   useEffect(() => {
     if (!itemIdForUpdate) return
     setLoading(true)
-    getDoc(doc(db, 'ships', itemIdForUpdate))
+    getDoc(doc(db, 'ship', itemIdForUpdate))
       .then((snap) => {
         if (snap.exists()) {
           const raw = snap.data() as Record<string, any>
@@ -739,15 +739,22 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         createdAt: new Date().toISOString(),
       }
 
-      const billRef = await addDoc(collection(db, 'bill'), bookingPayload)
-      await addDoc(collection(db, 'history_booking'), bookingPayload)
+      const billRef = await addDoc(collection(db, 'booking'), bookingPayload)
+
+      // ─── payment: ສ້າງ 1 doc ຕໍ່ 1 booking ຕອນສ້າງ booking ───
+      await addDoc(collection(db, 'payment'), {
+        bookingId: billRef.id,
+        userId: bookingPayload.user_id,
+        Amount: bookingPayload.grand_total,
+        Date: bookingPayload.createdAt,
+      })
 
       // ─── Decrement ship quantity on successful payment ───
       const paymentSucceeded =
         paymentStatus === 'approved' || paymentMethod === 'bcel' || isStaff
       if (paymentSucceeded && itemIdForUpdate && (shipData?.quantity ?? 0) > 0) {
         try {
-          await updateDoc(doc(db, 'ships', itemIdForUpdate), {
+          await updateDoc(doc(db, 'ship', itemIdForUpdate), {
             quantity: increment(-1),
             updatedAt: new Date().toISOString(),
           })
@@ -1312,6 +1319,19 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                     altInput: true,
                     altFormat: 'd/m/Y',
                     minDate: todayDateString,
+                    // ທາສີແຕ່ລະມື້: ເລືອກບໍ່ໄດ້ = ແດງອ່ອນ, ເລືອກໄດ້ = ຂຽວອ່ອນ
+                    onDayCreate: (_dObj: Date[], _dStr: string, _fp: unknown, dayElem: HTMLElement) => {
+                      const isDisabled = dayElem.classList.contains('flatpickr-disabled')
+                      const isSelected = dayElem.classList.contains('selected')
+                      if (isSelected) return
+                      if (isDisabled) {
+                        dayElem.style.backgroundColor = '#fff5f8'
+                        dayElem.style.color = '#f1416c'
+                      } else {
+                        dayElem.style.backgroundColor = '#e8fff3'
+                        dayElem.style.color = '#50cd89'
+                      }
+                    },
                   }}
                   placeholder='ວ/ດ/ປ'
                   onChange={(_selectedDates: Date[], dateStr: string) => {
@@ -1348,7 +1368,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                         updateBookingTime(nextHour, nextMinute)
                       }}
                     >
-                      <option value=''>Hour</option>
+                      <option value=''>ເລືອກໂມງ</option>
                       {availableHourOptions.map((h) => (
                         <option key={h} value={h}>{h}</option>
                       ))}
@@ -1361,7 +1381,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                       disabled={isSameDayBookingClosed || !selectedHour}
                       onChange={(e) => updateBookingTime(selectedHour, e.target.value)}
                     >
-                      <option value=''>Minute</option>
+                      <option value=''>ນາທີ</option>
                       {availableMinuteOptions.map((m) => (
                         <option key={m} value={m}>{m}</option>
                       ))}
@@ -1383,8 +1403,8 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
                 {isTodaySelected
                   ? isSameDayBookingClosed
                     ? 'ມື້ນີ້ບໍ່ສາມາດຈອງໄດ້ແລ້ວ ເພາະວ່າການຈອງພາຍໃນມື້ນີ້ແມ່ນປິດຕັ້ງແຕ່ເວລາ 17:00 ໂມງເປັນຕົ້ນໄປ'
-                    : `For today, booking starts from ${minutesToTimeString(minimumBookingMinutes)} and must be made by ${minutesToTimeString(SAME_DAY_LAST_BOOKING_MINUTES)}.`
-                  : `ເລີ່ມຕົ້ນຈອງໄດ້ຕັ້ງແຕ່ ${minutesToTimeString(SHOP_OPEN_MINUTES)}. ທ່ານສາມາດເລືອກເວລາໃດກໍໄດ້ທີ່ຫຼັງຈາກນັ້ນ, ແຕ່ການຈອງຈະຕ້ອງສິ້ນສຸດລົງພາຍໃນ ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
+                    : `ຮາ້ນເຮົາຈະປີດຈອງອອນລາຍ ${minutesToTimeString(minimumBookingMinutes)} ແລະ ຕອນນີ້ໄກ້ຮອດໂມງປິດແລ້ວ ${minutesToTimeString(SAME_DAY_LAST_BOOKING_MINUTES)}.`
+                  : `ເລີ່ມຕົ້ນຈອງໄດ້ຕັ້ງແຕ່ ${minutesToTimeString(SHOP_OPEN_MINUTES)}. ທ່ານສາມາດເລືອກເວລາໃດກໍໄດ້ຫຼັງຈາກນັ້ນ, ຮ້ານປິດ ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
               </div>
             )}
 
@@ -1431,7 +1451,7 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
               )}
               {bookingTime && maxBookableHours < 1 && (
                 <div className='text-danger fs-8 mt-2'>
-                  {`This time is too close to closing time at ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
+                  {`ຈອງໄກ້ໂມງປິດຮ້ານບໍ່ສາມາດຈອງໄດ້ ເພາະຮ້ານປິດ ${minutesToTimeString(SHOP_CLOSE_MINUTES)}.`}
                 </div>
               )}
               {errors.hours && <div className='text-danger fs-7 mt-2'>{errors.hours}</div>}

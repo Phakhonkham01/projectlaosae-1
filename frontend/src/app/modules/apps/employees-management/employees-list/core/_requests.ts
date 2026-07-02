@@ -3,7 +3,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { db, auth } from '../../../../../../../../firebase/useFirebase'
 import { User } from './_models'
 
-const COLLECTION = 'Users'
+const COLLECTION = 'users'
 
 // Get all
 export const getUsers = async (): Promise<User[]> => {
