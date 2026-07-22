@@ -4,7 +4,7 @@ import { useQueryResponse } from '../core/QueryResponseProvider'
 import { ShipData } from '../core/ship_models'
 import { KTIcon } from '../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
-import { collection, addDoc, doc, getDoc, getDocs } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../../../../../../../firebase/useFirebase'
 
@@ -230,15 +230,31 @@ const BookingShipEditModalForm: FC = () => {
         createdAt: new Date().toISOString(),
       }
 
-      const bookingRef = await addDoc(collection(db, 'booking'), bookingPayload)
+      // ─── booking_details: ຟອມລູກຄ້າບໍ່ມີ field ພວກນີ້ → ໃສ່ຄ່າ default ໄວ້ໃຫ້ detail modal ຫາເຫັນ ───
+      const detailsPayload = {
+        cash_amount: null,
+        transfer_amount: null,
+        bcel_amount_usd: null,
+        customer_name: '',
+        customer_phone: '',
+        booked_by_name: '',
+        booked_by_email: '',
+        booked_by_role: '',
+        createdAt: bookingPayload.createdAt,
+      }
 
-      // payment: ສ້າງ 1 doc ຕໍ່ 1 booking ຕອນສ້າງ booking
-      await addDoc(collection(db, 'payment'), {
+      // ─── ຂຽນ booking + booking_details + payment ພ້ອມກັນດ້ວຍ batch ───
+      const batch = writeBatch(db)
+      const bookingRef = doc(collection(db, 'booking'))
+      batch.set(bookingRef, bookingPayload)
+      batch.set(doc(db, 'booking_details', bookingRef.id), detailsPayload)
+      batch.set(doc(collection(db, 'payment')), {
         bookingId: bookingRef.id,
         userId: bookingPayload.user_id,
         Amount: bookingPayload.grand_total,
         Date: bookingPayload.createdAt,
       })
+      await batch.commit()
 
       Swal.fire({
         icon: 'success',

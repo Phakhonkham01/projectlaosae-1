@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   orderBy,
   query,
@@ -11,6 +12,16 @@ import {db} from '../../../../../../../../firebase/useFirebase'
 import {BillData, PaymentStatus} from './bill_models'
 
 const BILLS_COLLECTION = 'booking'
+const BILL_DETAILS_COLLECTION = 'booking_details'
+
+// ດຶງ field ລະອຽດການຊຳລະ (cash/transfer/bcel) ຈາກ booking_details.
+// doc ເກົ່າທີ່ບໍ່ມີ booking_details ຈະ return {} → detail modal fallback ໃຊ້ field ໃນ booking ເອງ
+export const getBookingDetails = async (
+  billId: string
+): Promise<Partial<BillData>> => {
+  const snap = await getDoc(doc(db, BILL_DETAILS_COLLECTION, billId))
+  return snap.exists() ? (snap.data() as Partial<BillData>) : {}
+}
 
 export const getBills = async (): Promise<BillData[]> => {
   const billsRef = collection(db, BILLS_COLLECTION)
@@ -49,6 +60,7 @@ export const deleteSelectedBills = async (selectedIds: string[]): Promise<void> 
   const batch = writeBatch(db)
   selectedIds.forEach((id) => {
     batch.delete(doc(db, BILLS_COLLECTION, id))
+    batch.delete(doc(db, BILL_DETAILS_COLLECTION, id))
   })
   await batch.commit()
 }

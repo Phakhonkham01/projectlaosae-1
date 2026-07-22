@@ -5,7 +5,7 @@ import { ShipData } from '../core/ship_models'
 import { KTIcon } from '../../../../../../_metronic/helpers'
 import Swal from 'sweetalert2'
 import Flatpickr from 'react-flatpickr'
-import { collection, addDoc, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, updateDoc, increment, writeBatch } from 'firebase/firestore'
 import { db } from '../../../../../../../../firebase/useFirebase'
 import { io } from 'socket.io-client'
 import QRCode from 'qrcode'
@@ -739,15 +739,43 @@ const BookingShipEditModalForm: FC<BookingShipEditModalFormProps> = ({
         createdAt: new Date().toISOString(),
       }
 
-      const billRef = await addDoc(collection(db, 'booking'), bookingPayload)
+      // ─── ແຍກ field ໜັກ/ໃຊ້ສະເພາະ detail ອອກໄປ collection booking_details ───
+      const {
+        cash_amount,
+        transfer_amount,
+        bcel_amount_usd,
+        customer_name,
+        customer_phone,
+        booked_by_name,
+        booked_by_email,
+        booked_by_role,
+        ...summaryPayload
+      } = bookingPayload
 
-      // ─── payment: ສ້າງ 1 doc ຕໍ່ 1 booking ຕອນສ້າງ booking ───
-      await addDoc(collection(db, 'payment'), {
+      const detailsPayload = {
+        cash_amount,
+        transfer_amount,
+        bcel_amount_usd,
+        customer_name,
+        customer_phone,
+        booked_by_name,
+        booked_by_email,
+        booked_by_role,
+        createdAt: bookingPayload.createdAt,
+      }
+
+      // ─── ຂຽນ booking + booking_details + payment ພ້ອມກັນດ້ວຍ batch ───
+      const batch = writeBatch(db)
+      const billRef = doc(collection(db, 'booking'))
+      batch.set(billRef, summaryPayload)
+      batch.set(doc(db, 'booking_details', billRef.id), detailsPayload)
+      batch.set(doc(collection(db, 'payment')), {
         bookingId: billRef.id,
         userId: bookingPayload.user_id,
         Amount: bookingPayload.grand_total,
         Date: bookingPayload.createdAt,
       })
+      await batch.commit()
 
       // ─── Decrement ship quantity on successful payment ───
       const paymentSucceeded =

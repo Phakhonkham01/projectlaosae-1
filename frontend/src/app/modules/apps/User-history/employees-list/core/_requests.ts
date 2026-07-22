@@ -3,6 +3,7 @@ import { db } from '../../../../../../../../firebase/useFirebase'
 import { HistoryBooking } from './_models'
 
 const COLLECTION = 'booking'
+const DETAILS_COLLECTION = 'booking_details'
 
 // Get all history
 export const getHistoryBookings = async (): Promise<HistoryBooking[]> => {
@@ -19,7 +20,11 @@ export const getHistoryBookings = async (): Promise<HistoryBooking[]> => {
 export const getHistoryBookingById = async (id: string): Promise<HistoryBooking | null> => {
   const docSnap = await getDoc(doc(db, COLLECTION, id))
   if (!docSnap.exists()) return null
-  return { id: docSnap.id, ...docSnap.data() } as HistoryBooking
+  // merge field ລະອຽດ (booked_by_*, customer_*) ຈາກ booking_details;
+  // doc ເກົ່າທີ່ບໍ່ມີ booking_details → fallback ໃຊ້ field ໃນ booking ເອງ
+  const detailsSnap = await getDoc(doc(db, DETAILS_COLLECTION, id))
+  const details = detailsSnap.exists() ? detailsSnap.data() : {}
+  return { id: docSnap.id, ...docSnap.data(), ...details } as HistoryBooking
 }
 
 // Get by user_id
@@ -110,4 +115,5 @@ export const updateBookingStatus = async (
 // Delete
 export const deleteHistoryBooking = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, COLLECTION, id))
+  await deleteDoc(doc(db, DETAILS_COLLECTION, id))
 }

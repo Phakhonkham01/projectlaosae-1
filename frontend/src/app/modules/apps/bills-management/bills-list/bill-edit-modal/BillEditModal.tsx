@@ -3,7 +3,7 @@ import Swal from 'sweetalert2'
 import {KTIcon} from '../../../../../../_metronic/helpers'
 import {useListView} from '../core/ListViewProvider'
 import {PAYMENT_STATUS_META, PAYMENT_STATUS_OPTIONS} from '../core/bill_models'
-import {updateBillStatus} from '../core/bill_requests'
+import {getBookingDetails, updateBillStatus} from '../core/bill_requests'
 import {useQueryResponse, useQueryResponseData} from '../core/QueryResponseProvider'
 
 const defaultPaymentStatus = PAYMENT_STATUS_OPTIONS[0]
@@ -41,6 +41,31 @@ const BookingShipEditModal = () => {
   const [paymentStatus, setPaymentStatus] = useState('')
   const [rejectReason, setRejectReason] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [details, setDetails] = useState<{
+    cash_amount?: number | null
+    transfer_amount?: number | null
+    bcel_amount_usd?: number | null
+  }>({})
+
+  // ດຶງ field ລະອຽດການຊຳລະຈາກ booking_details ຕອນເປີດ modal (booking ບໍ່ໄດ້ເກັບ field ພວກນີ້ແລ້ວ)
+  useEffect(() => {
+    if (!bill?.id) {
+      setDetails({})
+      return
+    }
+    let active = true
+    getBookingDetails(bill.id).then((d) => {
+      if (active) setDetails(d)
+    })
+    return () => {
+      active = false
+    }
+  }, [bill?.id])
+
+  // merge: doc ໃໝ່ໃຊ້ຄ່າຈາກ booking_details, doc ເກົ່າ fallback ໃຊ້ field ໃນ booking
+  const cashAmount = details.cash_amount ?? bill?.cash_amount
+  const transferAmount = details.transfer_amount ?? bill?.transfer_amount
+  const bcelAmountUsd = details.bcel_amount_usd ?? bill?.bcel_amount_usd
 
   useEffect(() => {
     document.body.classList.add('modal-open')
@@ -309,30 +334,30 @@ const BookingShipEditModal = () => {
 
                       {(bill.payment_method === 'cash+transfer' ||
                         bill.payment_method === 'bcel' ||
-                        bill.cash_amount != null ||
-                        bill.transfer_amount != null ||
-                        bill.bcel_amount_usd != null) && (
+                        cashAmount != null ||
+                        transferAmount != null ||
+                        bcelAmountUsd != null) && (
                         <>
                           <div className='separator separator-dashed my-4'></div>
                           <div className='text-muted fs-7 fw-bold text-uppercase mb-3'>
                             ລາຍລະອຽດການຊຳລະ
                           </div>
-                          {bill.cash_amount != null && (
+                          {cashAmount != null && (
                             <div className='d-flex justify-content-between align-items-center mb-2'>
                               <span className='text-muted fw-semibold'>ເງິນສົດ</span>
-                              <span className='fw-bold'>{bill.cash_amount.toLocaleString()} LAK</span>
+                              <span className='fw-bold'>{cashAmount.toLocaleString()} LAK</span>
                             </div>
                           )}
-                          {bill.transfer_amount != null && (
+                          {transferAmount != null && (
                             <div className='d-flex justify-content-between align-items-center mb-2'>
                               <span className='text-muted fw-semibold'>ໂອນ</span>
-                              <span className='fw-bold'>{bill.transfer_amount.toLocaleString()} LAK</span>
+                              <span className='fw-bold'>{transferAmount.toLocaleString()} LAK</span>
                             </div>
                           )}
-                          {bill.bcel_amount_usd != null && (
+                          {bcelAmountUsd != null && (
                             <div className='d-flex justify-content-between align-items-center mb-2'>
                               <span className='text-muted fw-semibold'>BCEL (USD)</span>
-                              <span className='fw-bold'>${bill.bcel_amount_usd.toLocaleString()}</span>
+                              <span className='fw-bold'>${bcelAmountUsd.toLocaleString()}</span>
                             </div>
                           )}
                         </>
