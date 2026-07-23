@@ -41,13 +41,19 @@ export const getBillById = async (billId: string): Promise<BillData | null> => {
 
 export const updateBillStatus = async (
   billId: string,
-  payment_status: PaymentStatus,
+  selectedStatus: PaymentStatus,
   reject_reason?: string
 ): Promise<void> => {
-  const payload = {
-    payment_status,
-    reject_reason: payment_status === 'rejected' ? reject_reason || '' : '',
-  }
+  // 'used' = ລູກຄ້າເຂົ້າມາໃຊ້ງານແລ້ວ → ເປັນ "ສະຖານະການຈອງ" (field `status`),
+  // ການຊຳລະຍັງຄົງເປັນ approved. ສ່ວນ approved/rejected ຂຽນທັງ payment_status ແລະ status ໃຫ້ກົງກັນ.
+  const payload =
+    selectedStatus === 'used'
+      ? {status: 'used', payment_status: 'approved', reject_reason: ''}
+      : {
+          payment_status: selectedStatus,
+          status: selectedStatus,
+          reject_reason: selectedStatus === 'rejected' ? reject_reason || '' : '',
+        }
 
   await updateDoc(doc(db, BILLS_COLLECTION, billId), payload)
 }

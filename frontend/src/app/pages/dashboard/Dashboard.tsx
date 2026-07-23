@@ -171,11 +171,13 @@ const normalizeStatus = (status?: string) => {
 const isRejectedStatus = (status?: string) => normalizeStatus(status) === 'rejected'
 
 const pendingStatuses = ['pending']
-const paidStatuses = ['approved']
+// 'used' = ລູກຄ້າເຂົ້າມາໃຊ້ງານແລ້ວ (ຕໍ່ຈາກ approved) — ຍັງນັບເປັນຊຳລະແລ້ວ/ລາຍຮັບ
+const paidStatuses = ['approved', 'used']
 
 const paymentStatusLabels: Record<string, string> = {
   pending: 'ລໍຖ້າຊຳລະ',
   approved: 'ຊຳລະແລ້ວ',
+  used: 'ເຂົ້າມາໃຊ້ງານສຳເລັດ',
   rejected: 'ປະຕິເສດ',
 }
 
@@ -206,6 +208,7 @@ const getPaymentMethodLabel = (method?: string) => {
 const getPaymentBadgeStyle = (status?: string): React.CSSProperties => {
   const current = normalizeStatus(status) || 'pending'
   if (current === 'approved') return {background: '#e6f9f4', color: '#00876b'}
+  if (current === 'used') return {background: '#e7f0ff', color: '#2b57c9'}
   if (current === 'rejected') return {background: '#fdeaea', color: '#c0392b'}
   return {background: '#fef6e0', color: '#b56a00'}
 }
@@ -409,7 +412,7 @@ const Dashboard = () => {
     const sortedHistory = [...historyBookings].sort(
       (a, b) => (getBookingDate(b)?.getTime() || 0) - (getBookingDate(a)?.getTime() || 0)
     )
-    const approvedHistory = historyBookings.filter((booking) => (booking.payment_status || '').toLowerCase() === 'approved')
+    const approvedHistory = historyBookings.filter((booking) => paidStatuses.includes(normalizeStatus(booking.payment_status)))
     const monthlyApproved = approvedHistory.filter((booking) => {
       const date = getBookingDate(booking)
       return date ? date >= startOfMonth : false
@@ -501,7 +504,7 @@ const Dashboard = () => {
     const rankedCustomers = Object.entries(customerRanking).sort((a, b) => b[1] - a[1]).slice(0, 5)
     const customerTotalSpent = myHistory.reduce((sum, booking) => sum + (booking.grand_total || 0), 0)
     const customerPendingBills = myBills.filter((booking) => pendingStatuses.includes(normalizeStatus(booking.payment_status)))
-    const customerApprovedBookings = myHistory.filter((booking) => (booking.payment_status || '').toLowerCase() === 'approved').length
+    const customerApprovedBookings = myHistory.filter((booking) => paidStatuses.includes(normalizeStatus(booking.payment_status))).length
 
     return {
       totalBookings: activeBookings.length,

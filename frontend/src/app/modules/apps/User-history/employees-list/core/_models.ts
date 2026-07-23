@@ -29,6 +29,7 @@ interface HistoryBooking {
   status:
     | 'pending'
     | 'approved'
+    | 'used'
     | 'rejected'
     | 'payment failed'
     | 'payment_failed'

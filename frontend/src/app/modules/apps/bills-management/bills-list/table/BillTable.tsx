@@ -35,14 +35,19 @@ const getDisplayStatus = (value?: string) => {
 
 const isRejectedBill = (bill: BillData) => getDisplayStatus(bill.payment_status) === 'rejected'
 
-const getStatusMeta = (paymentStatus: string | undefined) => {
-  const key = getDisplayStatus(paymentStatus)
+// 'used' (ເຂົ້າມາໃຊ້ງານສຳເລັດ) ຖືກເກັບໃນ field `status` (ສະຖານະການຈອງ), ບໍ່ແມ່ນ payment_status
+const getBillStatusKey = (bill: BillData) =>
+  normalizePaymentStatus(bill.status) === 'used' ? 'used' : getDisplayStatus(bill.payment_status)
+
+const getStatusMeta = (bill: BillData) => {
+  const key = getBillStatusKey(bill)
   return PAYMENT_STATUS_META[key as PaymentStatus] || defaultStatusMeta
 }
 
 const statusTabs: {label: string; value: StatusTab}[] = [
   {label: 'ທັງໝົດ', value: 'all'},
   {label: PAYMENT_STATUS_META.approved!.label, value: 'approved'},
+  {label: PAYMENT_STATUS_META.used!.label, value: 'used'},
 ]
 
 const paymentMethodMeta: Record<PaymentMethod, {title: string; shortLabel: string}> = {
@@ -187,7 +192,7 @@ const BillSection = ({
             </thead>
             <tbody className='fw-semibold text-gray-700'>
               {bills.map((bill) => {
-                const statusMeta = getStatusMeta(bill.payment_status)
+                const statusMeta = getStatusMeta(bill)
                 return (
                   <tr key={bill.id}>
                     <td>
@@ -324,7 +329,7 @@ const ShipTable = () => {
     () =>
       activeStatus === 'all'
         ? methodBills
-        : methodBills.filter((bill) => getDisplayStatus(bill.payment_status) === getDisplayStatus(activeStatus)),
+        : methodBills.filter((bill) => getBillStatusKey(bill) === getDisplayStatus(activeStatus)),
     [methodBills, activeStatus]
   )
 
@@ -334,7 +339,7 @@ const ShipTable = () => {
         acc[tab.value] =
           tab.value === 'all'
             ? methodBills.length
-            : methodBills.filter((bill) => getDisplayStatus(bill.payment_status) === getDisplayStatus(tab.value)).length
+            : methodBills.filter((bill) => getBillStatusKey(bill) === getDisplayStatus(tab.value)).length
         return acc
       }, {} as Record<StatusTab, number>),
     [methodBills]

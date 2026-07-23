@@ -22,12 +22,12 @@ type Props = {
 // ─── Status meta (only the statuses we still show) ──────────────────────────
 const statusMap: Record<string, {label: string; cls: string; icon: string}> = {
   approved: {label: 'ອະນຸມັດ', cls: 'badge-light-success', icon: '✅'},
+  used: {label: 'ເຂົ້າມາໃຊ້ງານສຳເລັດ', cls: 'badge-light-primary', icon: '🎉'},
   confirmed: {label: 'ຢືນຢັນແລ້ວ', cls: 'badge-light-success', icon: '✅'},
   completed: {label: 'ສຳເລັດແລ້ວ', cls: 'badge-light-primary', icon: '✅'},
   paid: {label: 'ຊຳລະແລ້ວ', cls: 'badge-light-success', icon: '💸'},
   rejected: {label: 'ປະຕິເສດແລ້ວ', cls: 'badge-light-danger', icon: '⛔'},
   cancelled: {label: 'ຍົກເລີກແລ້ວ', cls: 'badge-light-danger', icon: '⛔'},
-  re_submitted: {label: 'ສົ່ງກວດອີກຄັ້ງ', cls: 'badge-light-info', icon: '🔁'},
   refunded: {label: 'ຄືນເງິນແລ້ວ', cls: 'badge-light-info', icon: '↩️'},
 }
 

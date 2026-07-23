@@ -75,7 +75,9 @@ const BookingShipEditModal = () => {
   }, [])
 
   useEffect(() => {
-    const currentStatus = getDisplayPaymentStatus(bill?.payment_status)
+    // 'used' ຖືກເກັບໃນ field `status` (ສະຖານະການຈອງ) — ບໍ່ແມ່ນ payment_status
+    const currentStatus =
+      normalizePaymentStatus(bill?.status) === 'used' ? 'used' : getDisplayPaymentStatus(bill?.payment_status)
     const safeStatus =
       currentStatus && currentStatus in PAYMENT_STATUS_META ? currentStatus : defaultPaymentStatus
     setPaymentStatus(safeStatus)
@@ -129,9 +131,10 @@ const BookingShipEditModal = () => {
     return null
   }
 
+  const currentStatusKey =
+    normalizePaymentStatus(bill.status) === 'used' ? 'used' : getDisplayPaymentStatus(bill.payment_status)
   const paymentStatusMeta =
-    PAYMENT_STATUS_META[getDisplayPaymentStatus(bill.payment_status) as keyof typeof PAYMENT_STATUS_META] ??
-    defaultPaymentStatusMeta
+    PAYMENT_STATUS_META[currentStatusKey as keyof typeof PAYMENT_STATUS_META] ?? defaultPaymentStatusMeta
 
   return (
     <>
@@ -388,7 +391,7 @@ const BookingShipEditModal = () => {
                     </div>
                     <div className='card-body pt-0'>
                       <div className='mb-7'>
-                        <label className='form-label fw-bold'>ສະຖານະການຊຳລະ</label>
+                        <label className='form-label fw-bold'>ສະຖານະ</label>
                         <select
                           className='form-select form-select-solid'
                           value={paymentStatus}

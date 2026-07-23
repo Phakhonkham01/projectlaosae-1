@@ -61,7 +61,8 @@ const paymentMethodLabel = (method?: string) => {
 
 const isPaidBill = (bill: Bill) => {
   const s = (bill.payment_status ?? '').toLowerCase().trim().replace(/[\s-]+/g, '_')
-  return s === 'approved' || bill.payment_method === 'bcel' || bill.payment_method === 'cash+transfer'
+  // 'used' = ລູກຄ້າເຂົ້າມາໃຊ້ງານແລ້ວ (ຕໍ່ຈາກ approved) — ຍັງນັບເປັນລາຍຮັບ
+  return s === 'approved' || s === 'used' || bill.payment_method === 'bcel' || bill.payment_method === 'cash+transfer'
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────

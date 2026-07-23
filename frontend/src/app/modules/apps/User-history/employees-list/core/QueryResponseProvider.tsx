@@ -40,6 +40,7 @@ const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(
 const getDisplayStatus = (value?: string) => {
   const normalized = normalizeStatus(value)
   if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 're_submitted') return 'pending' // ສະຖານະ "ສົ່ງກວດອີກຄັ້ງ" ຖືກລົບອອກ — ນັບເປັນ pending
   if (normalized === 'payment_failed') return 'payment_failed'
   return normalized
 }

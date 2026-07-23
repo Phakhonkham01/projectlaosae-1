@@ -4,37 +4,41 @@ import {EmployeesActionsCell} from './EmployeesActionsCell'
 import {EmployeesListHeader} from '../../components/header/EmployeesListHeader'
 
 const bookingStatusStyles: Record<string, {bg: string; color: string}> = {
+  pending: {bg: '#fef6e0', color: '#b56a00'},
   confirmed: {bg: '#e8f5e9', color: '#10b981'},
   cancelled: {bg: '#fce8e8', color: '#ef4444'},
   completed: {bg: '#ede9fe', color: '#8b5cf6'},
   approved: {bg: '#e8f5e9', color: '#10b981'},
+  used: {bg: '#e7f0ff', color: '#2b57c9'},
   rejected: {bg: '#fce8e8', color: '#ef4444'},
-  re_submitted: {bg: '#e0f2fe', color: '#0284c7'},
 }
 
 const bookingStatusLabels: Record<string, string> = {
+  pending: 'ລໍຖ້າ',
   confirmed: 'ຢືນຢັນແລ້ວ',
   cancelled: 'ຍົກເລີກ',
   completed: 'ສຳເລັດ',
   approved: 'ອະນຸມັດ',
+  used: 'ເຂົ້າມາໃຊ້ງານສຳເລັດ',
   rejected: 'ປະຕິເສດ',
-  re_submitted: 'ສົ່ງກວດອີກຄັ້ງ',
 }
 
 const paymentStatusStyles: Record<string, {bg: string; color: string}> = {
+  pending: {bg: '#fef6e0', color: '#b56a00'},
   paid: {bg: '#e8f5e9', color: '#10b981'},
   refunded: {bg: '#ede9fe', color: '#8b5cf6'},
   approved: {bg: '#e8f5e9', color: '#10b981'},
+  used: {bg: '#e7f0ff', color: '#2b57c9'},
   rejected: {bg: '#fce8e8', color: '#ef4444'},
-  re_submitted: {bg: '#e0f2fe', color: '#0284c7'},
 }
 
 const paymentStatusLabels: Record<string, string> = {
+  pending: 'ລໍຖ້າ',
   paid: 'ຊຳລະແລ້ວ',
   refunded: 'ຄືນເງິນແລ້ວ',
   approved: 'ອະນຸມັດ',
+  used: 'ເຂົ້າມາໃຊ້ງານສຳເລັດ',
   rejected: 'ປະຕິເສດ',
-  re_submitted: 'ສົ່ງກວດອີກຄັ້ງ',
 }
 
 const paymentMethodLabels: Record<string, string> = {
@@ -73,6 +77,7 @@ const normalizeStatus = (value?: string) => value?.toLowerCase().trim().replace(
 const getDisplayStatus = (value?: string) => {
   const normalized = normalizeStatus(value)
   if (normalized === 'slip_submitted') return 'pending'
+  if (normalized === 're_submitted') return 'pending' // ສະຖານະ "ສົ່ງກວດອີກຄັ້ງ" ຖືກລົບອອກ — ນັບເປັນ pending
   if (normalized === 'payment_failed') return 'payment failed'
   return normalized
 }

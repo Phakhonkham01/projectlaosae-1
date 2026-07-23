@@ -4,6 +4,7 @@ export type PaymentStatus =
   | 'pending'
   | 'slip_submitted'
   | 'approved'
+  | 'used'
   | 'rejected'
   | 'payment failed'
   | 'under_review_again'
@@ -64,6 +65,7 @@ export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['cash', 'cash+transfer',
 
 export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
   'approved',
+  'used',
   'rejected',
 ]
 
@@ -71,5 +73,6 @@ export const PAYMENT_STATUS_META: Partial<
   Record<PaymentStatus, {label: string; badgeClass: string}>
 > = {
   approved: {label: 'ອະນຸມັດແລ້ວ', badgeClass: 'badge-light-success'},
+  used: {label: 'ເຂົ້າມາໃຊ້ງານສຳເລັດ', badgeClass: 'badge-light-primary'},
   rejected: {label: 'ປະຕິເສດ', badgeClass: 'badge-light-danger'},
 }
